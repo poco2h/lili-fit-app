@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+:root {
+  --mt-green: #1abc9c;
+  --mt-black: #000003;
+  --mt-purple: #a78bfa;
+  --mt-blue: #60a5fa;
+}
+
+@theme inline {
+  --color-mt-green: var(--mt-green);
+  --color-mt-black: var(--mt-black);
+  --color-mt-purple: var(--mt-purple);
+  --color-mt-blue: var(--mt-blue);
+  --font-sans: var(--font-sans-app);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: -apple-system, system-ui, "Segoe UI", Arial, sans-serif;
+}
+
+/* Landing (Owner/Follower) theme — fondo blanco, letra negra, acentos turquesa */
+.mt-landing {
+  background: #ffffff;
+  color: #000000;
+}
+
+/* App interior (Conversar, Mi Cerebro, etc.) — el negro de fondo lo pone el
+   canvas de partículas (fijo, montado una sola vez en el layout compartido).
+   Este wrapper NUNCA debe llevar background opaco propio: al vivir en el
+   DOM como hermano posterior al canvas, un fondo sólido aquí lo taparía
+   por completo — fue exactamente el bug reportado (átomos invisibles). */
+.mt-app {
+  background: transparent;
+  color: #ffffff;
+  min-height: 100vh;
+  position: relative;
+}
+
+/* Transparencia real (V10 §9 y REF_MisFuentes): las cards nunca deben tapar
+   los átomos del fondo — mismo valor que Mis Fuentes (rgba .22), no un
+   panel casi opaco. */
+.mt-glass {
+  background: rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(26, 188, 156, 0.18);
+  border-radius: 14px;
+}
+
+.mt-particle-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}

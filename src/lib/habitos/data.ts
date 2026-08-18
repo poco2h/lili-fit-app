@@ -148,6 +148,13 @@ export const MI_SCHOOL = [
  */
 export type HabitoDeporte = { emoji: string; nombre: string; categoria: string };
 
+/** Hábitos activos del módulo Microbiota — misma estructura que la referencia (nombre, categoría, estrellas). */
+export const HABITOS_MICROBIOMA: HabitoDeporte[] = [
+  { emoji: "🥤", nombre: "Ayuno intermitente 16h", categoria: "Microbiota · Digestivo" },
+  { emoji: "🥬", nombre: "Fermentados diarios", categoria: "Microbiota · Probióticos" },
+  { emoji: "🐟", nombre: "Omega-3 post-entreno", categoria: "Microbiota · Antiinflamatorio" },
+];
+
 export const DEPORTES = ["Boxeo", "Running", "Fuerza", "Yoga"] as const;
 export type Deporte = (typeof DEPORTES)[number];
 

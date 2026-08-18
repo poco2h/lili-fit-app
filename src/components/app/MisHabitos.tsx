@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { leerDemoTwin, type DemoTwin } from "@/lib/demo/localTwin";
-import { RESTAURANTES, generarAgendaFallback, DEPORTES, HABITOS_POR_DEPORTE, type Deporte } from "@/lib/habitos/data";
+import { RESTAURANTES, generarAgendaFallback, DEPORTES, HABITOS_POR_DEPORTE, HABITOS_MICROBIOMA, type Deporte } from "@/lib/habitos/data";
 import { recetasParaBacterias, nombresABacteriaIds } from "@/lib/recetas/rankear";
 import { enviarAgendaAlProfesional } from "@/lib/actions/agenda";
 import Autoevaluacion from "./Autoevaluacion";
@@ -51,6 +51,18 @@ export default function MisHabitos() {
 
       {modulo === "microbioma" && (
         <div>
+          <p className="mb-2 text-[10px] uppercase tracking-wide text-white/40">
+            Hábitos activos: {HABITOS_MICROBIOMA.length}
+          </p>
+          <div className="mb-5 grid gap-3">
+            {HABITOS_MICROBIOMA.map((h) => (
+              <div key={h.nombre} className="mt-glass p-4">
+                <p className="font-semibold">{h.emoji} {h.nombre}</p>
+                <p className="mt-1 text-xs text-white/40">{h.categoria}</p>
+                <div className="mt-2 flex gap-1 text-lg text-amber-400">★★★★★</div>
+              </div>
+            ))}
+          </div>
           <div className="mb-4 flex flex-wrap gap-2">
             {SUB_MICROBIOMA.map((s) => (
               <button

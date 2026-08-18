@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import Logo from "@/components/Logo";
-import LogoHormiga from "@/components/LogoHormiga";
 import Footer from "@/components/Footer";
 import ConversarPreview from "@/components/landing/ConversarPreview";
 import { MI_SCHOOL } from "@/lib/habitos/data";
@@ -26,11 +25,11 @@ const SECCIONES = [
   { t: "Mis Fuentes", d: "El conocimiento de tu profesional para ti: artículos, vídeos y planes que tu gemelo te recomienda." },
   { t: "Mi Cerebro", d: "Tu perfil completo visualizado: EGO ID y GUT ID. Ves quién eres — y cómo tu gemelo te ve." },
   { t: "Mis Hábitos", d: "Seguimiento de hábitos diseñados para tu perfil: entrenamiento, nutrición, sueño y recuperación." },
-  { t: "Tu propio gemelo cerebral", d: "Clon del gemelo mental del profesional." },
 ];
 
 export default function FollowerLanding() {
   const [menuAbierto, setMenuAbierto] = useState(false);
+  const [faqAbierta, setFaqAbierta] = useState<number | null>(null);
 
   return (
     <div className="mt-landing min-h-screen">
@@ -82,56 +81,80 @@ export default function FollowerLanding() {
       </header>
 
       <main className="pt-24">
-        {/* HERO */}
-        <section className="mx-auto max-w-5xl px-6 py-20 text-center">
-          <p className="text-[10px] text-[rgb(99,99,99)]">
-            Tu entrenador · tu nutricionista · siempre contigo
-          </p>
-          <h1 className="mt-8 font-serif text-[42px] leading-[1.05] font-normal text-black md:text-[58px] md:leading-[1.05] lg:text-[72px] lg:leading-[74.16px]">
-            Tu profesional fitness,
-            <br />
-            <em className="font-normal not-italic text-[rgb(99,99,99)]">sin horario.</em>
-          </h1>
-          <p className="mx-auto mt-11 max-w-2xl text-[15px] font-light leading-[26.25px] text-[rgb(99,99,99)]">
-            Accede al gemelo cerebral de tu entrenador o nutricionista cuando lo necesites —
-            en texto, con su voz o en videollamada. 24 horas, 7 días, 50 idiomas.
-          </p>
-          <div className="mt-8 flex justify-center gap-4">
-            <Link
-              href="/clientes/buscar"
-              className="rounded-full bg-black px-[30px] py-[13px] text-[11px] font-semibold text-white hover:bg-[#1abc9c] transition-colors"
-            >
-              Encontrar mi profesional →
-            </Link>
-            <a
-              href="#school"
-              className="rounded-full border border-black/20 px-[30px] py-[13px] text-[11px] font-semibold text-black hover:border-black"
-            >
-              Cómo funciona
-            </a>
+        {/* BLOQUE 1 · HERO — BLANCO (obligatorio) */}
+        <section className="bg-white px-6 py-20">
+          <div className="mx-auto grid max-w-6xl items-center gap-10 md:grid-cols-2">
+            <div>
+              <p className="text-[10px] text-[rgb(99,99,99)]">
+                Tu entrenador · tu nutricionista · siempre contigo
+              </p>
+              <h1 className="mt-8 font-serif text-[42px] leading-[1.05] font-normal text-black md:text-[52px] md:leading-[1.05]">
+                Tu profesional fitness,
+                <br />
+                <em className="font-normal not-italic text-[rgb(99,99,99)]">sin horario.</em>
+              </h1>
+              <p className="mt-8 max-w-xl text-[15px] font-light leading-[26.25px] text-[rgb(99,99,99)]">
+                Accede al gemelo cerebral de tu entrenador o nutricionista cuando lo necesites —
+                en texto, con su voz o en videollamada. 24 horas, 7 días, 50 idiomas.
+              </p>
+              <div className="mt-8 flex flex-wrap gap-4">
+                <Link
+                  href="/clientes/buscar"
+                  className="rounded-full bg-black px-[30px] py-[13px] text-[11px] font-semibold text-white hover:bg-[#1abc9c] transition-colors"
+                >
+                  Encontrar mi profesional →
+                </Link>
+                <a
+                  href="#school"
+                  className="rounded-full border border-black/20 px-[30px] py-[13px] text-[11px] font-semibold text-black hover:border-black"
+                >
+                  Cómo funciona
+                </a>
+              </div>
+            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/mindtwin-bustos.jpg"
+              alt="Dos gemelos cerebrales conectados"
+              className="mx-auto w-full max-w-md rounded-3xl border border-black/10"
+            />
           </div>
         </section>
 
-        {/* SCHOOL — cómo funciona, formato claro como en /clientes/buscar */}
-        <section id="school" className="border-t border-black/10 px-6 py-20">
+        {/* BLOQUE 2 · MI SCHOOL → FAQs — NEGRO */}
+        <section id="school" className="bg-black px-6 py-20 text-white">
           <div className="mx-auto max-w-3xl">
-            <p className="text-xs font-semibold uppercase tracking-widest text-[rgb(99,99,99)]">
+            <p className="text-xs font-semibold uppercase tracking-widest text-white/50">
               Cómo funciona
             </p>
-            <h2 className="mt-3 font-serif text-3xl md:text-4xl">Mi School.</h2>
+            <h2 className="mt-3 font-serif text-3xl md:text-4xl">Preguntas frecuentes.</h2>
             <div className="mt-8 space-y-3">
-              {MI_SCHOOL.map((item) => (
-                <div key={item.pregunta} className="rounded-2xl border border-black/10 p-5">
-                  <p className="font-semibold text-black">{item.pregunta}</p>
-                  <p className="mt-1 whitespace-pre-line text-sm text-[rgb(99,99,99)]">{item.respuesta}</p>
-                </div>
-              ))}
+              {MI_SCHOOL.map((item, i) => {
+                const abierta = faqAbierta === i;
+                return (
+                  <div key={item.pregunta} className="rounded-2xl border border-white/15">
+                    <button
+                      onClick={() => setFaqAbierta(abierta ? null : i)}
+                      className="flex w-full items-center justify-between gap-4 p-5 text-left"
+                      aria-expanded={abierta}
+                    >
+                      <span className="font-semibold text-white">{item.pregunta}</span>
+                      <span className="flex-shrink-0 text-xl text-white/50">{abierta ? "−" : "+"}</span>
+                    </button>
+                    {abierta && (
+                      <p className="whitespace-pre-line px-5 pb-5 text-sm text-white/60">
+                        {item.respuesta}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </section>
 
-        {/* PREVIEW CONVERSAR */}
-        <section id="que-es" className="px-6 py-10">
+        {/* BLOQUE 3 · PREVIEW CONVERSAR — BLANCO */}
+        <section className="bg-white px-6 py-20">
           <div className="mx-auto max-w-5xl text-center">
             <p className="text-xs font-semibold uppercase tracking-widest text-[rgb(99,99,99)]">
               Una conversación real de Lili Fit
@@ -143,10 +166,10 @@ export default function FollowerLanding() {
           <ConversarPreview />
         </section>
 
-        {/* PASOS */}
-        <section className="border-t border-black/10 bg-[#f9f9f9] px-6 py-20">
+        {/* BLOQUE 4 · PASOS — NEGRO */}
+        <section className="bg-black px-6 py-20 text-white">
           <div className="mx-auto max-w-5xl">
-            <p className="text-xs font-semibold uppercase tracking-widest text-[rgb(99,99,99)]">
+            <p className="text-xs font-semibold uppercase tracking-widest text-white/50">
               ¿Qué es Mindtwins · Lili Fit?
             </p>
             <h2 className="mt-3 font-serif text-3xl md:text-4xl">
@@ -154,21 +177,21 @@ export default function FollowerLanding() {
             </h2>
             <div className="mt-10 grid gap-6 md:grid-cols-2">
               {PASOS.map((p) => (
-                <div key={p.n} className="rounded-2xl border border-black/10 bg-white p-6">
+                <div key={p.n} className="rounded-2xl border border-white/15 p-6">
                   <span className="text-xs font-bold text-[#1abc9c]">PASO {p.n}</span>
                   <h3 className="mt-2 text-lg font-semibold">{p.t}</h3>
-                  <p className="mt-2 text-sm text-[rgb(99,99,99)]">{p.d}</p>
+                  <p className="mt-2 text-sm text-white/60">{p.d}</p>
                 </div>
               ))}
             </div>
-            <p className="mt-8 text-center text-sm text-[rgb(99,99,99)]">
+            <p className="mt-8 text-center text-sm text-white/60">
               Todo en menos de 2 horas de configuración · Activo para siempre
             </p>
           </div>
         </section>
 
-        {/* CANALES */}
-        <section id="canales" className="border-t border-black/10 px-6 py-20">
+        {/* BLOQUE 5 · CANALES — BLANCO */}
+        <section id="canales" className="bg-white px-6 py-20">
           <div className="mx-auto max-w-5xl">
             <p className="text-xs font-semibold uppercase tracking-widest text-[rgb(99,99,99)]">Los canales</p>
             <h2 className="mt-3 font-serif text-3xl md:text-4xl">Elige cómo quieres conectar hoy.</h2>
@@ -186,47 +209,43 @@ export default function FollowerLanding() {
           </div>
         </section>
 
-        {/* SECCIONES */}
-        <section className="border-t border-black/10 bg-[#f9f9f9] px-6 py-20">
+        {/* BLOQUE 6 · MI MINDTWIN (4 áreas) — NEGRO */}
+        <section className="bg-black px-6 py-20 text-white">
           <div className="mx-auto max-w-5xl">
-            <p className="text-xs font-semibold uppercase tracking-widest text-[rgb(99,99,99)]">
+            <p className="text-xs font-semibold uppercase tracking-widest text-white/50">
               Mi MindTwin · lo que encuentras dentro
             </p>
             <h2 className="mt-3 font-serif text-3xl md:text-4xl">
-              Tu gemelo cerebral. Cinco espacios, una sola experiencia.
+              Tu gemelo cerebral. Cuatro espacios, una sola experiencia.
             </h2>
             <div className="mt-10 grid gap-5 md:grid-cols-2">
               {SECCIONES.map((s) => (
-                <div key={s.t} className="rounded-2xl border border-black/10 bg-white p-6">
+                <div key={s.t} className="rounded-2xl border border-white/15 p-6">
                   <h3 className="text-base font-semibold">{s.t}</h3>
-                  <p className="mt-2 text-sm text-[rgb(99,99,99)]">{s.d}</p>
+                  <p className="mt-2 text-sm text-white/60">{s.d}</p>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* CTA final */}
-        <section id="cta" className="border-t border-black/10 bg-black px-6 py-20 text-center text-white">
-          <h2 className="font-serif text-3xl md:text-4xl">Tu profesional. Hoy mismo.</h2>
-          <p className="mx-auto mt-3 max-w-xl text-white/70">
+        {/* BLOQUE 7 · CTA final — BLANCO */}
+        <section id="cta" className="bg-white px-6 py-20 text-center">
+          <h2 className="font-serif text-3xl md:text-4xl text-black">Tu profesional fitness. Hoy Mismo.</h2>
+          <p className="mx-auto mt-3 max-w-xl text-[rgb(99,99,99)]">
             Sin permanencia, sin suscripción. Pagas solo las sesiones que uses.
           </p>
           <Link
             href="/clientes/buscar"
-            className="mt-6 inline-block rounded-full bg-[#1abc9c] px-8 py-3 text-sm font-semibold text-black hover:opacity-90"
+            className="mt-6 inline-block rounded-full bg-black px-8 py-3 text-sm font-semibold text-white hover:bg-[#1abc9c] hover:text-black transition-colors"
           >
             Encontrar mi profesional →
           </Link>
         </section>
 
-        <footer className="flex flex-col items-center gap-4 px-6 py-10 text-sm text-[rgb(99,99,99)]">
-          <div className="flex items-center gap-2">
-            <LogoHormiga size={18} dark={false} />
-            <span>Copyright@2026</span>
-          </div>
+        <footer className="flex items-center justify-between border-t border-black/10 px-6 py-6 text-sm text-[rgb(99,99,99)]">
+          <span>Copyright 2026 @ Mylili</span>
           <Link href="/terminos" className="underline">Términos y condiciones</Link>
-          <Link href="/profesionales" className="underline">Para profesionales →</Link>
         </footer>
         <Footer dark={false} />
       </main>

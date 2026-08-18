@@ -9,9 +9,9 @@ const LINKS = [
   { href: "/app/fuentes", label: "Mis Fuentes", icon: "📂" },
   { href: "/app/cerebro", label: "Mi Cerebro", icon: "🧠" },
   { href: "/app/habitos", label: "Mis Hábitos", icon: "💚" },
-  { href: "/app/school", label: "Mi School", icon: "🎓" },
   { href: "/app/videos", label: "Mis Vídeos", icon: "🎬" },
   { href: "/app/clientes", label: "Mis Clientes", icon: "👥" },
+  { href: "/app/school", label: "Mi School", icon: "🎓" },
 ];
 
 export default function AppNav() {

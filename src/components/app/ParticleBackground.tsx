@@ -17,8 +17,13 @@ export default function ParticleBackground() {
     const container = containerRef.current;
     if (!container) return;
 
-    let W = window.innerWidth;
-    let H = window.innerHeight;
+    // Medimos el propio contenedor (no window.innerWidth/Height): si este
+    // componente se reutiliza dentro de una tarjeta pequeña (ver
+    // ConversarPreview), el canvas debe dimensionarse a esa tarjeta — si no,
+    // renderiza como si ocupara toda la pantalla y luego se recorta con CSS,
+    // lo que hace que los átomos se vean artificialmente gigantes/con zoom.
+    let W = container.clientWidth || window.innerWidth;
+    let H = container.clientHeight || window.innerHeight;
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(68, W / H, 0.5, 3000);
@@ -32,12 +37,14 @@ export default function ParticleBackground() {
     renderer.setClearColor(0x000003, 1);
 
     const onResize = () => {
-      W = window.innerWidth;
-      H = window.innerHeight;
+      W = container.clientWidth || window.innerWidth;
+      H = container.clientHeight || window.innerHeight;
       renderer.setSize(W, H);
       camera.aspect = W / H;
       camera.updateProjectionMatrix();
     };
+    const resizeObserver = new ResizeObserver(onResize);
+    resizeObserver.observe(container);
     window.addEventListener("resize", onResize);
 
     const mobile = W < 600;
@@ -199,6 +206,7 @@ export default function ParticleBackground() {
       cancelAnimationFrame(frameId);
       document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("resize", onResize);
+      resizeObserver.disconnect();
       geo.dispose();
       mat.dispose();
       sGeo.dispose();

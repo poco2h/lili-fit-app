@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import Logo from "@/components/Logo";
-import LogoHormiga from "@/components/LogoHormiga";
 import Footer from "@/components/Footer";
 import ConversarPreview from "@/components/landing/ConversarPreview";
 
@@ -70,72 +69,82 @@ export default function ProfesionalesLanding() {
       </header>
 
       <main className="pt-24">
-        {/* HERO */}
-        <section className="mx-auto max-w-5xl px-6 py-20 text-center">
-          <p className="text-[10px] text-[rgb(99,99,99)]">
-            Para nutricionistas · entrenadores · coaches
-          </p>
-          <h1 className="mt-8 font-serif text-[42px] leading-[1.05] font-normal text-black md:text-[64px] md:leading-[1.05] lg:text-[79.2px] lg:leading-[83.16px]">
-            Tu doble digital.
-            <br />
-            <em className="font-normal not-italic text-[rgb(99,99,99)]">Sin límite de clientes.</em>
-          </h1>
-          <p className="mx-auto mt-11 max-w-2xl text-[15px] font-light leading-[26.25px] text-[rgb(99,99,99)]">
-            Lili Fit crea tu gemelo cerebral entrenado con tu psicología, tu voz y tu
-            metodología. Atiende a todos tus clientes 24/7 en texto, voz y vídeo — sin que
-            estés presente.
-          </p>
-          <div className="mt-8 flex justify-center gap-4">
-            <Link
-              href="/profesionales/contratar"
-              className="rounded-full bg-black px-[30px] py-[13px] text-[11px] font-semibold text-white hover:bg-[#1abc9c] transition-colors"
-            >
-              Crear mi MindTwin →
-            </Link>
-            <Link
-              href="/app/school"
-              className="rounded-full border border-black/20 px-[30px] py-[13px] text-[11px] font-semibold text-black hover:border-black"
-            >
-              Ver cómo funciona
-            </Link>
-          </div>
-          <div className="mt-14 grid grid-cols-3 gap-6 text-center">
-            {[["24/7", "Disponibilidad"], ["50+", "Idiomas"], ["3×20'", "Para configurarlo"]].map(
-              ([n, l]) => (
-                <div key={l}>
-                  <div className="text-3xl font-serif">{n}</div>
-                  <div className="mt-1 text-[10px] uppercase tracking-wide text-[rgb(99,99,99)]">{l}</div>
-                </div>
-              )
-            )}
+        {/* BLOQUE 1 · HERO — BLANCO (obligatorio) */}
+        <section className="bg-white px-6 py-20">
+          <div className="mx-auto grid max-w-6xl items-center gap-10 md:grid-cols-2">
+            <div>
+              <p className="text-[10px] text-[rgb(99,99,99)]">
+                Para nutricionistas · entrenadores · coaches
+              </p>
+              <h1 className="mt-8 font-serif text-[42px] leading-[1.05] font-normal text-black md:text-[52px] md:leading-[1.05]">
+                Tu doble digital.
+                <br />
+                <em className="font-normal not-italic text-[rgb(99,99,99)]">Sin límite de clientes.</em>
+              </h1>
+              <p className="mt-8 max-w-xl text-[15px] font-light leading-[26.25px] text-[rgb(99,99,99)]">
+                Lili Fit crea tu gemelo cerebral entrenado con tu psicología, tu voz y tu
+                metodología. Atiende a todos tus clientes 24/7 en texto, voz y vídeo — sin que
+                estés presente.
+              </p>
+              <div className="mt-8 flex flex-wrap gap-4">
+                <Link
+                  href="/profesionales/contratar"
+                  className="rounded-full bg-black px-[30px] py-[13px] text-[11px] font-semibold text-white hover:bg-[#1abc9c] transition-colors"
+                >
+                  Crear mi MindTwin →
+                </Link>
+                <Link
+                  href="/app/school"
+                  className="rounded-full border border-black/20 px-[30px] py-[13px] text-[11px] font-semibold text-black hover:border-black"
+                >
+                  Ver cómo funciona
+                </Link>
+              </div>
+              <div className="mt-10 grid grid-cols-3 gap-6">
+                {[["24/7", "Disponibilidad"], ["50+", "Idiomas"], ["3×20'", "Para configurarlo"]].map(
+                  ([n, l]) => (
+                    <div key={l}>
+                      <div className="text-3xl font-serif">{n}</div>
+                      <div className="mt-1 text-[10px] uppercase tracking-wide text-[rgb(99,99,99)]">{l}</div>
+                    </div>
+                  )
+                )}
+              </div>
+            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/mindtwin-bustos.jpg"
+              alt="Dos gemelos cerebrales conectados"
+              className="mx-auto w-full max-w-md rounded-3xl border border-black/10"
+            />
           </div>
         </section>
 
-        {/* EL SISTEMA */}
-        <section id="sistema" className="border-t border-black/10 bg-[#f9f9f9] px-6 py-20">
+        {/* BLOQUE 2 · EL SISTEMA — NEGRO */}
+        <section id="sistema" className="bg-black px-6 py-20 text-white">
           <div className="mx-auto max-w-5xl">
-            <p className="text-xs font-semibold uppercase tracking-widest text-[rgb(99,99,99)]">El sistema</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-white/50">El sistema</p>
             <h2 className="mt-3 font-serif text-3xl md:text-4xl">
               Creas tu gemelo cerebral. Tus clientes acceden a él 24/7.
             </h2>
             <div className="mt-10 grid gap-6 md:grid-cols-2">
-              <div className="rounded-2xl border border-black/10 bg-white p-6">
+              <div className="rounded-2xl border border-white/15 p-6">
                 <p className="text-xs font-bold uppercase tracking-wide text-[#1abc9c]">
                   Tú · Owner · Profesional
                 </p>
                 <h3 className="mt-2 text-xl font-semibold">Creas tu MindTwin</h3>
-                <p className="mt-2 text-sm text-[rgb(99,99,99)]">
+                <p className="mt-2 text-sm text-white/60">
                   Tres sesiones conversacionales de 20 minutos. El sistema aprende cómo
                   piensas, cómo hablas y cómo decides. Clona tu voz. Construye tu perfil
                   completo.
                 </p>
               </div>
-              <div className="rounded-2xl border border-black/10 bg-white p-6">
+              <div className="rounded-2xl border border-white/15 p-6">
                 <p className="text-xs font-bold uppercase tracking-wide text-[#1abc9c]">
                   Tus clientes · Followers
                 </p>
                 <h3 className="mt-2 text-xl font-semibold">Acceden a tu gemelo</h3>
-                <p className="mt-2 text-sm text-[rgb(99,99,99)]">
+                <p className="mt-2 text-sm text-white/60">
                   Cada cliente habla con tu MindTwin cuando necesita. Texto, voz o vídeo en
                   tiempo real — tu metodología, tu tono, tus respuestas.
                 </p>
@@ -144,8 +153,8 @@ export default function ProfesionalesLanding() {
           </div>
         </section>
 
-        {/* PREVIEW CONVERSAR — fondo átomos, igual a la referencia */}
-        <section className="px-6 py-20">
+        {/* BLOQUE 3 · PREVIEW CONVERSAR — BLANCO */}
+        <section className="bg-white px-6 py-20">
           <div className="mx-auto max-w-5xl text-center">
             <p className="text-xs font-semibold uppercase tracking-widest text-[rgb(99,99,99)]">Conversar</p>
             <h2 className="mt-3 font-serif text-3xl md:text-4xl">
@@ -155,10 +164,10 @@ export default function ProfesionalesLanding() {
           <ConversarPreview />
         </section>
 
-        {/* PROCESO */}
-        <section id="proceso" className="border-t border-black/10 px-6 py-20">
+        {/* BLOQUE 4 · PROCESO — NEGRO */}
+        <section id="proceso" className="bg-black px-6 py-20 text-white">
           <div className="mx-auto max-w-5xl">
-            <p className="text-xs font-semibold uppercase tracking-widest text-[rgb(99,99,99)]">El proceso</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-white/50">El proceso</p>
             <h2 className="mt-3 font-serif text-3xl md:text-4xl">
               En solo tres sesiones, dispones de un gemelo mental para siempre.
             </h2>
@@ -168,18 +177,18 @@ export default function ProfesionalesLanding() {
                 { s: "Sesión 02 · 20 min", t: "EGO ID II", d: "Estilo de apego, inteligencia emocional, perfil motivacional." },
                 { s: "Sesión 03 · 20 min", t: "GUT ID + activación", d: "Microbioma (28 preguntas), grabas tu voz y un vídeo corto. Tu gemelo queda activo." },
               ].map((step) => (
-                <div key={step.t} className="rounded-2xl border border-black/10 p-6">
-                  <p className="text-xs uppercase tracking-wide text-[rgb(99,99,99)]">{step.s}</p>
+                <div key={step.t} className="rounded-2xl border border-white/15 p-6">
+                  <p className="text-xs uppercase tracking-wide text-white/50">{step.s}</p>
                   <h3 className="mt-2 text-lg font-semibold">{step.t}</h3>
-                  <p className="mt-2 text-sm text-[rgb(99,99,99)]">{step.d}</p>
+                  <p className="mt-2 text-sm text-white/60">{step.d}</p>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* SECCIONES APP */}
-        <section className="border-t border-black/10 px-6 py-20">
+        {/* BLOQUE 5 · SECCIONES APP — BLANCO */}
+        <section className="bg-white px-6 py-20">
           <div className="mx-auto max-w-5xl">
             <p className="text-xs font-semibold uppercase tracking-widest text-[rgb(99,99,99)]">
               Tu MindTwin · lo que encuentras dentro
@@ -198,8 +207,8 @@ export default function ProfesionalesLanding() {
           </div>
         </section>
 
-        {/* CTA final */}
-        <section id="cta" className="border-t border-black/10 bg-black px-6 py-20 text-center text-white">
+        {/* BLOQUE 6 · CTA final — NEGRO */}
+        <section id="cta" className="bg-black px-6 py-20 text-center text-white">
           <h2 className="font-serif text-3xl md:text-4xl">Empieza hoy. Activo en 60 minutos.</h2>
           <Link
             href="/profesionales/contratar"
@@ -209,13 +218,9 @@ export default function ProfesionalesLanding() {
           </Link>
         </section>
 
-        <footer className="flex flex-col items-center gap-4 px-6 py-10 text-sm text-[rgb(99,99,99)]">
-          <div className="flex items-center gap-2">
-            <LogoHormiga size={18} dark={false} />
-            <span>Copyright@2026</span>
-          </div>
+        <footer className="flex items-center justify-between border-t border-black/10 px-6 py-6 text-sm text-[rgb(99,99,99)]">
+          <span>Copyright 2026 @ Mylili</span>
           <Link href="/terminos" className="underline">Términos y condiciones</Link>
-          <Link href="/" className="underline">Versión cliente →</Link>
         </footer>
         <Footer dark={false} />
       </main>

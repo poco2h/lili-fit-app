@@ -76,14 +76,11 @@ export default function ConversarChat({
       {/* Barra superior de canales y bolsa de minutos */}
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 p-3">
         <div className="flex items-center gap-1.5">
-          {(role === "owner"
-            ? ([["texto", "💬 Texto"]] as const)
-            : ([
-                ["texto", "💬 Texto"],
-                ["voz", "🎙️ Voz"],
-                ["video", "🎬 Vídeo RT"],
-              ] as const)
-          ).map(([key, label]) => (
+          {([
+            ["texto", "💬 Texto"],
+            ["voz", "🎙️ Voz"],
+            ["video", "🎬 Vídeo RT"],
+          ] as const).map(([key, label]) => (
             <button
               key={key}
               onClick={() => setCanal(key)}

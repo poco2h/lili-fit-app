@@ -57,7 +57,10 @@ export default function MisVideos() {
           <button
             key={v.key}
             onClick={() => setVariante(v.key)}
-            className={"mt-glass p-4 text-left " + (variante === v.key ? "border-[#1abc9c]" : "")}
+            className={
+              "mt-glass p-4 text-left border-2 transition " +
+              (variante === v.key ? "border-[#1abc9c] bg-[#1abc9c]/[0.08]" : "border-transparent")
+            }
           >
             <p className="font-semibold">{v.nombre}</p>
             <p className="mt-1 text-xs text-white/60">{v.desc}</p>

@@ -12,7 +12,6 @@ const LINKS = [
   { href: "/app/school", label: "Mi School", icon: "🎓" },
   { href: "/app/videos", label: "Mis Vídeos", icon: "🎬" },
   { href: "/app/clientes", label: "Mis Clientes", icon: "👥" },
-  { href: "/app/billing", label: "Mi Facturación", icon: "💳" },
 ];
 
 export default function AppNav() {

@@ -1,6 +1,6 @@
 export type GutData = {
   source: "n1_import" | "conversational" | null;
-  gut_baseline_score: number | null; // 0-100
+  gut_baseline_score: number | null; // 0-1000 (escala ampliada V10.1, antes 0-100)
   bacterias_dominantes: string[];
   bacterias_deficientes: string[];
   gatillos: string[];

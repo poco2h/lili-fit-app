@@ -52,20 +52,31 @@ export default function SesionBilling() {
     };
   }, []);
 
+  const [pagando, setPagando] = useState(false);
+  const [errorPago, setErrorPago] = useState<string | null>(null);
+
   async function comprarPaquete(minutos: PaqueteMinutos) {
     const precio = PRECIOS_BASE_PAQUETES[canal][minutos];
-    const res = await fetch("/api/billing/wallet", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        canal,
-        minutos,
-        precioEur: precio,
-        descripcion: `Compra paquete ${minutos} min`,
-      }),
-    });
-    if (res.ok) {
-      await cargarSaldo();
+    setPagando(true);
+    setErrorPago(null);
+    try {
+      const res = await fetch("/api/billing/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kind: "minutes", canal, minutos, precioEur: precio }),
+      });
+      const data = await res.json();
+      if (res.status === 501) {
+        setErrorPago("Falta configurar Stripe (STRIPE_SECRET_KEY) para pagos reales todavía.");
+        return;
+      }
+      if (!res.ok || !data.url) {
+        setErrorPago(data?.error ?? "No se ha podido iniciar el pago.");
+        return;
+      }
+      window.location.href = data.url;
+    } finally {
+      setPagando(false);
     }
   }
 
@@ -225,6 +236,11 @@ export default function SesionBilling() {
                   </span>
                   <span className="text-xs text-white/40">Tarifas oficiales IVA incl.</span>
                 </div>
+                {errorPago && (
+                  <p className="mb-3 rounded-lg bg-red-500/10 border border-red-500/30 px-3 py-2 text-xs text-red-300">
+                    {errorPago}
+                  </p>
+                )}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {([20, 40, 60] as PaqueteMinutos[]).map((m) => {
                     const price = PRECIOS_BASE_PAQUETES[canal][m];
@@ -252,9 +268,10 @@ export default function SesionBilling() {
                             e.stopPropagation();
                             comprarPaquete(m);
                           }}
-                          className="mt-3 w-full rounded-lg bg-white/10 hover:bg-white/20 py-1.5 text-xs font-bold text-white transition"
+                          disabled={pagando}
+                          className="mt-3 w-full rounded-lg bg-white/10 hover:bg-white/20 py-1.5 text-xs font-bold text-white transition disabled:opacity-50"
                         >
-                          + Añadir a bolsa
+                          {pagando ? "Redirigiendo a Stripe..." : "Pagar y añadir a bolsa →"}
                         </button>
                       </div>
                     );

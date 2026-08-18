@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
       elapsedSeconds = Math.round(elapsedMin * 60);
     }
 
-    const sesion = obtenerSesion(id);
+    const sesion = await obtenerSesion(id);
     if (!sesion) {
       return NextResponse.json({ error: "session_billing no encontrada" }, { status: 404 });
     }
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
     const finalPriceEur = calcularPrecioBase(sesion.canal, actualMinBilling);
 
     // Descontar segundos consumidos de la bolsa
-    const walletResult = consumirSegundosBolsa(
+    const walletResult = await consumirSegundosBolsa(
       sesion.followerId,
       sesion.ownerId,
       sesion.canal,
@@ -40,9 +40,9 @@ export async function POST(req: NextRequest) {
       id
     );
 
-    const balanceActual = obtenerBalanceMinutos(sesion.followerId, sesion.ownerId, sesion.canal);
+    const balanceActual = await obtenerBalanceMinutos(sesion.followerId, sesion.ownerId, sesion.canal);
 
-    const actualizada = actualizarSesion(id, {
+    const actualizada = await actualizarSesion(id, {
       actualMin: actualMinBilling,
       elapsedSeconds,
       finalPriceEur,

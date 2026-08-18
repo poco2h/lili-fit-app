@@ -1,7 +1,12 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import Logo from "@/components/Logo";
+import LogoHormiga from "@/components/LogoHormiga";
 import Footer from "@/components/Footer";
 import ConversarPreview from "@/components/landing/ConversarPreview";
+import { MI_SCHOOL } from "@/lib/habitos/data";
 
 const PASOS = [
   { n: "01", t: "El profesional publica su gemelo cerebral", d: "En 3 sesiones de 20 min, tu entrenador o nutricionista construye su MindTwin: EGO ID, GUT ID, voz clonada y avatar." },
@@ -21,32 +26,59 @@ const SECCIONES = [
   { t: "Mis Fuentes", d: "El conocimiento de tu profesional para ti: artículos, vídeos y planes que tu gemelo te recomienda." },
   { t: "Mi Cerebro", d: "Tu perfil completo visualizado: EGO ID y GUT ID. Ves quién eres — y cómo tu gemelo te ve." },
   { t: "Mis Hábitos", d: "Seguimiento de hábitos diseñados para tu perfil: entrenamiento, nutrición, sueño y recuperación." },
-  { t: "Mi MindTwin", d: "Tu propio gemelo cerebral personal, construido con tu voz y tu perfil psicológico." },
+  { t: "Tu propio gemelo cerebral", d: "Clon del gemelo mental del profesional." },
 ];
 
 export default function FollowerLanding() {
+  const [menuAbierto, setMenuAbierto] = useState(false);
+
   return (
     <div className="mt-landing min-h-screen">
-      <header className="fixed top-0 inset-x-0 z-50 flex items-center justify-between border-b border-black/10 bg-white/95 px-6 py-3 backdrop-blur">
-        <div className="flex items-center gap-3">
-          <Logo size={34} />
-          <div>
-            <div className="text-[11px] font-bold leading-tight">Mindtwins · Lili Fit</div>
-            <div className="text-[10px] leading-tight text-[rgb(99,99,99)]">Para usuarios</div>
+      <header className="fixed top-0 inset-x-0 z-50 border-b border-black/10 bg-white/95 px-6 py-3 backdrop-blur">
+        <div className="flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-3">
+            <Logo size={30} />
+            <span className="text-[10px] leading-tight text-[rgb(99,99,99)]">Para usuarios</span>
+          </Link>
+          <nav className="hidden md:flex items-center gap-6 text-[11px] text-[rgb(99,99,99)]">
+            <a href="#school" className="hover:text-black">Cómo funciona</a>
+            <a href="#canales" className="hover:text-black">Canales</a>
+            <Link href="/app/fuentes" className="font-bold text-[#1abc9c] hover:text-black">Demo</Link>
+            <Link href="/profesionales" className="hover:text-black">Soy profesional</Link>
+          </nav>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/clientes/buscar"
+              className="hidden rounded-full bg-black px-[30px] py-[13px] text-[10px] font-semibold text-white hover:bg-[#1abc9c] transition-colors md:inline-block"
+            >
+              Encontrar mi profesional
+            </Link>
+            <button
+              onClick={() => setMenuAbierto((v) => !v)}
+              aria-label="Abrir menú"
+              className="flex h-9 w-9 flex-col items-center justify-center gap-1.5 rounded-lg border border-black/15 md:hidden"
+            >
+              <span className="h-[1.5px] w-5 bg-black" />
+              <span className="h-[1.5px] w-5 bg-black" />
+              <span className="h-[1.5px] w-5 bg-black" />
+            </button>
           </div>
         </div>
-        <nav className="hidden md:flex items-center gap-6 text-[11px] text-[rgb(99,99,99)]">
-          <a href="#que-es" className="hover:text-black">¿Qué es?</a>
-          <a href="#canales" className="hover:text-black">Canales</a>
-          <Link href="/app/fuentes" className="font-bold text-[#1abc9c] hover:text-black">Ver demo del app →</Link>
-          <Link href="/profesionales" className="hover:text-black">Soy profesional</Link>
-        </nav>
-        <Link
-          href="/clientes/buscar"
-          className="rounded-full bg-black px-[30px] py-[13px] text-[10px] font-semibold text-white hover:bg-[#1abc9c] transition-colors"
-        >
-          Encontrar mi profesional
-        </Link>
+        {menuAbierto && (
+          <nav className="mt-3 flex flex-col gap-4 border-t border-black/10 pt-3 text-sm md:hidden">
+            <a href="#school" onClick={() => setMenuAbierto(false)} className="text-black/70">Cómo funciona</a>
+            <a href="#canales" onClick={() => setMenuAbierto(false)} className="text-black/70">Canales</a>
+            <Link href="/app/fuentes" onClick={() => setMenuAbierto(false)} className="font-bold text-[#1abc9c]">Demo</Link>
+            <Link href="/profesionales" onClick={() => setMenuAbierto(false)} className="text-black/70">Soy profesional</Link>
+            <Link
+              href="/clientes/buscar"
+              onClick={() => setMenuAbierto(false)}
+              className="rounded-full bg-black px-[30px] py-[13px] text-center text-[11px] font-semibold text-white"
+            >
+              Encontrar mi profesional
+            </Link>
+          </nav>
+        )}
       </header>
 
       <main className="pt-24">
@@ -56,9 +88,9 @@ export default function FollowerLanding() {
             Tu entrenador · tu nutricionista · siempre contigo
           </p>
           <h1 className="mt-8 font-serif text-[42px] leading-[1.05] font-normal text-black md:text-[58px] md:leading-[1.05] lg:text-[72px] lg:leading-[74.16px]">
-            MINDTWIN. Tu profesional fitness,
+            Tu profesional fitness,
             <br />
-            <em className="font-normal not-italic text-[rgb(99,99,99)]">Sin horarios.</em>
+            <em className="font-normal not-italic text-[rgb(99,99,99)]">sin horario.</em>
           </h1>
           <p className="mx-auto mt-11 max-w-2xl text-[15px] font-light leading-[26.25px] text-[rgb(99,99,99)]">
             Accede al gemelo cerebral de tu entrenador o nutricionista cuando lo necesites —
@@ -72,11 +104,29 @@ export default function FollowerLanding() {
               Encontrar mi profesional →
             </Link>
             <a
-              href="#que-es"
+              href="#school"
               className="rounded-full border border-black/20 px-[30px] py-[13px] text-[11px] font-semibold text-black hover:border-black"
             >
               Cómo funciona
             </a>
+          </div>
+        </section>
+
+        {/* SCHOOL — cómo funciona, formato claro como en /clientes/buscar */}
+        <section id="school" className="border-t border-black/10 px-6 py-20">
+          <div className="mx-auto max-w-3xl">
+            <p className="text-xs font-semibold uppercase tracking-widest text-[rgb(99,99,99)]">
+              Cómo funciona
+            </p>
+            <h2 className="mt-3 font-serif text-3xl md:text-4xl">Mi School.</h2>
+            <div className="mt-8 space-y-3">
+              {MI_SCHOOL.map((item) => (
+                <div key={item.pregunta} className="rounded-2xl border border-black/10 p-5">
+                  <p className="font-semibold text-black">{item.pregunta}</p>
+                  <p className="mt-1 whitespace-pre-line text-sm text-[rgb(99,99,99)]">{item.respuesta}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -171,7 +221,11 @@ export default function FollowerLanding() {
         </section>
 
         <footer className="flex flex-col items-center gap-4 px-6 py-10 text-sm text-[rgb(99,99,99)]">
-          <div>Mindtwins · Lili Fit · © 2026 · Lili Fit es una marca de Poco2h</div>
+          <div className="flex items-center gap-2">
+            <LogoHormiga size={18} dark={false} />
+            <span>Copyright@2026</span>
+          </div>
+          <Link href="/terminos" className="underline">Términos y condiciones</Link>
           <Link href="/profesionales" className="underline">Para profesionales →</Link>
         </footer>
         <Footer dark={false} />

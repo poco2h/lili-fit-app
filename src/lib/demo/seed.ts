@@ -59,7 +59,7 @@ export function rellenarConDatosDeEjemplo() {
     tales_data: talesWeights,
     gut: {
       source: "conversational",
-      gut_baseline_score: 78,
+      gut_baseline_score: 780,
       bacterias_dominantes: ["Akkermansia", "Bifidobacterium"],
       bacterias_deficientes: ["Faecalibacterium"],
       gatillos: ["lacteos", "estres_digestivo"],

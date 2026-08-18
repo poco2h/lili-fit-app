@@ -18,20 +18,20 @@ export async function POST(req: NextRequest) {
     const ownerId = body?.ownerId ?? "demo_owner";
     const forcePurchase = Boolean(body?.forcePurchase);
 
-    let balance = obtenerBalanceMinutos(followerId, ownerId, canal);
+    let balance = await obtenerBalanceMinutos(followerId, ownerId, canal);
     let coveredByWallet = balance.hasAvailableMinutes && !forcePurchase;
 
     // Si no tiene minutos en la bolsa o solicita recarga explícita
     if (!coveredByWallet) {
       const validMin = (selectedMin === 40 || selectedMin === 60 ? selectedMin : 20) as PaqueteMinutos;
       const precioPaquete = PRECIOS_BASE_PAQUETES[canal][validMin] ?? 2.83;
-      recargarBolsaMinutos(followerId, ownerId, canal, validMin, precioPaquete, `Compra inicial paquete ${validMin}m`);
-      balance = obtenerBalanceMinutos(followerId, ownerId, canal);
+      await recargarBolsaMinutos(followerId, ownerId, canal, validMin, precioPaquete, `Compra inicial paquete ${validMin}m`);
+      balance = await obtenerBalanceMinutos(followerId, ownerId, canal);
       coveredByWallet = true;
     }
 
     const id = crypto.randomUUID();
-    crearSesion({
+    await crearSesion({
       id,
       followerId,
       ownerId,

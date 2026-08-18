@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { leerDemoTwin, type DemoTwin } from "@/lib/demo/localTwin";
-import { RESTAURANTES, generarAgendaFallback } from "@/lib/habitos/data";
+import { RESTAURANTES, generarAgendaFallback, DEPORTES, HABITOS_POR_DEPORTE, type Deporte } from "@/lib/habitos/data";
 import { recetasParaBacterias, nombresABacteriaIds } from "@/lib/recetas/rankear";
 import { enviarAgendaAlProfesional } from "@/lib/actions/agenda";
 import Autoevaluacion from "./Autoevaluacion";
@@ -17,6 +17,7 @@ export default function MisHabitos() {
   const [sub, setSub] = useState<(typeof SUB_MICROBIOMA)[number]>("autoevaluacion");
   const [enviando, setEnviando] = useState(false);
   const [enviado, setEnviado] = useState<string | null>(null);
+  const [deporte, setDeporte] = useState<Deporte>("Boxeo");
 
   useEffect(() => {
     setTwin(leerDemoTwin());
@@ -145,10 +146,32 @@ export default function MisHabitos() {
       )}
 
       {modulo === "deportes" && (
-        <div className="mt-glass space-y-3 p-5">
-          <p className="text-sm text-white/60">Autoevaluación, estadísticas y alertas de entrenamiento. Sin agenda propia — la agenda de Microbioma ya incorpora las sesiones deportivas.</p>
-          <div className="grid grid-cols-3 gap-3 text-center">
-            <div><p className="text-2xl font-bold text-[#1abc9c]">3</p><p className="text-xs text-white/40">Sesiones/semana</p></div>
+        <div className="space-y-4">
+          <div className="flex flex-wrap gap-2">
+            {DEPORTES.map((d) => (
+              <button
+                key={d}
+                onClick={() => setDeporte(d)}
+                className={"rounded-full px-3 py-1.5 text-xs font-semibold " + (deporte === d ? "bg-[#1abc9c]/20 text-[#1abc9c]" : "bg-white/5 text-white/50 hover:text-white")}
+              >
+                {d}
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-white/40">
+            Hábitos específicos de {deporte.toLowerCase()} — distintos de los de Microbiota, aunque se registran en la misma agenda semanal.
+          </p>
+          <div className="grid gap-3">
+            {HABITOS_POR_DEPORTE[deporte].map((h) => (
+              <div key={h.nombre} className="mt-glass p-4">
+                <p className="font-semibold">{h.emoji} {h.nombre}</p>
+                <p className="mt-1 text-xs text-white/40">{h.categoria}</p>
+                <div className="mt-2 flex gap-1 text-lg text-amber-400">★★★★★</div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-glass grid grid-cols-3 gap-3 p-5 text-center">
+            <div><p className="text-2xl font-bold text-[#1abc9c]">{HABITOS_POR_DEPORTE[deporte].length}</p><p className="text-xs text-white/40">Sesiones/semana</p></div>
             <div><p className="text-2xl font-bold text-[#1abc9c]">72%</p><p className="text-xs text-white/40">Adherencia</p></div>
             <div><p className="text-2xl font-bold text-[#1abc9c]">0</p><p className="text-xs text-white/40">Alertas</p></div>
           </div>

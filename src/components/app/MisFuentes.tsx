@@ -215,7 +215,7 @@ export default function MisFuentes() {
             </p>
             {gutCompleto && (
               <div className="mt-2 border-t border-white/[0.06] pt-2 text-[10px]">
-                Score base: <b className="text-white/70">{twin.gut.gut_baseline_score}/100</b>
+                Score base: <b className="text-white/70">{twin.gut.gut_baseline_score}/1000</b>
                 {twin.gut.bacterias_dominantes.length > 0 && <> · Dominantes: {twin.gut.bacterias_dominantes.join(", ")}</>}
               </div>
             )}

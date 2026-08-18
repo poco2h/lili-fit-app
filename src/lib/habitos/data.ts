@@ -140,3 +140,64 @@ export const MI_SCHOOL = [
     respuesta: "Aquí ves tus facturas mensuales (licencia + sesiones de tus clientes), su estado de pago y puedes descargarlas. No hace falta que hagas nada — se genera automáticamente cada mes.",
   },
 ];
+
+/**
+ * Hábitos del módulo "Deportes" de Mis Hábitos — diferentes por deporte
+ * (no son hábitos de microbioma), igual que la referencia
+ * https://stellular-rugelach-d8c19d.netlify.app.
+ */
+export type HabitoDeporte = { emoji: string; nombre: string; categoria: string };
+
+export const DEPORTES = ["Boxeo", "Running", "Fuerza", "Yoga"] as const;
+export type Deporte = (typeof DEPORTES)[number];
+
+/**
+ * Mi School — versión Follower (cliente): explica los conceptos desde su
+ * propio punto de vista como cliente del profesional, distinta de MI_SCHOOL
+ * (que está escrita desde el punto de vista del Owner construyendo su perfil).
+ */
+export const MI_SCHOOL_FOLLOWER = [
+  {
+    pregunta: "¿Qué es el EGO ID?",
+    respuesta: "El perfil psicológico completo de tu profesional — cómo piensa, decide y se comunica. Su MindTwin lo usa para responderte igual que lo haría él o ella en persona.",
+  },
+  {
+    pregunta: "¿Qué es el GUT ID?",
+    respuesta: "El perfil de microbioma de tu profesional (o el tuyo, si tu plan lo incluye): qué bacterias dominan, cuáles faltan y qué síntomas digestivos son frecuentes. Se usa para personalizar tus recomendaciones.",
+  },
+  {
+    pregunta: "¿Cómo funciona el MindTwin de mi profesional?",
+    respuesta: "Combina el EGO ID y el GUT ID de tu profesional con un motor de 3 capas: primero busca una respuesta ya guardada, después aplica reglas fijas de su perfil, y solo si hace falta usa una IA para generar la respuesta — siempre con su metodología.",
+  },
+  {
+    pregunta: "Mis Conversaciones — ¿qué es y cómo interactúo?",
+    respuesta: "Es el chat con el MindTwin de tu profesional, en texto, voz o vídeo, disponible 24/7. Pregunta lo que necesites y recibe respuestas con su tono y su metodología, no genéricas.",
+  },
+  {
+    pregunta: "Mis Hábitos — ¿qué es y cómo interactúo?",
+    respuesta: "Aquí rellenas tu autoevaluación (cómo has dormido, tu energía, tu ánimo) y ves los hábitos que tu profesional recomienda para tu perfil y tu deporte.",
+  },
+];
+
+export const HABITOS_POR_DEPORTE: Record<Deporte, HabitoDeporte[]> = {
+  Boxeo: [
+    { emoji: "🥊", nombre: "Técnica de golpeo · 45 min", categoria: "Boxeo · Técnica" },
+    { emoji: "🏃", nombre: "Road work · 5km", categoria: "Boxeo · Resistencia" },
+    { emoji: "🧘", nombre: "Recuperación activa", categoria: "Boxeo · Recuperación" },
+  ],
+  Running: [
+    { emoji: "🏃", nombre: "Rodaje suave · 8km", categoria: "Running · Base aeróbica" },
+    { emoji: "⚡", nombre: "Series 400m ×8", categoria: "Running · Velocidad" },
+    { emoji: "🦵", nombre: "Fuerza de tren inferior", categoria: "Running · Prevención lesiones" },
+  ],
+  Fuerza: [
+    { emoji: "🏋️", nombre: "Sentadilla + peso muerto", categoria: "Fuerza · Tren inferior" },
+    { emoji: "💪", nombre: "Empuje: press banca/militar", categoria: "Fuerza · Tren superior" },
+    { emoji: "🔄", nombre: "Movilidad y calentamiento", categoria: "Fuerza · Prevención" },
+  ],
+  Yoga: [
+    { emoji: "🧘", nombre: "Vinyasa flow · 45 min", categoria: "Yoga · Movilidad" },
+    { emoji: "🌬️", nombre: "Pranayama / respiración", categoria: "Yoga · Recuperación" },
+    { emoji: "🧠", nombre: "Meditación guiada", categoria: "Yoga · Mente" },
+  ],
+};

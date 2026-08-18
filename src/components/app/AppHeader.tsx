@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import Logo from "@/components/Logo";
 import { leerDemoTwin, type DemoTwin } from "@/lib/demo/localTwin";
 import { calcularFidelidadDemo } from "@/lib/fidelity/calcularDemo";
 
-const OWNER_NOMBRE_DEMO = "David Rodríguez";
+export const OWNER_NOMBRE_DEMO = "David Rodríguez";
 const OWNER_INICIALES = "DR";
 
 /** Cabecera de identidad del Owner — avatar, rol y MINDSCORE (V10: fidelidad), igual a la referencia REF_MisFuentes. */
@@ -29,10 +31,10 @@ export default function AppHeader() {
             Owner · Profesional
           </span>
         </div>
-        <span className="ml-1 rounded-full bg-amber-400/15 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-400">
-          Demo
-        </span>
       </div>
+      <Link href="/" className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" aria-label="Volver a la landing">
+        <Logo size={26} />
+      </Link>
       <div className="text-right">
         <div className="text-[22px] font-extrabold leading-none text-[#1abc9c]">{mindscore ?? "—"}%</div>
         <div className="text-[9px] uppercase tracking-wide text-white/40">Mindscore</div>

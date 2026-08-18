@@ -93,7 +93,7 @@ export default function OnboardingFlow({ ownerName }: { ownerName: string }) {
           ))}
         </div>
         <p className="text-sm text-white/70">
-          GUT ID baseline: <span className="text-[#1abc9c]">{resultado.gut.gut_baseline_score}/100</span>
+          GUT ID baseline: <span className="text-[#1abc9c]">{resultado.gut.gut_baseline_score}/1000</span>
           {resultado.gut.gatillos.length > 0 && (
             <> · gatillos detectados: {resultado.gut.gatillos.join(", ")}</>
           )}

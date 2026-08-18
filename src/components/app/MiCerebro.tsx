@@ -146,7 +146,7 @@ export default function MiCerebro() {
                 {badgeGutId(twin.gut)}
               </span>
             </div>
-            <p className="mt-1 text-2xl font-bold text-[#1abc9c]">{twin.gut.gut_baseline_score ?? "—"}/100</p>
+            <p className="mt-1 text-2xl font-bold text-[#1abc9c]">{twin.gut.gut_baseline_score ?? "—"}/1000</p>
           </div>
         </div>
       ) : (

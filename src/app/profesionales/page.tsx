@@ -1,55 +1,72 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import Logo from "@/components/Logo";
+import LogoHormiga from "@/components/LogoHormiga";
 import Footer from "@/components/Footer";
-import IncomeCalculator from "@/components/landing/IncomeCalculator";
 import ConversarPreview from "@/components/landing/ConversarPreview";
-
-const CANALES = [
-  { canal: "💬 Texto", p20: "2,83 €", p40: "2,91 €", p60: "2,99 €" },
-  { canal: "🎙️ Voz", p20: "6,17 €", p40: "9,59 €", p60: "13,01 €" },
-  { canal: "🎥 Videoconferencia", p20: "13,87 €", p40: "24,98 €", p60: "36,09 €" },
-];
 
 const SECCIONES = [
   { nombre: "Conversar", desc: "Tu gemelo atiende a todos tus clientes en texto, voz y videoconferencia — 24/7, en su idioma, con tu psicología y tu metodología." },
   { nombre: "Mis Fuentes", desc: "Alimenta tu gemelo con tu conocimiento: artículos, protocolos, estudios, PDFs o cualquier contenido que uses en consulta." },
-  { nombre: "Mi Cerebro", desc: "Tu perfil completo visualizado: EGO ID, GUT ID y la voz clonada activa. Ves exactamente cómo tu gemelo te representa." },
-  { nombre: "Mis Hábitos", desc: "Define los hábitos que recomiendas a tus clientes según su perfil. Tu gemelo los propone, hace seguimiento y ajusta." },
+  { nombre: "Mi Cerebro", desc: "Tu perfil completo visualizado: EGO ID, GUT ID. Ves exactamente cómo tu gemelo te representa." },
+  { nombre: "Mis Hábitos", desc: "Define los hábitos que tu gemelo recomienda a tus clientes según su perfil. Tu gemelo los propone, hace seguimiento y ajusta." },
   { nombre: "Mis Vídeos", desc: "Genera Reels y TikToks con tu avatar digital hablando a cámara, o vídeos de acción con tu cuerpo completo." },
-  { nombre: "Mis Marcas", desc: "Gestiona un catálogo de marcas que recomiendas. Tu gemelo las menciona de forma orgánica en conversaciones relevantes." },
-  { nombre: "Mis Clientes", desc: "Dashboard de tus clientes: rachas, alertas, minutos consumidos y billing. Sin acceso al contenido de sus conversaciones." },
+  { nombre: "Mis Clientes", desc: "Dashboard de tus clientes: rachas, alertas, minutos consumidos y facturación. Sin acceso al contenido de sus conversaciones." },
   { nombre: "Mi School", desc: "Explica a tus clientes qué es el EGO ID, el GUT ID y cómo funciona tu MindTwin — contenido estático, sin coste." },
 ];
 
 export default function ProfesionalesLanding() {
+  const [menuAbierto, setMenuAbierto] = useState(false);
+
   return (
     <div className="mt-landing min-h-screen">
-      <header className="fixed top-0 inset-x-0 z-50 flex items-center justify-between border-b border-black/10 bg-white/95 px-6 py-3 backdrop-blur">
-        <div className="flex items-center gap-3">
-          <Logo size={34} />
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] font-bold leading-tight">Mindtwins · Lili Fit</span>
-              <span className="rounded-full bg-amber-400/20 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-600">
-                Demo
-              </span>
-            </div>
-            <div className="text-[10px] leading-tight text-[rgb(99,99,99)]">Para profesionales</div>
+      <header className="fixed top-0 inset-x-0 z-50 border-b border-black/10 bg-white/95 px-6 py-3 backdrop-blur">
+        <div className="flex items-center justify-between">
+          <Link href="/profesionales" className="flex items-center gap-3">
+            <Logo size={30} />
+            <span className="text-[10px] leading-tight text-[rgb(99,99,99)]">Para profesionales</span>
+          </Link>
+          <nav className="hidden md:flex items-center gap-6 text-[11px] text-[rgb(99,99,99)]">
+            <a href="#sistema" className="hover:text-black">El sistema</a>
+            <a href="#proceso" className="hover:text-black">Cómo funciona</a>
+            <Link href="/app/fuentes" className="font-bold text-[#1abc9c] hover:text-black">Demo</Link>
+            <Link href="/" className="hover:text-black">Versión cliente →</Link>
+          </nav>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/profesionales/contratar"
+              className="hidden rounded-full bg-black px-[30px] py-[13px] text-[10px] font-semibold text-white hover:bg-[#1abc9c] transition-colors md:inline-block"
+            >
+              Crear mi MindTwin
+            </Link>
+            <button
+              onClick={() => setMenuAbierto((v) => !v)}
+              aria-label="Abrir menú"
+              className="flex h-9 w-9 flex-col items-center justify-center gap-1.5 rounded-lg border border-black/15 md:hidden"
+            >
+              <span className="h-[1.5px] w-5 bg-black" />
+              <span className="h-[1.5px] w-5 bg-black" />
+              <span className="h-[1.5px] w-5 bg-black" />
+            </button>
           </div>
         </div>
-        <nav className="hidden md:flex items-center gap-6 text-[11px] text-[rgb(99,99,99)]">
-          <a href="#sistema" className="hover:text-black">El sistema</a>
-          <a href="#proceso" className="hover:text-black">Cómo funciona</a>
-          <a href="#precios" className="hover:text-black">Precios</a>
-          <Link href="/app/fuentes" className="font-bold text-[#1abc9c] hover:text-black">Ver demo del app →</Link>
-          <Link href="/" className="hover:text-black">Versión cliente →</Link>
-        </nav>
-        <Link
-          href="/profesionales/contratar"
-          className="rounded-full bg-black px-[30px] py-[13px] text-[10px] font-semibold text-white hover:bg-[#1abc9c] transition-colors"
-        >
-          Crear mi MindTwin
-        </Link>
+        {menuAbierto && (
+          <nav className="mt-3 flex flex-col gap-4 border-t border-black/10 pt-3 text-sm md:hidden">
+            <a href="#sistema" onClick={() => setMenuAbierto(false)} className="text-black/70">El sistema</a>
+            <a href="#proceso" onClick={() => setMenuAbierto(false)} className="text-black/70">Cómo funciona</a>
+            <Link href="/app/fuentes" onClick={() => setMenuAbierto(false)} className="font-bold text-[#1abc9c]">Demo</Link>
+            <Link href="/" onClick={() => setMenuAbierto(false)} className="text-black/70">Versión cliente →</Link>
+            <Link
+              href="/profesionales/contratar"
+              onClick={() => setMenuAbierto(false)}
+              className="rounded-full bg-black px-[30px] py-[13px] text-center text-[11px] font-semibold text-white"
+            >
+              Crear mi MindTwin
+            </Link>
+          </nav>
+        )}
       </header>
 
       <main className="pt-24">
@@ -75,12 +92,12 @@ export default function ProfesionalesLanding() {
             >
               Crear mi MindTwin →
             </Link>
-            <a
-              href="#proceso"
+            <Link
+              href="/app/school"
               className="rounded-full border border-black/20 px-[30px] py-[13px] text-[11px] font-semibold text-black hover:border-black"
             >
               Ver cómo funciona
-            </a>
+            </Link>
           </div>
           <div className="mt-14 grid grid-cols-3 gap-6 text-center">
             {[["24/7", "Disponibilidad"], ["50+", "Idiomas"], ["3×20'", "Para configurarlo"]].map(
@@ -161,48 +178,6 @@ export default function ProfesionalesLanding() {
           </div>
         </section>
 
-        {/* PRECIOS */}
-        <section id="precios" className="border-t border-black/10 bg-[#f9f9f9] px-6 py-20">
-          <div className="mx-auto max-w-5xl">
-            <p className="text-xs font-semibold uppercase tracking-widest text-[rgb(99,99,99)]">Precios</p>
-            <h2 className="mt-3 font-serif text-3xl md:text-4xl">Tú no pagas, pagan tus clientes.</h2>
-            <p className="mt-3 max-w-2xl text-[rgb(99,99,99)]">
-              Tu licencia mensual de Mylili te da acceso ilimitado al sistema. Tus clientes
-              pagan por sesión según el canal y la duración elegida. Tú fijas el precio final
-              de tu MindTwin.
-            </p>
-
-            <div className="mt-8 overflow-x-auto rounded-2xl border border-black/10 bg-white">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-black/10 text-left text-[rgb(99,99,99)]">
-                    <th className="p-4">Canal</th>
-                    <th className="p-4">20 minutos</th>
-                    <th className="p-4">40 minutos</th>
-                    <th className="p-4">60 minutos</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {CANALES.map((row) => (
-                    <tr key={row.canal} className="border-b border-black/5 last:border-0">
-                      <td className="p-4 font-medium">{row.canal}</td>
-                      <td className="p-4">{row.p20} <span className="text-[rgb(99,99,99)]">IVA incl.</span></td>
-                      <td className="p-4">{row.p40} <span className="text-[rgb(99,99,99)]">IVA incl.</span></td>
-                      <td className="p-4">{row.p60} <span className="text-[rgb(99,99,99)]">IVA incl.</span></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <p className="mt-3 text-xs text-[rgb(99,99,99)]">
-              * Precios PVP finales con IVA incluido. Billing por minutos reales de sesión: si
-              el cliente contrata 40 min y usa 28, paga por 28 minutos. Sin permanencia.
-            </p>
-
-            <IncomeCalculator />
-          </div>
-        </section>
-
         {/* SECCIONES APP */}
         <section className="border-t border-black/10 px-6 py-20">
           <div className="mx-auto max-w-5xl">
@@ -210,7 +185,7 @@ export default function ProfesionalesLanding() {
               Tu MindTwin · lo que encuentras dentro
             </p>
             <h2 className="mt-3 font-serif text-3xl md:text-4xl">
-              Tu gemelo cerebral. Ocho espacios, una sola plataforma.
+              Tu gemelo cerebral. Siete espacios, una sola plataforma.
             </h2>
             <div className="mt-10 grid gap-5 md:grid-cols-2">
               {SECCIONES.map((s) => (
@@ -235,7 +210,11 @@ export default function ProfesionalesLanding() {
         </section>
 
         <footer className="flex flex-col items-center gap-4 px-6 py-10 text-sm text-[rgb(99,99,99)]">
-          <div>Mindtwins · Lili Fit · © 2026 · Lili Fit es una marca de Poco2h</div>
+          <div className="flex items-center gap-2">
+            <LogoHormiga size={18} dark={false} />
+            <span>Copyright@2026</span>
+          </div>
+          <Link href="/terminos" className="underline">Términos y condiciones</Link>
           <Link href="/" className="underline">Versión cliente →</Link>
         </footer>
         <Footer dark={false} />

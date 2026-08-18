@@ -4,8 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import ConversarChat from "@/components/app/ConversarChat";
 import { leerDemoTwin, type DemoTwin } from "@/lib/demo/localTwin";
-
-const OWNER_NAME_DEMO = "María López"; // sin auth real todavía — ver tarea #11 (magic link)
+import { OWNER_NOMBRE_DEMO } from "@/components/app/AppHeader";
 
 export default function ConversarPage() {
   const [twin, setTwin] = useState<DemoTwin | null>(null);
@@ -27,7 +26,7 @@ export default function ConversarPage() {
             </Link>
           </div>
         )}
-        <ConversarChat ownerName={OWNER_NAME_DEMO} role="follower" />
+        <ConversarChat ownerName={OWNER_NOMBRE_DEMO} role="owner" />
       </div>
     </div>
   );

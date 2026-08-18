@@ -10,7 +10,7 @@ export default function Footer({ dark = true }: Props) {
         (dark ? "border-white/10 bg-black" : "border-black/10")
       }
     >
-      <LogoHormiga size={22} />
+      <LogoHormiga size={22} dark={dark} />
       <a
         href="https://mylili.org"
         target="_blank"

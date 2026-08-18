@@ -13,9 +13,9 @@ export async function GET(req: NextRequest) {
   const ownerId = searchParams.get("ownerId") ?? "demo_owner";
   const canal = (searchParams.get("canal") as Canal) ?? "texto";
 
-  const balance = obtenerBalanceMinutos(followerId, ownerId, canal);
-  const wallet = obtenerOCrearWallet(followerId, ownerId, canal);
-  const transacciones = obtenerTransaccionesBolsa(wallet.id);
+  const balance = await obtenerBalanceMinutos(followerId, ownerId, canal);
+  const wallet = await obtenerOCrearWallet(followerId, ownerId, canal);
+  const transacciones = await obtenerTransaccionesBolsa(wallet.id);
 
   return NextResponse.json({
     ...balance,
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
     const precioEur = Number(body?.precioEur ?? 0);
     const descripcion = body?.descripcion ?? "Recarga de bolsa de minutos";
 
-    const resultado = recargarBolsaMinutos(
+    const resultado = await recargarBolsaMinutos(
       followerId,
       ownerId,
       canal,
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
       descripcion
     );
 
-    const balance = obtenerBalanceMinutos(followerId, ownerId, canal);
+    const balance = await obtenerBalanceMinutos(followerId, ownerId, canal);
 
     return NextResponse.json({
       success: true,

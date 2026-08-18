@@ -40,8 +40,9 @@ export function calcularGutBaseline(respuestas: RespuestasBaseline): GutData {
     "hinchazon", "energia_post_comida", "lacteos", "gluten", "azucar", "estres_digestivo", "antibioticos",
   ].filter((id) => respuestas[id] === 1);
 
-  const penalizacion = alertas.length * 5;
-  const gut_baseline_score = Math.max(0, Math.min(100, Math.round(((mediaEscalas - 1) / 4) * 100 - penalizacion)));
+  // Escala 0-1000 (más granular y representativa que el 0-100 anterior).
+  const penalizacion = alertas.length * 50;
+  const gut_baseline_score = Math.max(0, Math.min(1000, Math.round(((mediaEscalas - 1) / 4) * 1000 - penalizacion)));
 
   return {
     source: "conversational",

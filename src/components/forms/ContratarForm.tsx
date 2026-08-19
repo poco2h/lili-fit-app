@@ -1,20 +1,58 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { contratarOwner, type ActionResult } from "@/lib/actions/onboarding";
 import IncomeCalculator from "@/components/landing/IncomeCalculator";
 
+const BORRADOR_KEY = "mindtwin_contratar_borrador";
+
+type Borrador = { nombre: string; email: string; especialidad: string; nif: string; direccionFacturacion: string; claveAcceso: string };
+
 export default function ContratarForm() {
+  const searchParams = useSearchParams();
   const [result, setResult] = useState<ActionResult | null>(null);
   const [pending, setPending] = useState(false);
   const [stripeConectado, setStripeConectado] = useState(false);
+  const [stripeAccountId, setStripeAccountId] = useState<string | null>(null);
   const [conectandoStripe, setConectandoStripe] = useState(false);
   const [stripeError, setStripeError] = useState<string | null>(null);
   const [claveAcceso, setClaveAcceso] = useState("");
   const [solicitandoClave, setSolicitandoClave] = useState(false);
   const [claveSolicitada, setClaveSolicitada] = useState<string | null>(null);
   const [claveError, setClaveError] = useState<string | null>(null);
+  const [borrador, setBorrador] = useState<Borrador | null>(null);
+
+  // Al volver del onboarding alojado de Stripe Connect (redirección completa,
+  // se pierde el estado en memoria), restauramos lo que el owner ya había
+  // rellenado y marcamos la cuenta conectada como completada.
+  useEffect(() => {
+    const accountId = searchParams.get("stripe_account");
+    const raw = sessionStorage.getItem(BORRADOR_KEY);
+    if (raw) {
+      try {
+        setBorrador(JSON.parse(raw));
+      } catch {
+        // borrador corrupto, se ignora
+      }
+    }
+    if (accountId && !searchParams.get("refresh")) {
+      setStripeAccountId(accountId);
+      setStripeConectado(true);
+      if (raw) {
+        try {
+          const b: Borrador = JSON.parse(raw);
+          if (b.claveAcceso) setClaveAcceso(b.claveAcceso);
+        } catch {
+          // ignorado
+        }
+      }
+      sessionStorage.removeItem(BORRADOR_KEY);
+      window.history.replaceState(null, "", "/profesionales/contratar");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function solicitarClaveAcceso(nombre: string, email: string, especialidad: string) {
     if (!nombre || !email || !especialidad) {
@@ -88,23 +126,50 @@ export default function ContratarForm() {
   async function conectarStripe() {
     setConectandoStripe(true);
     setStripeError(null);
-    const res = await fetch("/api/billing/checkout", { method: "POST" });
-    setConectandoStripe(false);
-    if (res.status === 501) {
-      setStripeConectado(false);
-      setStripeError("Falta configurar STRIPE_SECRET_KEY para este proyecto — de momento no se puede conectar Stripe de verdad.");
-      return;
+
+    const fd = new FormData(formRef.current ?? undefined);
+    const borradorActual: Borrador = {
+      nombre: String(fd.get("nombre") ?? ""),
+      email: String(fd.get("email") ?? ""),
+      especialidad: String(fd.get("especialidad") ?? ""),
+      nif: String(fd.get("nif") ?? ""),
+      direccionFacturacion: String(fd.get("direccionFacturacion") ?? ""),
+      claveAcceso,
+    };
+
+    try {
+      const res = await fetch("/api/billing/stripe-connect/onboard", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ accountId: stripeAccountId }),
+      });
+      const data = await res.json();
+      if (res.status === 501) {
+        setStripeError("Falta configurar STRIPE_SECRET_KEY para este proyecto — de momento no se puede conectar Stripe de verdad.");
+        return;
+      }
+      if (!res.ok || !data.url) {
+        setStripeError(data?.error ?? "No se ha podido iniciar Stripe Connect.");
+        return;
+      }
+      sessionStorage.setItem(BORRADOR_KEY, JSON.stringify(borradorActual));
+      window.location.href = data.url;
+    } catch {
+      setStripeError("Error de red conectando con Stripe.");
+    } finally {
+      setConectandoStripe(false);
     }
-    setStripeConectado(true);
   }
 
   return (
     <form
+      key={borrador ? "restaurado" : "vacio"}
       ref={formRef}
       className="mt-8 grid gap-4"
       action={async (formData) => {
         formData.set("stripeConectado", String(stripeConectado));
         formData.set("claveAcceso", claveAcceso);
+        if (stripeAccountId) formData.set("stripeAccountId", stripeAccountId);
         setPending(true);
         const res = await contratarOwner(formData);
         setResult(res);
@@ -113,15 +178,15 @@ export default function ContratarForm() {
     >
       <label className="text-sm">
         <span className="block text-[rgb(99,99,99)]">Nombre completo</span>
-        <input name="nombre" required className="mt-1 w-full rounded-lg border border-black/15 px-3 py-2" />
+        <input name="nombre" defaultValue={borrador?.nombre} required className="mt-1 w-full rounded-lg border border-black/15 px-3 py-2" />
       </label>
       <label className="text-sm">
         <span className="block text-[rgb(99,99,99)]">Email</span>
-        <input name="email" type="email" required className="mt-1 w-full rounded-lg border border-black/15 px-3 py-2" />
+        <input name="email" type="email" defaultValue={borrador?.email} required className="mt-1 w-full rounded-lg border border-black/15 px-3 py-2" />
       </label>
       <label className="text-sm">
         <span className="block text-[rgb(99,99,99)]">Especialidad</span>
-        <input name="especialidad" required placeholder="Nutricionista, entrenador, coach..." className="mt-1 w-full rounded-lg border border-black/15 px-3 py-2" />
+        <input name="especialidad" defaultValue={borrador?.especialidad} required placeholder="Nutricionista, entrenador, coach..." className="mt-1 w-full rounded-lg border border-black/15 px-3 py-2" />
       </label>
       <div className="mt-2 border-t border-black/10 pt-4">
         <p className="text-xs font-semibold uppercase tracking-widest text-[rgb(99,99,99)]">
@@ -141,11 +206,11 @@ export default function ContratarForm() {
       </div>
       <label className="text-sm">
         <span className="block text-[rgb(99,99,99)]">NIF / CIF</span>
-        <input name="nif" required className="mt-1 w-full rounded-lg border border-black/15 px-3 py-2" />
+        <input name="nif" defaultValue={borrador?.nif} required className="mt-1 w-full rounded-lg border border-black/15 px-3 py-2" />
       </label>
       <label className="text-sm">
         <span className="block text-[rgb(99,99,99)]">Dirección de facturación</span>
-        <input name="direccionFacturacion" required className="mt-1 w-full rounded-lg border border-black/15 px-3 py-2" />
+        <input name="direccionFacturacion" defaultValue={borrador?.direccionFacturacion} required className="mt-1 w-full rounded-lg border border-black/15 px-3 py-2" />
       </label>
 
       <div className="flex items-center justify-between rounded-lg border border-black/10 p-3">

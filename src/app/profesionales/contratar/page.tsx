@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import Logo from "@/components/Logo";
 import ContratarForm from "@/components/forms/ContratarForm";
@@ -19,7 +20,9 @@ export default function ContratarPage() {
           Tu licencia de Mylili te da acceso ilimitado al sistema. Tras inscribirte, recibirás
           un email con tu magic link.
         </p>
-        <ContratarForm />
+        <Suspense fallback={null}>
+          <ContratarForm />
+        </Suspense>
       </main>
     </div>
   );

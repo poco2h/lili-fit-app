@@ -29,7 +29,7 @@ type HiggsfieldStatus = {
   video?: { url: string } | null;
 };
 
-async function pollHiggsfield(statusUrl: string, authHeader: string, timeoutMs = 25000): Promise<HiggsfieldStatus> {
+async function pollHiggsfield(statusUrl: string, authHeader: string, timeoutMs = 50000): Promise<HiggsfieldStatus> {
   const terminal = new Set(["completed", "failed", "nsfw", "canceled"]);
   const start = Date.now();
   let delay = 2000;

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { leerDemoTwin, type DemoTwin } from "@/lib/demo/localTwin";
-import { RESTAURANTES, generarAgendaFallback, DEPORTES, HABITOS_POR_DEPORTE, HABITOS_MICROBIOMA, type Deporte } from "@/lib/habitos/data";
+import { RESTAURANTES, generarAgendaFallback, DEPORTES, HABITOS_POR_DEPORTE, HABITOS_MICROBIOMA, type Deporte, type HabitoDeporte } from "@/lib/habitos/data";
 import { recetasParaBacterias, nombresABacteriaIds } from "@/lib/recetas/rankear";
 import { enviarAgendaAlProfesional } from "@/lib/actions/agenda";
 import Autoevaluacion from "./Autoevaluacion";
@@ -41,6 +41,10 @@ export default function MisHabitos() {
   const [enviando, setEnviando] = useState(false);
   const [enviado, setEnviado] = useState<string | null>(null);
   const [deporte, setDeporte] = useState<Deporte>("Boxeo");
+  const [habitosExtra, setHabitosExtra] = useState<Record<string, HabitoDeporte[]>>({});
+  const [nuevoAbierto, setNuevoAbierto] = useState(false);
+  const [nuevoNombre, setNuevoNombre] = useState("");
+  const [nuevaCategoria, setNuevaCategoria] = useState("");
 
   useEffect(() => {
     setTwin(leerDemoTwin());
@@ -50,8 +54,24 @@ export default function MisHabitos() {
   const bacteriasDeficientes = twin?.gut.bacterias_deficientes ?? [];
   const agenda = generarAgendaFallback(bacteriasDeficientes, twin?.direcciones?.domicilioPersonal);
   const recetasRecomendadas = recetasParaBacterias(nombresABacteriaIds(bacteriasDeficientes));
-  const habitosActivos = modulo === "microbiota" ? HABITOS_MICROBIOMA : HABITOS_POR_DEPORTE[deporte];
+  const claveHabitos = modulo === "microbiota" ? "microbiota" : deporte;
+  const habitosBase = modulo === "microbiota" ? HABITOS_MICROBIOMA : HABITOS_POR_DEPORTE[deporte];
+  const habitosActivos = [...habitosBase, ...(habitosExtra[claveHabitos] ?? [])];
   const subTabs = modulo === "microbiota" ? SUB_MICROBIOTA : SUB_DEPORTES;
+
+  function anadirHabito() {
+    if (!nuevoNombre.trim()) return;
+    setHabitosExtra((prev) => ({
+      ...prev,
+      [claveHabitos]: [
+        ...(prev[claveHabitos] ?? []),
+        { emoji: "✨", nombre: nuevoNombre.trim(), categoria: nuevaCategoria.trim() || (modulo === "microbiota" ? "Microbiota" : deporte) },
+      ],
+    }));
+    setNuevoNombre("");
+    setNuevaCategoria("");
+    setNuevoAbierto(false);
+  }
 
   async function enviarAgenda() {
     setEnviando(true);
@@ -84,16 +104,19 @@ export default function MisHabitos() {
       </p>
 
       {modulo === "deportes" && (
-        <div className="flex flex-wrap gap-2">
-          {DEPORTES.map((d) => (
-            <button
-              key={d}
-              onClick={() => setDeporte(d)}
-              className={"rounded-full px-3 py-1.5 text-xs font-semibold " + (deporte === d ? "bg-[#1abc9c]/20 text-[#1abc9c]" : "bg-white/5 text-white/50 hover:text-white")}
-            >
-              {d}
-            </button>
-          ))}
+        <div>
+          <p className="mb-2 text-[10px] font-bold uppercase tracking-wide text-white/40">Disciplinas</p>
+          <div className="flex flex-wrap gap-2">
+            {DEPORTES.map((d) => (
+              <button
+                key={d}
+                onClick={() => setDeporte(d)}
+                className={"rounded-full px-3 py-1.5 text-xs font-semibold " + (deporte === d ? "bg-[#1abc9c]/20 text-[#1abc9c]" : "bg-white/5 text-white/50 hover:text-white")}
+              >
+                {d}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
@@ -105,6 +128,38 @@ export default function MisHabitos() {
             <div className="mt-2 flex gap-1 text-lg text-amber-400">★★★★★</div>
           </div>
         ))}
+
+        {nuevoAbierto ? (
+          <div className="mt-glass space-y-2 p-4">
+            <input
+              value={nuevoNombre}
+              onChange={(e) => setNuevoNombre(e.target.value)}
+              placeholder="Nombre del hábito o ejercicio"
+              className="w-full rounded-lg bg-white/5 px-3 py-2 text-sm placeholder:text-white/30 focus:outline-none"
+            />
+            <input
+              value={nuevaCategoria}
+              onChange={(e) => setNuevaCategoria(e.target.value)}
+              placeholder={`Categoría (ej. ${modulo === "microbiota" ? "Microbiota · Digestivo" : `${deporte} · Técnica`})`}
+              className="w-full rounded-lg bg-white/5 px-3 py-2 text-sm placeholder:text-white/30 focus:outline-none"
+            />
+            <div className="flex gap-2">
+              <button onClick={anadirHabito} disabled={!nuevoNombre.trim()} className="rounded-full bg-white px-4 py-1.5 text-xs font-bold text-black disabled:opacity-40">
+                Guardar hábito →
+              </button>
+              <button onClick={() => setNuevoAbierto(false)} className="rounded-full bg-white/5 px-4 py-1.5 text-xs text-white/60">
+                Cancelar
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button
+            onClick={() => setNuevoAbierto(true)}
+            className="mt-glass flex items-center justify-center gap-2 border border-dashed border-white/15 p-4 text-sm text-white/60 hover:text-white"
+          >
+            + Añadir {modulo === "microbiota" ? "hábito" : "ejercicio"}
+          </button>
+        )}
       </div>
 
       <div className="flex flex-wrap gap-2">

@@ -102,12 +102,15 @@ export default function MisVideos() {
           placeholder="Hoy os cuento cómo recuperar mejor después de una sesión intensa..."
           className="mt-2 w-full rounded-xl bg-white/5 px-3 py-2.5 text-sm placeholder:text-white/30 focus:outline-none"
         />
+        <p className="mt-3 text-xs text-white/50">
+          Vas a generar: <span className="font-bold text-[#1abc9c]">{VARIANTES.find((v) => v.key === variante)?.nombre}</span>
+        </p>
         <button
           onClick={generar}
           disabled={loading || !guion.trim()}
-          className="mt-3 rounded-full bg-white px-6 py-2.5 text-sm font-bold text-black disabled:opacity-40"
+          className="mt-2 rounded-full bg-white px-6 py-2.5 text-sm font-bold text-black disabled:opacity-40"
         >
-          {loading ? "Generando..." : "Paso 3 · Generar vídeo →"}
+          {loading ? "Generando..." : `Paso 3 · Generar vídeo (${VARIANTES.find((v) => v.key === variante)?.nombre}) →`}
         </button>
 
         {resultado && (

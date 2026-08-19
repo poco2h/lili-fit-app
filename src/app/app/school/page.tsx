@@ -1,39 +1,34 @@
 "use client";
 
 import { useState } from "react";
-import { MI_SCHOOL, MI_SCHOOL_FOLLOWER } from "@/lib/habitos/data";
+import { MI_SCHOOL } from "@/lib/habitos/data";
 
 export default function SchoolPage() {
-  const [vista, setVista] = useState<"owner" | "follower">("owner");
-  const contenido = vista === "owner" ? MI_SCHOOL : MI_SCHOOL_FOLLOWER;
+  const [abierta, setAbierta] = useState<number | null>(null);
 
   return (
     <div className="mt-app">
       <div className="relative z-10 mx-auto max-w-2xl px-4 py-10">
-        <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-xl font-bold">Mi School</h1>
-          <div className="flex gap-1">
-            <button
-              onClick={() => setVista("owner")}
-              className={"rounded-full px-3 py-1.5 text-xs font-semibold " + (vista === "owner" ? "bg-white text-black" : "bg-white/10 text-white/60")}
-            >
-              Vista Owner
-            </button>
-            <button
-              onClick={() => setVista("follower")}
-              className={"rounded-full px-3 py-1.5 text-xs font-semibold " + (vista === "follower" ? "bg-white text-black" : "bg-white/10 text-white/60")}
-            >
-              Vista Follower
-            </button>
-          </div>
-        </div>
+        <h1 className="mb-6 text-xl font-bold">Mi School</h1>
         <div className="space-y-3">
-          {contenido.map((item) => (
-            <div key={item.pregunta} className="mt-glass p-4">
-              <p className="font-semibold text-[#1abc9c]">{item.pregunta}</p>
-              <p className="mt-1 whitespace-pre-line text-sm text-white/70">{item.respuesta}</p>
-            </div>
-          ))}
+          {MI_SCHOOL.map((item, i) => {
+            const abiertaAhora = abierta === i;
+            return (
+              <div key={item.pregunta} className="mt-glass overflow-hidden">
+                <button
+                  onClick={() => setAbierta(abiertaAhora ? null : i)}
+                  className="flex w-full items-center justify-between gap-4 p-4 text-left"
+                  aria-expanded={abiertaAhora}
+                >
+                  <span className="font-semibold text-[#1abc9c]">{item.pregunta}</span>
+                  <span className="flex-shrink-0 text-xl text-white/50">{abiertaAhora ? "−" : "+"}</span>
+                </button>
+                {abiertaAhora && (
+                  <p className="whitespace-pre-line px-4 pb-4 text-sm text-white/70">{item.respuesta}</p>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

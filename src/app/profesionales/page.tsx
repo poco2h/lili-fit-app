@@ -34,6 +34,7 @@ export default function ProfesionalesLanding() {
             <a href="#proceso" className="hover:text-black">Cómo funciona</a>
             <Link href="/app/fuentes" className="font-bold text-[#1abc9c] hover:text-black">Demo</Link>
             <Link href="/" className="hover:text-black">Versión cliente →</Link>
+            <Link href="/profesionales/cuenta" className="hover:text-black">Mi cuenta</Link>
           </nav>
           <div className="flex items-center gap-3">
             <Link

@@ -154,7 +154,7 @@ export default function SesionBilling() {
       </div>
 
       {/* Tarjeta de Bolsa de Minutos */}
-      <div className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-md">
+      <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
           <div>
             <span className="text-xs uppercase tracking-widest text-[#1abc9c] font-bold">
@@ -308,7 +308,7 @@ export default function SesionBilling() {
 
       {/* Recibo / Resultado tras finalizar sesión */}
       {resultado && (
-        <div className="rounded-2xl border border-[#1abc9c]/40 bg-[#1abc9c]/10 p-6 backdrop-blur-md">
+        <div className="rounded-2xl border border-[#1abc9c]/40 bg-[#1abc9c]/10 p-6">
           <div className="flex items-center gap-2 text-[#1abc9c] font-bold text-sm mb-2">
             <span>✓</span> {resultado.message ?? "Sesión finalizada con éxito"}
           </div>

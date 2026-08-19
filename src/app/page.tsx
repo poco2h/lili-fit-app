@@ -81,7 +81,7 @@ export default function FollowerLanding() {
       </header>
 
       <main className="pt-24">
-        {/* BLOQUE 1 · HERO — BLANCO (obligatorio) */}
+        {/* BLOQUE 1 · HERO + PREVIEW CONVERSAR — BLANCO (obligatorio) */}
         <section className="bg-white px-6 py-20">
           <div className="mx-auto grid max-w-6xl items-center gap-10 md:grid-cols-2">
             <div>
@@ -119,43 +119,8 @@ export default function FollowerLanding() {
               className="mx-auto w-full max-w-md rounded-3xl border border-black/10"
             />
           </div>
-        </section>
 
-        {/* BLOQUE 2 · MI SCHOOL → FAQs — NEGRO */}
-        <section id="school" className="bg-black px-6 py-20 text-white">
-          <div className="mx-auto max-w-3xl">
-            <p className="text-xs font-semibold uppercase tracking-widest text-white/50">
-              Cómo funciona
-            </p>
-            <h2 className="mt-3 font-serif text-3xl md:text-4xl">Preguntas frecuentes.</h2>
-            <div className="mt-8 space-y-3">
-              {MI_SCHOOL.map((item, i) => {
-                const abierta = faqAbierta === i;
-                return (
-                  <div key={item.pregunta} className="rounded-2xl border border-white/15">
-                    <button
-                      onClick={() => setFaqAbierta(abierta ? null : i)}
-                      className="flex w-full items-center justify-between gap-4 p-5 text-left"
-                      aria-expanded={abierta}
-                    >
-                      <span className="font-semibold text-white">{item.pregunta}</span>
-                      <span className="flex-shrink-0 text-xl text-white/50">{abierta ? "−" : "+"}</span>
-                    </button>
-                    {abierta && (
-                      <p className="whitespace-pre-line px-5 pb-5 text-sm text-white/60">
-                        {item.respuesta}
-                      </p>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-
-        {/* BLOQUE 3 · PREVIEW CONVERSAR — BLANCO */}
-        <section className="bg-white px-6 py-20">
-          <div className="mx-auto max-w-5xl text-center">
+          <div className="mx-auto mt-16 max-w-5xl text-center">
             <p className="text-xs font-semibold uppercase tracking-widest text-[rgb(99,99,99)]">
               Una conversación real de Lili Fit
             </p>
@@ -166,7 +131,7 @@ export default function FollowerLanding() {
           <ConversarPreview />
         </section>
 
-        {/* BLOQUE 4 · PASOS — NEGRO */}
+        {/* BLOQUE 2 · PASOS — NEGRO */}
         <section className="bg-black px-6 py-20 text-white">
           <div className="mx-auto max-w-5xl">
             <p className="text-xs font-semibold uppercase tracking-widest text-white/50">
@@ -190,7 +155,7 @@ export default function FollowerLanding() {
           </div>
         </section>
 
-        {/* BLOQUE 5 · CANALES — BLANCO */}
+        {/* BLOQUE 3 · CANALES — BLANCO */}
         <section id="canales" className="bg-white px-6 py-20">
           <div className="mx-auto max-w-5xl">
             <p className="text-xs font-semibold uppercase tracking-widest text-[rgb(99,99,99)]">Los canales</p>
@@ -209,7 +174,7 @@ export default function FollowerLanding() {
           </div>
         </section>
 
-        {/* BLOQUE 6 · MI MINDTWIN (4 áreas) — NEGRO */}
+        {/* BLOQUE 4 · MI MINDTWIN (4 áreas) — NEGRO */}
         <section className="bg-black px-6 py-20 text-white">
           <div className="mx-auto max-w-5xl">
             <p className="text-xs font-semibold uppercase tracking-widest text-white/50">
@@ -229,15 +194,47 @@ export default function FollowerLanding() {
           </div>
         </section>
 
-        {/* BLOQUE 7 · CTA final — BLANCO */}
-        <section id="cta" className="bg-white px-6 py-20 text-center">
-          <h2 className="font-serif text-3xl md:text-4xl text-black">Tu profesional fitness. Hoy Mismo.</h2>
-          <p className="mx-auto mt-3 max-w-xl text-[rgb(99,99,99)]">
+        {/* BLOQUE 5 · MI SCHOOL → FAQs — BLANCO (último bloque antes del CTA) */}
+        <section id="school" className="bg-white px-6 py-20">
+          <div className="mx-auto max-w-3xl">
+            <p className="text-xs font-semibold uppercase tracking-widest text-[rgb(99,99,99)]">
+              Cómo funciona
+            </p>
+            <h2 className="mt-3 font-serif text-3xl md:text-4xl">Preguntas frecuentes.</h2>
+            <div className="mt-8 space-y-3">
+              {MI_SCHOOL.map((item, i) => {
+                const abierta = faqAbierta === i;
+                return (
+                  <div key={item.pregunta} className="rounded-2xl border border-black/10">
+                    <button
+                      onClick={() => setFaqAbierta(abierta ? null : i)}
+                      className="flex w-full items-center justify-between gap-4 p-5 text-left"
+                      aria-expanded={abierta}
+                    >
+                      <span className="font-semibold text-black">{item.pregunta}</span>
+                      <span className="flex-shrink-0 text-xl text-[rgb(99,99,99)]">{abierta ? "−" : "+"}</span>
+                    </button>
+                    {abierta && (
+                      <p className="whitespace-pre-line px-5 pb-5 text-sm text-[rgb(99,99,99)]">
+                        {item.respuesta}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* BLOQUE 6 · CTA final — NEGRO */}
+        <section id="cta" className="bg-black px-6 py-20 text-center text-white">
+          <h2 className="font-serif text-3xl md:text-4xl">Tu profesional fitness. Hoy Mismo.</h2>
+          <p className="mx-auto mt-3 max-w-xl text-white/70">
             Sin permanencia, sin suscripción. Pagas solo las sesiones que uses.
           </p>
           <Link
             href="/clientes/buscar"
-            className="mt-6 inline-block rounded-full bg-black px-8 py-3 text-sm font-semibold text-white hover:bg-[#1abc9c] hover:text-black transition-colors"
+            className="mt-6 inline-block rounded-full bg-[#1abc9c] px-8 py-3 text-sm font-semibold text-black hover:opacity-90"
           >
             Encontrar mi profesional →
           </Link>

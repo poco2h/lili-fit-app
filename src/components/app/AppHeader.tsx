@@ -33,7 +33,7 @@ export default function AppHeader() {
         </div>
       </div>
       <Link href="/" className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" aria-label="Volver a la landing">
-        <Logo size={26} />
+        <Logo variant="dark" size={26} />
       </Link>
       <div className="text-right">
         <div className="text-[22px] font-extrabold leading-none text-[#1abc9c]">{mindscore ?? "—"}%</div>

@@ -99,10 +99,6 @@ export const MI_SCHOOL = [
     respuesta: "Tu perfil de microbioma: bacterias dominantes/deficientes, gatillos digestivos y síntomas, en 7 dimensiones. Se actualiza con tus autoevaluaciones semanales en Mis Hábitos.",
   },
   {
-    pregunta: "¿Cómo funciona mi MindTwin por dentro?",
-    respuesta: "Combina tu EGO ID y GUT ID con un motor de 3 capas: primero mira si ya tiene una respuesta parecida guardada (caché, sin coste), después aplica reglas fijas de tu perfil (determinista, sin IA), y solo si ninguna de las dos cubre tu pregunta usa un LLM (Gemini) para generar la respuesta.",
-  },
-  {
     pregunta: "Mis Conversaciones — ¿qué es y cómo interactúo?",
     respuesta:
       "Es el chat con tu MindTwin, en texto, voz o vídeo. Las 3 primeras veces que entres aquí NO es un chat normal: son tus 3 sesiones de creación de perfil (S1, S2, S3), de unos 20 minutos cada una, donde vas respondiendo con normalidad y el sistema construye tu EGO ID sin que rellenes ningún formulario. Después de esas 3 sesiones, Mis Conversaciones se convierte en tu chat habitual con el MindTwin.\n\n" +
@@ -171,10 +167,6 @@ export const MI_SCHOOL_FOLLOWER = [
   {
     pregunta: "¿Qué es el GUT ID?",
     respuesta: "El perfil de microbioma de tu profesional (o el tuyo, si tu plan lo incluye): qué bacterias dominan, cuáles faltan y qué síntomas digestivos son frecuentes. Se usa para personalizar tus recomendaciones.",
-  },
-  {
-    pregunta: "¿Cómo funciona el MindTwin de mi profesional?",
-    respuesta: "Combina el EGO ID y el GUT ID de tu profesional con un motor de 3 capas: primero busca una respuesta ya guardada, después aplica reglas fijas de su perfil, y solo si hace falta usa una IA para generar la respuesta — siempre con su metodología.",
   },
   {
     pregunta: "Mis Conversaciones — ¿qué es y cómo interactúo?",

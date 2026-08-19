@@ -5,6 +5,7 @@ import Link from "next/link";
 import Logo from "@/components/Logo";
 import Footer from "@/components/Footer";
 import ConversarPreview from "@/components/landing/ConversarPreview";
+import { MI_SCHOOL } from "@/lib/habitos/data";
 
 const SECCIONES = [
   { nombre: "Conversar", desc: "Tu gemelo atiende a todos tus clientes en texto, voz y videoconferencia — 24/7, en su idioma, con tu psicología y tu metodología." },
@@ -18,6 +19,7 @@ const SECCIONES = [
 
 export default function ProfesionalesLanding() {
   const [menuAbierto, setMenuAbierto] = useState(false);
+  const [faqAbierta, setFaqAbierta] = useState<number | null>(null);
 
   return (
     <div className="mt-landing min-h-screen">
@@ -118,6 +120,14 @@ export default function ProfesionalesLanding() {
               className="mx-auto w-full max-w-md rounded-3xl border border-black/10"
             />
           </div>
+
+          <div className="mx-auto mt-16 max-w-5xl text-center">
+            <p className="text-xs font-semibold uppercase tracking-widest text-[rgb(99,99,99)]">Conversar</p>
+            <h2 className="mt-3 font-serif text-3xl md:text-4xl">
+              Tu perfil habla por ti, en cualquier idioma, a cualquier hora.
+            </h2>
+          </div>
+          <ConversarPreview />
         </section>
 
         {/* BLOQUE 2 · EL SISTEMA — NEGRO */}
@@ -153,21 +163,10 @@ export default function ProfesionalesLanding() {
           </div>
         </section>
 
-        {/* BLOQUE 3 · PREVIEW CONVERSAR — BLANCO */}
-        <section className="bg-white px-6 py-20">
-          <div className="mx-auto max-w-5xl text-center">
-            <p className="text-xs font-semibold uppercase tracking-widest text-[rgb(99,99,99)]">Conversar</p>
-            <h2 className="mt-3 font-serif text-3xl md:text-4xl">
-              Tu perfil habla por ti, en cualquier idioma, a cualquier hora.
-            </h2>
-          </div>
-          <ConversarPreview />
-        </section>
-
-        {/* BLOQUE 4 · PROCESO — NEGRO */}
-        <section id="proceso" className="bg-black px-6 py-20 text-white">
+        {/* BLOQUE 3 · PROCESO — BLANCO */}
+        <section id="proceso" className="bg-white px-6 py-20">
           <div className="mx-auto max-w-5xl">
-            <p className="text-xs font-semibold uppercase tracking-widest text-white/50">El proceso</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-[rgb(99,99,99)]">El proceso</p>
             <h2 className="mt-3 font-serif text-3xl md:text-4xl">
               En solo tres sesiones, dispones de un gemelo mental para siempre.
             </h2>
@@ -177,20 +176,20 @@ export default function ProfesionalesLanding() {
                 { s: "Sesión 02 · 20 min", t: "EGO ID II", d: "Estilo de apego, inteligencia emocional, perfil motivacional." },
                 { s: "Sesión 03 · 20 min", t: "GUT ID + activación", d: "Microbioma (28 preguntas), grabas tu voz y un vídeo corto. Tu gemelo queda activo." },
               ].map((step) => (
-                <div key={step.t} className="rounded-2xl border border-white/15 p-6">
-                  <p className="text-xs uppercase tracking-wide text-white/50">{step.s}</p>
+                <div key={step.t} className="rounded-2xl border border-black/10 p-6">
+                  <p className="text-xs uppercase tracking-wide text-[rgb(99,99,99)]">{step.s}</p>
                   <h3 className="mt-2 text-lg font-semibold">{step.t}</h3>
-                  <p className="mt-2 text-sm text-white/60">{step.d}</p>
+                  <p className="mt-2 text-sm text-[rgb(99,99,99)]">{step.d}</p>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* BLOQUE 5 · SECCIONES APP — BLANCO */}
-        <section className="bg-white px-6 py-20">
+        {/* BLOQUE 4 · SECCIONES APP — NEGRO */}
+        <section className="bg-black px-6 py-20 text-white">
           <div className="mx-auto max-w-5xl">
-            <p className="text-xs font-semibold uppercase tracking-widest text-[rgb(99,99,99)]">
+            <p className="text-xs font-semibold uppercase tracking-widest text-white/50">
               Tu MindTwin · lo que encuentras dentro
             </p>
             <h2 className="mt-3 font-serif text-3xl md:text-4xl">
@@ -198,11 +197,43 @@ export default function ProfesionalesLanding() {
             </h2>
             <div className="mt-10 grid gap-5 md:grid-cols-2">
               {SECCIONES.map((s) => (
-                <div key={s.nombre} className="rounded-2xl border border-black/10 p-6">
+                <div key={s.nombre} className="rounded-2xl border border-white/15 p-6">
                   <h3 className="text-base font-semibold">{s.nombre}</h3>
-                  <p className="mt-2 text-sm text-[rgb(99,99,99)]">{s.desc}</p>
+                  <p className="mt-2 text-sm text-white/60">{s.desc}</p>
                 </div>
               ))}
+            </div>
+          </div>
+        </section>
+
+        {/* BLOQUE 5 · MI SCHOOL → FAQs — BLANCO (último bloque antes del CTA) */}
+        <section id="school" className="bg-white px-6 py-20">
+          <div className="mx-auto max-w-3xl">
+            <p className="text-xs font-semibold uppercase tracking-widest text-[rgb(99,99,99)]">
+              Mi School
+            </p>
+            <h2 className="mt-3 font-serif text-3xl md:text-4xl">Preguntas frecuentes.</h2>
+            <div className="mt-8 space-y-3">
+              {MI_SCHOOL.map((item, i) => {
+                const abierta = faqAbierta === i;
+                return (
+                  <div key={item.pregunta} className="rounded-2xl border border-black/10">
+                    <button
+                      onClick={() => setFaqAbierta(abierta ? null : i)}
+                      className="flex w-full items-center justify-between gap-4 p-5 text-left"
+                      aria-expanded={abierta}
+                    >
+                      <span className="font-semibold text-black">{item.pregunta}</span>
+                      <span className="flex-shrink-0 text-xl text-[rgb(99,99,99)]">{abierta ? "−" : "+"}</span>
+                    </button>
+                    {abierta && (
+                      <p className="whitespace-pre-line px-5 pb-5 text-sm text-[rgb(99,99,99)]">
+                        {item.respuesta}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </section>

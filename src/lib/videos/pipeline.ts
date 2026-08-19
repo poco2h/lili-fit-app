@@ -5,6 +5,7 @@ export type VideoJobResult = {
   mensaje: string;
   videoUrl?: string;
   requestId?: string;
+  statusUrl?: string;
 };
 
 /**
@@ -21,7 +22,7 @@ const VOICE_ID_PLACEHOLDER = "21m00Tcm4TlvDq8ikWAM";
  */
 const IMAGE_URL_PLACEHOLDER = "https://picsum.photos/id/64/768/1024";
 
-type HiggsfieldStatus = {
+export type HiggsfieldStatus = {
   status: "queued" | "in_progress" | "nsfw" | "failed" | "completed" | "canceled";
   request_id: string;
   status_url?: string;
@@ -29,21 +30,40 @@ type HiggsfieldStatus = {
   video?: { url: string } | null;
 };
 
-async function pollHiggsfield(statusUrl: string, authHeader: string, timeoutMs = 50000): Promise<HiggsfieldStatus> {
-  const terminal = new Set(["completed", "failed", "nsfw", "canceled"]);
-  const start = Date.now();
-  let delay = 2000;
+function higgsfieldAuthHeader(): string | null {
+  const secret = process.env.HIGGSFIELD_API_KEY;
+  const keyId = process.env.HIGGSFIELD_API_KEY_ID;
+  if (!secret || !keyId) return null;
+  return `Key ${keyId}:${secret}`;
+}
 
-  while (Date.now() - start < timeoutMs) {
-    const res = await fetch(statusUrl, { headers: { Authorization: authHeader } });
-    if (!res.ok) throw new Error(`Higgsfield status ${res.status}`);
-    const data = (await res.json()) as HiggsfieldStatus;
-    if (terminal.has(data.status)) return data;
-    await new Promise((r) => setTimeout(r, delay));
-    delay = Math.min(delay * 1.5, 10000);
+/**
+ * Consulta UNA vez el estado de un request ya enviado a Higgsfield — pensado
+ * para que el cliente haga polling llamando a este endpoint cada pocos
+ * segundos, en vez de mantener la función serverless abierta sondeando
+ * (los planes de Vercel cortan la función mucho antes de que Higgsfield
+ * termine de generar el vídeo — probado: FUNCTION_INVOCATION_TIMEOUT).
+ */
+export async function consultarEstadoVideo(statusUrl: string): Promise<VideoJobResult> {
+  const authHeader = higgsfieldAuthHeader();
+  if (!authHeader) return { estado: "error", mensaje: "Falta configurar Higgsfield." };
+
+  const res = await fetch(statusUrl, { headers: { Authorization: authHeader } });
+  if (!res.ok) return { estado: "error", mensaje: `Higgsfield status ${res.status}` };
+  const data = (await res.json()) as HiggsfieldStatus;
+
+  if (data.status === "completed" && data.video?.url) {
+    return { estado: "completado", mensaje: "Vídeo generado.", videoUrl: data.video.url, requestId: data.request_id };
   }
-
-  throw new Error("timeout");
+  if (data.status === "failed" || data.status === "nsfw" || data.status === "canceled") {
+    return { estado: "error", mensaje: `Higgsfield: ${data.error ?? data.status}`, requestId: data.request_id };
+  }
+  return {
+    estado: "procesando",
+    mensaje: "Higgsfield sigue procesando el vídeo…",
+    requestId: data.request_id,
+    statusUrl,
+  };
 }
 
 /**
@@ -53,20 +73,16 @@ async function pollHiggsfield(statusUrl: string, authHeader: string, timeoutMs =
  * fecha de esta integración — solo hay modelos image2video/text2image).
  * V4 = imagen → higgsfield-ai/dop/standard (image2video) → mp4.
  * API real: POST https://platform.higgsfield.ai/higgsfield-ai/{modelo} con
- * Authorization: Key {HIGGSFIELD_API_KEY_ID}:{HIGGSFIELD_API_KEY}, la
- * respuesta es asíncrona (request_id + status_url a sondear).
+ * Authorization: Key {HIGGSFIELD_API_KEY_ID}:{HIGGSFIELD_API_KEY}. La
+ * respuesta es asíncrona (request_id + status_url) — este pipeline solo
+ * ENVÍA el trabajo; el cliente sondea /api/videos/estado con el status_url.
  */
 export async function generarVideo(variante: VariantePV, guion: string): Promise<VideoJobResult> {
   const elevenlabsKey = process.env.ELEVENLABS_API_KEY;
-  const higgsfieldSecret = process.env.HIGGSFIELD_API_KEY;
-  const higgsfieldKeyId = process.env.HIGGSFIELD_API_KEY_ID;
+  const authHeader = higgsfieldAuthHeader();
 
-  if (!elevenlabsKey || !higgsfieldSecret || !higgsfieldKeyId) {
-    const faltan = [
-      !elevenlabsKey && "ELEVENLABS_API_KEY",
-      !higgsfieldSecret && "HIGGSFIELD_API_KEY",
-      !higgsfieldKeyId && "HIGGSFIELD_API_KEY_ID",
-    ].filter(Boolean);
+  if (!elevenlabsKey || !authHeader) {
+    const faltan = [!elevenlabsKey && "ELEVENLABS_API_KEY", !authHeader && "HIGGSFIELD_API_KEY/HIGGSFIELD_API_KEY_ID"].filter(Boolean);
     return {
       estado: "simulado",
       mensaje: `Simulado — faltan ${faltan.join(" y ")}. Guion recibido (${guion.length} caracteres).`,
@@ -91,8 +107,7 @@ export async function generarVideo(variante: VariantePV, guion: string): Promise
     });
     if (!ttsRes.ok) throw new Error(`ElevenLabs TTS falló (${ttsRes.status})`);
 
-    // 2) Higgsfield image2video (V4) — imagen placeholder hasta tener el avatar real del owner.
-    const authHeader = `Key ${higgsfieldKeyId}:${higgsfieldSecret}`;
+    // 2) Higgsfield image2video (V4) — solo ENVÍA el trabajo, no espera a que termine.
     const submitRes = await fetch("https://platform.higgsfield.ai/higgsfield-ai/dop/standard", {
       method: "POST",
       headers: { Authorization: authHeader, "Content-Type": "application/json", Accept: "application/json" },
@@ -107,23 +122,13 @@ export async function generarVideo(variante: VariantePV, guion: string): Promise
     }
     const submitData = (await submitRes.json()) as { request_id: string; status_url: string };
 
-    const final = await pollHiggsfield(submitData.status_url, authHeader);
-    if (final.status === "completed" && final.video?.url) {
-      return { estado: "completado", mensaje: "Vídeo generado.", videoUrl: final.video.url, requestId: final.request_id };
-    }
-    if (final.status === "failed" || final.status === "nsfw" || final.status === "canceled") {
-      return { estado: "error", mensaje: `Higgsfield: ${final.error ?? final.status}`, requestId: final.request_id };
-    }
     return {
       estado: "procesando",
-      mensaje: "Higgsfield sigue procesando el vídeo — vuelve a comprobarlo en unos segundos.",
+      mensaje: "Higgsfield está generando el vídeo…",
       requestId: submitData.request_id,
+      statusUrl: submitData.status_url,
     };
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "Error desconocido";
-    if (msg === "timeout") {
-      return { estado: "procesando", mensaje: "Higgsfield sigue procesando el vídeo — vuelve a comprobarlo en unos segundos." };
-    }
-    return { estado: "error", mensaje: msg };
+    return { estado: "error", mensaje: e instanceof Error ? e.message : "Error desconocido" };
   }
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { VariantePV, VideoJobResult } from "@/lib/videos/pipeline";
 
 const VARIANTES: Array<{ key: VariantePV; nombre: string; desc: string; cuando: string }> = [
@@ -21,6 +21,26 @@ export default function MisVideos() {
   const [guion, setGuion] = useState("");
   const [resultado, setResultado] = useState<VideoJobResult | null>(null);
   const [loading, setLoading] = useState(false);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
+  }, []);
+
+  function iniciarPolling(statusUrl: string) {
+    if (pollRef.current) clearInterval(pollRef.current);
+    pollRef.current = setInterval(async () => {
+      const res = await fetch(`/api/videos/estado?statusUrl=${encodeURIComponent(statusUrl)}`);
+      const data: VideoJobResult = await res.json();
+      setResultado(data);
+      if (data.estado !== "procesando" && pollRef.current) {
+        clearInterval(pollRef.current);
+        pollRef.current = null;
+      }
+    }, 3000);
+  }
 
   async function generar() {
     if (!guion.trim() || loading) return;
@@ -32,7 +52,11 @@ export default function MisVideos() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ variante, guion }),
       });
-      setResultado(await res.json());
+      const data: VideoJobResult = await res.json();
+      setResultado(data);
+      if (data.estado === "procesando" && data.statusUrl) {
+        iniciarPolling(data.statusUrl);
+      }
     } finally {
       setLoading(false);
     }

@@ -92,12 +92,16 @@ export default function MisVideos() {
               "mt-4 rounded-lg p-3 text-sm " +
               (resultado.estado === "completado"
                 ? "bg-[#1abc9c]/10 text-[#1abc9c]"
-                : resultado.estado === "simulado"
+                : resultado.estado === "simulado" || resultado.estado === "procesando"
                   ? "bg-amber-500/10 text-amber-400"
                   : "bg-red-500/10 text-red-400")
             }
           >
             {resultado.mensaje}
+            {resultado.estado === "completado" && resultado.videoUrl && (
+              // eslint-disable-next-line jsx-a11y/media-has-caption
+              <video controls src={resultado.videoUrl} className="mt-3 w-full rounded-lg" />
+            )}
           </div>
         )}
       </div>

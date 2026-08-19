@@ -93,6 +93,24 @@ export default function MisVideos() {
         ))}
       </div>
 
+      <div className="mt-glass p-4">
+        <p className="mb-3 text-xs font-bold uppercase tracking-wide text-white/50">Elige qué quieres generar</p>
+        <div className="flex flex-wrap gap-2">
+          {VARIANTES.map((v) => (
+            <button
+              key={v.key}
+              onClick={() => setVariante(v.key)}
+              className={
+                "rounded-full px-4 py-2 text-sm font-bold transition " +
+                (variante === v.key ? "bg-[#1abc9c] text-black" : "bg-white/10 text-white/70 hover:bg-white/15")
+              }
+            >
+              {v.nombre}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="mt-glass p-5">
         <label className="text-sm text-white/60">Paso 2 · Guion — qué dirá tu MindTwin</label>
         <textarea

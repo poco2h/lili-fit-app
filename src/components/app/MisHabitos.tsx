@@ -105,7 +105,7 @@ export default function MisHabitos() {
 
       {modulo === "deportes" && (
         <div>
-          <p className="mb-2 text-[10px] font-bold uppercase tracking-wide text-white/40">Disciplinas</p>
+          <p className="mb-2 text-sm font-bold uppercase tracking-wide text-white">Disciplinas</p>
           <div className="flex flex-wrap gap-2">
             {DEPORTES.map((d) => (
               <button

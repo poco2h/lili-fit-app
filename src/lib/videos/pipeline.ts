@@ -60,7 +60,7 @@ export async function consultarEstadoVideo(statusUrl: string): Promise<VideoJobR
   }
   return {
     estado: "procesando",
-    mensaje: "Higgsfield sigue procesando el vídeo…",
+    mensaje: `Higgsfield sigue procesando el vídeo… (${data.status})`,
     requestId: data.request_id,
     statusUrl,
   };

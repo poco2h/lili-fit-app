@@ -17,8 +17,9 @@ const VOICE_ID_PLACEHOLDER = "21m00Tcm4TlvDq8ikWAM";
 /**
  * Imagen de referencia usada como placeholder hasta que exista un flujo real
  * de subida de foto/avatar del owner (Mis Fuentes o el propio onboarding).
+ * Tiene que ser una URL pública que Higgsfield pueda descargar de verdad.
  */
-const IMAGE_URL_PLACEHOLDER = "https://platform.higgsfield.ai/samples/portrait-placeholder.jpg";
+const IMAGE_URL_PLACEHOLDER = "https://picsum.photos/id/64/768/1024";
 
 type HiggsfieldStatus = {
   status: "queued" | "in_progress" | "nsfw" | "failed" | "completed" | "canceled";
@@ -100,7 +101,10 @@ export async function generarVideo(variante: VariantePV, guion: string): Promise
         prompt: guion.slice(0, 500),
       }),
     });
-    if (!submitRes.ok) throw new Error(`Higgsfield submit falló (${submitRes.status})`);
+    if (!submitRes.ok) {
+      const body = await submitRes.text().catch(() => "");
+      throw new Error(`Higgsfield submit falló (${submitRes.status}): ${body.slice(0, 300)}`);
+    }
     const submitData = (await submitRes.json()) as { request_id: string; status_url: string };
 
     const final = await pollHiggsfield(submitData.status_url, authHeader);

@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { leerDemoTwin, actualizarSources, type DemoTwin, type Sources } from "@/lib/demo/localTwin";
+import type { Sources } from "@/lib/demo/localTwin";
 import { calcularFidelidadDemo } from "@/lib/fidelity/calcularDemo";
+import { useTwin } from "@/lib/session/useTwin";
 
 /**
  * Rebuild literal de REF_MisFuentes_LOADED.html/EMPTY.html + el contenido
@@ -71,11 +71,7 @@ const CONECTORES_EXTERNOS: Array<{
 ];
 
 export default function MisFuentes() {
-  const [twin, setTwin] = useState<DemoTwin | null>(null);
-
-  useEffect(() => {
-    setTwin(leerDemoTwin());
-  }, []);
+  const { twin, guardar } = useTwin();
 
   if (!twin) {
     return (
@@ -93,9 +89,9 @@ export default function MisFuentes() {
   const internasAvanzadas = egoCompleto && gutCompleto;
 
   function toggle(key: keyof Sources) {
-    const actual = twin?.sources[key] ?? false;
-    const actualizado = actualizarSources({ [key]: !actual } as Partial<Sources>);
-    if (actualizado) setTwin(actualizado);
+    if (!twin) return;
+    const actual = twin.sources[key] ?? false;
+    guardar({ ...twin, sources: { ...twin.sources, [key]: !actual } });
   }
 
   const activasExternas = CONECTORES_EXTERNOS.filter((c) => twin.sources[c.key]).length;

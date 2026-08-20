@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { leerDemoTwin, type DemoTwin } from "@/lib/demo/localTwin";
+import { useState } from "react";
+import { useTwin } from "@/lib/session/useTwin";
 import { RESTAURANTES, generarAgendaFallback, DEPORTES, HABITOS_POR_DEPORTE, HABITOS_MICROBIOMA, type Deporte, type HabitoDeporte } from "@/lib/habitos/data";
 import { recetasParaBacterias, nombresABacteriaIds } from "@/lib/recetas/rankear";
 import { enviarAgendaAlProfesional } from "@/lib/actions/agenda";
@@ -35,7 +35,7 @@ function fechaHoy() {
 }
 
 export default function MisHabitos() {
-  const [twin, setTwin] = useState<DemoTwin | null>(null);
+  const { twin } = useTwin();
   const [modulo, setModulo] = useState<Modulo>("microbiota");
   const [sub, setSub] = useState<string>("autoevaluacion");
   const [enviando, setEnviando] = useState(false);
@@ -45,10 +45,6 @@ export default function MisHabitos() {
   const [nuevoAbierto, setNuevoAbierto] = useState(false);
   const [nuevoNombre, setNuevoNombre] = useState("");
   const [nuevaCategoria, setNuevaCategoria] = useState("");
-
-  useEffect(() => {
-    setTwin(leerDemoTwin());
-  }, []);
 
   const gatillos = twin?.gut.gatillos ?? [];
   const bacteriasDeficientes = twin?.gut.bacterias_deficientes ?? [];

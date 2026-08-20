@@ -1,11 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import Logo from "@/components/Logo";
-import { leerDemoTwin, type DemoTwin } from "@/lib/demo/localTwin";
 import { calcularFidelidadDemo } from "@/lib/fidelity/calcularDemo";
-import { useOwnerSession } from "@/lib/session/useOwnerSession";
+import { useTwin } from "@/lib/session/useTwin";
 
 export const OWNER_NOMBRE_DEMO = "David Rodríguez";
 const OWNER_INICIALES_DEMO = "DR";
@@ -17,12 +15,7 @@ function iniciales(nombre: string) {
 
 /** Cabecera de identidad del Owner — avatar, rol y MINDSCORE (V10: fidelidad), igual a la referencia REF_MisFuentes. */
 export default function AppHeader() {
-  const [twin, setTwin] = useState<DemoTwin | null>(null);
-  const { owner } = useOwnerSession();
-
-  useEffect(() => {
-    setTwin(leerDemoTwin());
-  }, []);
+  const { twin, owner } = useTwin();
 
   const mindscore = twin ? Math.round(calcularFidelidadDemo(twin) * 100) : null;
   const nombreMostrado = owner?.ownerName ?? OWNER_NOMBRE_DEMO;

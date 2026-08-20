@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { leerDemoTwin, type DemoTwin } from "@/lib/demo/localTwin";
+import { useState } from "react";
+import { useTwin } from "@/lib/session/useTwin";
 import { badgeGutId } from "@/lib/gut/types";
 import { ENEAGRAMA_TRIADA } from "@/lib/ego/eneagramaInfo";
 import { VIA_FORTALEZAS } from "@/lib/ego/types";
@@ -38,13 +38,9 @@ function BarraTales({ pct }: { pct: number }) {
 }
 
 export default function MiCerebro() {
-  const [twin, setTwin] = useState<DemoTwin | null>(null);
+  const { twin } = useTwin();
   const [tab, setTab] = useState<"quien-soy" | "tales">("quien-soy");
   const [vista3d, setVista3d] = useState(false);
-
-  useEffect(() => {
-    setTwin(leerDemoTwin());
-  }, []);
 
   if (!twin) {
     return (

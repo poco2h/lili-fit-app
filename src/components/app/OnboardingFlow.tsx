@@ -6,7 +6,8 @@ import { calcularEgoId } from "@/lib/ego/scoring";
 import { calcularTalesWeights } from "@/lib/ego/talesWeights";
 import { PREGUNTAS_BASELINE, calcularGutBaseline, type RespuestasBaseline } from "@/lib/gut/baseline";
 import type { Respuestas } from "@/lib/ego/types";
-import { guardarDemoTwin, SOURCES_VACIO, type Direcciones } from "@/lib/demo/localTwin";
+import { SOURCES_VACIO, type Direcciones } from "@/lib/demo/localTwin";
+import { useTwin } from "@/lib/session/useTwin";
 
 const ORDEN: Array<"S1" | "S2" | "S3"> = ["S1", "S2", "S3"];
 const ETIQUETAS: Record<"S1" | "S2" | "S3", string> = {
@@ -18,6 +19,7 @@ const ETIQUETAS: Record<"S1" | "S2" | "S3", string> = {
 type Fase = "sesion" | "gut" | "direcciones" | "completo";
 
 export default function OnboardingFlow({ ownerName }: { ownerName: string }) {
+  const { guardar } = useTwin();
   const [sesionIdx, setSesionIdx] = useState(0);
   const [itemIdx, setItemIdx] = useState(0);
   const [respuestas, setRespuestas] = useState<Respuestas>({});
@@ -40,7 +42,7 @@ export default function OnboardingFlow({ ownerName }: { ownerName: string }) {
 
   useEffect(() => {
     if (resultado) {
-      guardarDemoTwin({
+      guardar({
         ego: resultado.ego,
         tales_weights: resultado.tales,
         gut: resultado.gut,
@@ -50,7 +52,7 @@ export default function OnboardingFlow({ ownerName }: { ownerName: string }) {
         direcciones,
       });
     }
-  }, [resultado, direcciones]);
+  }, [resultado, direcciones, guardar]);
 
   function responder(valor: number) {
     setRespuestas((r) => ({ ...r, [item.id]: valor }));

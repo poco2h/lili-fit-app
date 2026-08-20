@@ -1,23 +1,17 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import ConversarChat from "@/components/app/ConversarChat";
-import { leerDemoTwin, type DemoTwin } from "@/lib/demo/localTwin";
 import { OWNER_NOMBRE_DEMO } from "@/components/app/AppHeader";
-import { useOwnerSession } from "@/lib/session/useOwnerSession";
+import { useTwin } from "@/lib/session/useTwin";
 
 function ConversarPageInner() {
-  const [twin, setTwin] = useState<DemoTwin | null>(null);
   const searchParams = useSearchParams();
-  const { owner } = useOwnerSession();
+  const { twin, owner } = useTwin();
   const ownerId = owner?.ownerId ?? searchParams.get("ownerId") ?? undefined;
   const ownerName = owner?.ownerName ?? OWNER_NOMBRE_DEMO;
-
-  useEffect(() => {
-    setTwin(leerDemoTwin());
-  }, []);
 
   return (
     <div className="mt-app">

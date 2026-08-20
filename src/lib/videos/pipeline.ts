@@ -29,9 +29,41 @@ export type HiggsfieldStatus = {
   status_url?: string;
   error?: string | null;
   video?: { url: string } | null;
+  image?: { url: string } | null;
 };
 
-function higgsfieldAuthHeader(): string | null {
+export type ImageJobResult = {
+  estado: "completado" | "procesando" | "error";
+  mensaje: string;
+  imageUrl?: string;
+  requestId?: string;
+  statusUrl?: string;
+};
+
+/** Igual que consultarEstadoVideo pero para jobs de imagen (Soul text2image). */
+export async function consultarEstadoImagen(statusUrl: string): Promise<ImageJobResult> {
+  const authHeader = higgsfieldAuthHeader();
+  if (!authHeader) return { estado: "error", mensaje: "Falta configurar Higgsfield." };
+
+  const res = await fetch(statusUrl, { headers: { Authorization: authHeader } });
+  if (!res.ok) return { estado: "error", mensaje: `Higgsfield status ${res.status}` };
+  const data = (await res.json()) as HiggsfieldStatus;
+
+  if (data.status === "completed" && data.image?.url) {
+    return { estado: "completado", mensaje: "Foto generada.", imageUrl: data.image.url, requestId: data.request_id };
+  }
+  if (data.status === "failed" || data.status === "nsfw" || data.status === "canceled") {
+    return { estado: "error", mensaje: `Higgsfield: ${data.error ?? data.status}`, requestId: data.request_id };
+  }
+  return {
+    estado: "procesando",
+    mensaje: `Higgsfield sigue generando la foto… (${data.status})`,
+    requestId: data.request_id,
+    statusUrl,
+  };
+}
+
+export function higgsfieldAuthHeader(): string | null {
   const secret = process.env.HIGGSFIELD_API_KEY;
   const keyId = process.env.HIGGSFIELD_API_KEY_ID;
   if (!secret || !keyId) return null;

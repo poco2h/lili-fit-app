@@ -1,11 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Logo from "@/components/Logo";
 import { getSupabaseBrowser } from "@/lib/supabase/browserClient";
 
 type Owner = { ownerId: string; ownerName: string; voiceId: string | null; avatarUrl: string | null };
+type EstadoSoul = "idle" | "subiendo" | "entrenando" | "listo" | "error";
+
+const MIN_FOTOS_SOUL = 20;
 
 export default function AvatarProfesionalPage() {
   const supabase = getSupabaseBrowser();
@@ -16,6 +19,14 @@ export default function AvatarProfesionalPage() {
   const [archivo, setArchivo] = useState<File | null>(null);
   const [subiendo, setSubiendo] = useState(false);
   const [errorSubir, setErrorSubir] = useState<string | null>(null);
+
+  const [fotosSoul, setFotosSoul] = useState<File[]>([]);
+  const [estadoSoul, setEstadoSoul] = useState<EstadoSoul>("idle");
+  const [mensajeSoul, setMensajeSoul] = useState<string | null>(null);
+  const [soulId, setSoulId] = useState<string | null>(null);
+  const [fotoGenerada, setFotoGenerada] = useState<string | null>(null);
+  const pollSoulRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pollFotoRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const [guion, setGuion] = useState("Hoy os cuento cómo recuperar mejor después de una sesión intensa.");
   const [generando, setGenerando] = useState(false);
@@ -48,6 +59,13 @@ export default function AvatarProfesionalPage() {
     });
   }, [supabase]);
 
+  useEffect(() => {
+    return () => {
+      if (pollSoulRef.current) clearInterval(pollSoulRef.current);
+      if (pollFotoRef.current) clearInterval(pollFotoRef.current);
+    };
+  }, []);
+
   async function subirFoto() {
     if (!owner || !archivo) return;
     setSubiendo(true);
@@ -66,6 +84,104 @@ export default function AvatarProfesionalPage() {
     } finally {
       setSubiendo(false);
     }
+  }
+
+  function iniciarPollingSoul(id: string) {
+    if (pollSoulRef.current) clearInterval(pollSoulRef.current);
+    pollSoulRef.current = setInterval(async () => {
+      const res = await fetch(`/api/profesionales/avatar/estado-soul?id=${encodeURIComponent(id)}`);
+      const data = await res.json();
+      setMensajeSoul(data.mensaje ?? null);
+      if (data.estado === "completado") {
+        clearInterval(pollSoulRef.current!);
+        setEstadoSoul("listo");
+        setSoulId(data.soulId ?? id);
+      } else if (data.estado === "error") {
+        clearInterval(pollSoulRef.current!);
+        setEstadoSoul("error");
+      }
+    }, 5000);
+  }
+
+  async function entrenarSoul() {
+    if (!owner || fotosSoul.length < MIN_FOTOS_SOUL) return;
+    setEstadoSoul("subiendo");
+    setMensajeSoul(`Subiendo fotos… (0/${fotosSoul.length})`);
+    try {
+      const urls: string[] = [];
+      for (let i = 0; i < fotosSoul.length; i++) {
+        const form = new FormData();
+        form.append("ownerId", owner.ownerId);
+        form.append("foto", fotosSoul[i]);
+        const res = await fetch("/api/profesionales/avatar/subir-lote", { method: "POST", body: form });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error ?? "Error subiendo una foto.");
+        urls.push(json.url);
+        setMensajeSoul(`Subiendo fotos… (${i + 1}/${fotosSoul.length})`);
+      }
+
+      setEstadoSoul("entrenando");
+      setMensajeSoul("Entrenando tu Soul ID (3-5 min)…");
+      const res = await fetch("/api/profesionales/avatar/entrenar-soul", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ownerId: owner.ownerId, ownerName: owner.ownerName, photoUrls: urls }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ? `${json.error}${json.details ? " — " + json.details : ""}` : "Error entrenando el Soul.");
+      iniciarPollingSoul(json.soulTrainingId);
+    } catch (e) {
+      setEstadoSoul("error");
+      setMensajeSoul(e instanceof Error ? e.message : "Error desconocido.");
+    }
+  }
+
+  function iniciarPollingFoto(statusUrl: string) {
+    if (pollFotoRef.current) clearInterval(pollFotoRef.current);
+    pollFotoRef.current = setInterval(async () => {
+      const res = await fetch(`/api/profesionales/avatar/estado-foto?statusUrl=${encodeURIComponent(statusUrl)}`);
+      const data = await res.json();
+      if (data.estado === "completado" && data.imageUrl) {
+        clearInterval(pollFotoRef.current!);
+        setFotoGenerada(data.imageUrl);
+        setMensajeSoul(null);
+      } else if (data.estado === "error") {
+        clearInterval(pollFotoRef.current!);
+        setMensajeSoul(data.mensaje ?? "Error generando la foto.");
+      }
+    }, 4000);
+  }
+
+  async function generarFotoRealista() {
+    if (!soulId) return;
+    setMensajeSoul("Generando tu foto realista…");
+    setFotoGenerada(null);
+    const res = await fetch("/api/profesionales/avatar/generar-foto", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ soulId }),
+    });
+    const json = await res.json();
+    if (!res.ok) {
+      setMensajeSoul(json.error ?? "Error generando la foto.");
+      return;
+    }
+    if (json.estado === "completado" && json.imageUrl) {
+      setFotoGenerada(json.imageUrl);
+      setMensajeSoul(null);
+    } else if (json.statusUrl) {
+      iniciarPollingFoto(json.statusUrl);
+    }
+  }
+
+  async function usarFotoGenerada() {
+    if (!owner || !fotoGenerada) return;
+    await fetch("/api/profesionales/avatar/guardar-foto", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ownerId: owner.ownerId, avatarUrl: fotoGenerada }),
+    });
+    setOwner({ ...owner, avatarUrl: fotoGenerada });
   }
 
   function iniciarPolling(statusUrl: string) {
@@ -103,7 +219,7 @@ export default function AvatarProfesionalPage() {
         </Link>
         <h1 className="mt-4 font-serif text-2xl">Tu avatar</h1>
         <p className="mt-2 text-sm text-[rgb(99,99,99)]">
-          Sube una foto tuya de referencia (buena luz, mirando a cámara) para animar tu avatar en los vídeos.
+          Sube una foto rápida, o entrena un Soul ID con 20+ fotos para un avatar mucho más realista.
         </p>
 
         {cargandoOwner && <p className="mt-6 text-sm text-[rgb(99,99,99)]">Cargando tu perfil...</p>}
@@ -116,7 +232,7 @@ export default function AvatarProfesionalPage() {
             </p>
 
             <div className="space-y-3 rounded-xl border border-black/10 p-4">
-              <p className="text-sm font-semibold">1. Foto de referencia</p>
+              <p className="text-sm font-semibold">1. Foto rápida (referencia simple)</p>
               {owner.avatarUrl && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={owner.avatarUrl} alt="Tu avatar" className="h-40 w-full rounded-lg object-cover" />
@@ -144,9 +260,66 @@ export default function AvatarProfesionalPage() {
               {errorSubir && <p className="text-xs text-red-600">{errorSubir}</p>}
             </div>
 
+            <div className="space-y-3 rounded-xl border border-[#1abc9c]/40 p-4">
+              <p className="text-sm font-semibold">2. Modo realista · Soul ID (recomendado)</p>
+              <p className="text-xs text-[rgb(99,99,99)]">
+                Entrena un personaje consistente con Higgsfield Soul ID a partir de {MIN_FOTOS_SOUL}+ fotos tuyas —
+                distintos ángulos y expresiones, buena luz, sin gafas de sol. Tarda unos minutos y el resultado es
+                mucho más fiel que con una sola foto.
+              </p>
+              <label className="flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed border-[#1abc9c]/40 bg-[#1abc9c]/[0.04] px-4 py-6 text-center hover:bg-[#1abc9c]/[0.08]">
+                <span className="text-2xl">🖼️</span>
+                <span className="text-sm font-semibold text-black">
+                  {fotosSoul.length > 0 ? `${fotosSoul.length} fotos elegidas` : "Subir fotos (mínimo 20)"}
+                </span>
+                <span className="text-xs text-[rgb(120,120,120)]">
+                  {fotosSoul.length > 0 && fotosSoul.length < MIN_FOTOS_SOUL
+                    ? `Necesitas ${MIN_FOTOS_SOUL - fotosSoul.length} más`
+                    : "Selecciona varias fotos a la vez (Ctrl/Cmd + clic)"}
+                </span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={(e) => setFotosSoul(Array.from(e.target.files ?? []))}
+                  className="hidden"
+                />
+              </label>
+              <button
+                onClick={entrenarSoul}
+                disabled={fotosSoul.length < MIN_FOTOS_SOUL || estadoSoul === "subiendo" || estadoSoul === "entrenando"}
+                className="w-full rounded-full bg-[#0e6b57] px-6 py-3 text-sm font-semibold text-white disabled:opacity-40"
+              >
+                {estadoSoul === "subiendo" || estadoSoul === "entrenando" ? "Procesando…" : "Entrenar mi Soul ID →"}
+              </button>
+              {mensajeSoul && <p className="text-xs text-[rgb(99,99,99)]">{mensajeSoul}</p>}
+
+              {estadoSoul === "listo" && !fotoGenerada && (
+                <button
+                  onClick={generarFotoRealista}
+                  className="w-full rounded-full bg-black px-6 py-3 text-sm font-semibold text-white"
+                >
+                  Generar foto realista →
+                </button>
+              )}
+
+              {fotoGenerada && (
+                <div className="space-y-2">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={fotoGenerada} alt="Foto generada" className="h-48 w-full rounded-lg object-cover" />
+                  <button
+                    onClick={usarFotoGenerada}
+                    className="w-full rounded-full bg-[#0e6b57] px-6 py-3 text-sm font-semibold text-white"
+                  >
+                    Usar esta foto como mi avatar →
+                  </button>
+                </div>
+              )}
+            </div>
+
             {owner.avatarUrl && (
               <div className="space-y-3 rounded-xl border border-black/10 p-4">
-                <p className="text-sm font-semibold">2. Prueba y tunea (vídeo V2 · cuerpo en acción)</p>
+                <p className="text-sm font-semibold">3. Prueba y tunea (vídeo V2 · cuerpo en acción)</p>
                 <textarea
                   value={guion}
                   onChange={(e) => setGuion(e.target.value)}

@@ -118,12 +118,19 @@ export default function VozProfesionalPage() {
 
             <div className="space-y-3 rounded-xl border border-black/10 p-4">
               <p className="text-sm font-semibold">1. Muestra de voz</p>
-              <input
-                type="file"
-                accept="audio/*"
-                onChange={(e) => setArchivo(e.target.files?.[0] ?? null)}
-                className="block w-full text-sm"
-              />
+              <label className="flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed border-black/20 bg-[rgb(250,250,250)] px-4 py-6 text-center hover:bg-[rgb(245,245,245)]">
+                <span className="text-2xl">🎵</span>
+                <span className="text-sm font-semibold text-black">Subir archivo</span>
+                <span className="text-xs text-[rgb(120,120,120)]">
+                  {archivo ? archivo.name : "Haz clic para elegir un audio de tu ordenador"}
+                </span>
+                <input
+                  type="file"
+                  accept="audio/*"
+                  onChange={(e) => setArchivo(e.target.files?.[0] ?? null)}
+                  className="hidden"
+                />
+              </label>
               <button
                 onClick={clonarVoz}
                 disabled={!archivo || clonando}

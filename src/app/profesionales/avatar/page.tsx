@@ -121,12 +121,19 @@ export default function AvatarProfesionalPage() {
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={owner.avatarUrl} alt="Tu avatar" className="h-40 w-full rounded-lg object-cover" />
               )}
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => setArchivo(e.target.files?.[0] ?? null)}
-                className="block w-full text-sm"
-              />
+              <label className="flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed border-black/20 bg-[rgb(250,250,250)] px-4 py-6 text-center hover:bg-[rgb(245,245,245)]">
+                <span className="text-2xl">📷</span>
+                <span className="text-sm font-semibold text-black">Subir archivo</span>
+                <span className="text-xs text-[rgb(120,120,120)]">
+                  {archivo ? archivo.name : "Haz clic para elegir una foto de tu ordenador"}
+                </span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setArchivo(e.target.files?.[0] ?? null)}
+                  className="hidden"
+                />
+              </label>
               <button
                 onClick={subirFoto}
                 disabled={!archivo || subiendo}

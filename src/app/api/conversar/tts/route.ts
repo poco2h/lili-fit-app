@@ -8,15 +8,14 @@ import { NextRequest, NextResponse } from "next/server";
  */
 export async function POST(req: NextRequest) {
   const apiKey = process.env.ELEVENLABS_API_KEY;
-  const voiceId = process.env.ELEVENLABS_VOICE_ID;
+  const { texto, voiceId: voiceIdBody } = await req.json();
+  const voiceId = voiceIdBody || process.env.ELEVENLABS_VOICE_ID;
   if (!apiKey || !voiceId) {
     return NextResponse.json(
       { error: "ELEVENLABS_API_KEY/ELEVENLABS_VOICE_ID no configuradas" },
       { status: 501 }
     );
   }
-
-  const { texto } = await req.json();
 
   const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
     method: "POST",

@@ -27,9 +27,9 @@ async function llamarGemini(
   mensaje: string,
   ownerName: string,
   sportsContextResumen?: string
-): Promise<string | null> {
+): Promise<{ texto: string } | { errorApiKeyFalta: true } | null> {
   const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) return null;
+  if (!apiKey) return { errorApiKeyFalta: true };
 
   const bloqueSports = sportsContextResumen ? ` Contexto deportivo actual: ${sportsContextResumen}` : "";
 
@@ -53,10 +53,16 @@ async function llamarGemini(
         }),
       }
     );
-    if (!res.ok) return null;
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      console.error(`[Conversar] Gemini falló (${res.status}): ${body.slice(0, 300)}`);
+      return null;
+    }
     const data = await res.json();
-    return data?.candidates?.[0]?.content?.parts?.[0]?.text ?? null;
-  } catch {
+    const texto = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    return texto ? { texto } : null;
+  } catch (e) {
+    console.error("[Conversar] Gemini fetch error:", e);
     return null;
   }
 }
@@ -93,12 +99,14 @@ export async function responderConversar(input: ConversarInput): Promise<Convers
   }
 
   const generada = await llamarGemini(mensaje, ownerName, sportsContextResumen);
-  if (generada) {
-    const base = aplicaGuardrailPrecio(role, mensaje, generada, ownerName);
+  if (generada && "texto" in generada) {
+    const base = aplicaGuardrailPrecio(role, mensaje, generada.texto, ownerName);
     return { ...conMencionMarca(base, mensaje, marcas, marcaYaMencionada), capa: "n3-gemini" };
   }
 
   const fallback =
-    "Ahora mismo no puedo generar una respuesta completa (falta configurar GEMINI_API_KEY), pero he registrado tu mensaje.";
+    generada && "errorApiKeyFalta" in generada
+      ? "Ahora mismo no puedo generar una respuesta completa (falta configurar GEMINI_API_KEY), pero he registrado tu mensaje."
+      : "Ahora mismo no puedo generar una respuesta completa (fallo temporal al conectar con el modelo), pero he registrado tu mensaje.";
   return { ...conMencionMarca(fallback, mensaje, marcas, marcaYaMencionada), capa: "n3-fallback" };
 }

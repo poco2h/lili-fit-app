@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { rellenarConDatosDeEjemplo } from "@/lib/demo/seed";
+import { usePathname } from "next/navigation";
 
 const LINKS = [
   { href: "/app/conversar", label: "Mis Conversaciones", icon: "💬" },
@@ -16,13 +15,6 @@ const LINKS = [
 
 export default function AppNav() {
   const pathname = usePathname();
-  const router = useRouter();
-
-  function rellenarYVer() {
-    rellenarConDatosDeEjemplo();
-    router.push("/app/fuentes");
-    router.refresh();
-  }
 
   return (
     <nav className="relative z-10 flex flex-wrap items-center gap-1 border-b border-[#1abc9c]/18 bg-black/55 px-3 py-2 backdrop-blur-md">
@@ -38,12 +30,6 @@ export default function AppNav() {
           {l.icon} {l.label}
         </Link>
       ))}
-      <button
-        onClick={rellenarYVer}
-        className="ml-auto rounded-full bg-white px-3 py-1.5 text-[11px] font-bold text-black whitespace-nowrap"
-      >
-        ✨ Rellenar con datos de ejemplo
-      </button>
     </nav>
   );
 }

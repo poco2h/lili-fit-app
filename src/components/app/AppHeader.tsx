@@ -33,7 +33,7 @@ export default function AppHeader() {
           )}
         </div>
         <div>
-          <div className="text-[15px] font-extrabold leading-tight">{nombreMostrado}</div>
+          <div className="text-[15px] font-extrabold leading-tight text-white">{nombreMostrado}</div>
           <span className="mt-0.5 inline-block rounded bg-[#1abc9c]/18 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[#1abc9c]">
             Owner · Profesional
           </span>

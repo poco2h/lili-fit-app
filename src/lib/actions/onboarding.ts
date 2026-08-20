@@ -55,6 +55,8 @@ export async function contratarOwner(formData: FormData): Promise<ActionResult> 
         nif,
         direccion_facturacion: direccionFacturacion,
         stripe_conectado: stripeConectado,
+        precio_follower_texto_min: 0,
+        margen_profesional_pct: 0,
       })
       .select("id")
       .single();

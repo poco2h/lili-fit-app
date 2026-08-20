@@ -29,9 +29,11 @@ function now() {
 export default function ConversarChat({
   ownerName,
   role,
+  ownerId,
 }: {
   ownerName: string;
   role: "owner" | "follower";
+  ownerId?: string;
 }) {
   const [canal, setCanal] = useState<Canal>("texto");
   const [messages, setMessages] = useState<Msg[]>([
@@ -135,7 +137,7 @@ export default function ConversarChat({
       {canal === "video" ? (
         <VideollamadaPanel ownerName={ownerName} />
       ) : canal === "voz" ? (
-        <VozPanel ownerName={ownerName} />
+        <VozPanel ownerName={ownerName} ownerId={ownerId} role={role} />
       ) : (
         <>
           <div className="flex-1 space-y-3 overflow-y-auto p-4">

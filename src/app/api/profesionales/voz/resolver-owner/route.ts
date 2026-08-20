@@ -41,10 +41,15 @@ export async function POST(req: NextRequest) {
 
   const { data: perfil } = await supabase
     .from("twin_profiles")
-    .select("voice_id")
+    .select("voice_id, avatar_soul_id")
     .eq("owner_id", owner.id)
     .is("follower_id", null)
     .maybeSingle();
 
-  return NextResponse.json({ ownerId: owner.id, ownerName: owner.name, voiceId: perfil?.voice_id ?? null });
+  return NextResponse.json({
+    ownerId: owner.id,
+    ownerName: owner.name,
+    voiceId: perfil?.voice_id ?? null,
+    avatarUrl: perfil?.avatar_soul_id ?? null,
+  });
 }

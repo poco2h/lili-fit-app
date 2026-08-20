@@ -9,16 +9,17 @@ export type VideoJobResult = {
 };
 
 /**
- * Voz pública de ElevenLabs ("Rachel") usada como placeholder hasta que el
- * owner clone su propia voz en la sesión S3 de Conversar (elevenlabs_voice_id
- * en twin_profile, hoy siempre null — ver src/lib/types/twinProfile.ts).
+ * Voz pública de ElevenLabs ("Rachel") — fallback cuando no se pasa
+ * ownerId o el owner todavía no ha clonado su voz en /profesionales/voz
+ * (twin_profiles.voice_id).
  */
 const VOICE_ID_PLACEHOLDER = "21m00Tcm4TlvDq8ikWAM";
 
 /**
- * Imagen de referencia usada como placeholder hasta que exista un flujo real
- * de subida de foto/avatar del owner (Mis Fuentes o el propio onboarding).
- * Tiene que ser una URL pública que Higgsfield pueda descargar de verdad.
+ * Imagen de referencia — fallback cuando no se pasa ownerId o el owner
+ * todavía no ha subido su foto en /profesionales/avatar
+ * (twin_profiles.avatar_soul_id). Tiene que ser una URL pública que
+ * Higgsfield pueda descargar de verdad.
  */
 const IMAGE_URL_PLACEHOLDER = "https://picsum.photos/id/64/768/1024";
 
@@ -77,9 +78,26 @@ export async function consultarEstadoVideo(statusUrl: string): Promise<VideoJobR
  * respuesta es asíncrona (request_id + status_url) — este pipeline solo
  * ENVÍA el trabajo; el cliente sondea /api/videos/estado con el status_url.
  */
-export async function generarVideo(variante: VariantePV, guion: string): Promise<VideoJobResult> {
+export async function generarVideo(variante: VariantePV, guion: string, ownerId?: string): Promise<VideoJobResult> {
   const elevenlabsKey = process.env.ELEVENLABS_API_KEY;
   const authHeader = higgsfieldAuthHeader();
+
+  let voiceId = VOICE_ID_PLACEHOLDER;
+  let imageUrl = IMAGE_URL_PLACEHOLDER;
+  if (ownerId) {
+    const { getSupabaseAdmin } = await import("@/lib/supabase/server");
+    const supabase = getSupabaseAdmin();
+    if (supabase) {
+      const { data } = await supabase
+        .from("twin_profiles")
+        .select("voice_id, avatar_soul_id")
+        .eq("owner_id", ownerId)
+        .is("follower_id", null)
+        .maybeSingle();
+      if (data?.voice_id) voiceId = data.voice_id;
+      if (data?.avatar_soul_id) imageUrl = data.avatar_soul_id;
+    }
+  }
 
   if (!elevenlabsKey || !authHeader) {
     const faltan = [!elevenlabsKey && "ELEVENLABS_API_KEY", !authHeader && "HIGGSFIELD_API_KEY/HIGGSFIELD_API_KEY_ID"].filter(Boolean);
@@ -100,7 +118,7 @@ export async function generarVideo(variante: VariantePV, guion: string): Promise
 
   try {
     // 1) TTS con ElevenLabs — voz placeholder hasta tener elevenlabs_voice_id real del owner.
-    const ttsRes = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID_PLACEHOLDER}`, {
+    const ttsRes = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
       method: "POST",
       headers: { "xi-api-key": elevenlabsKey, "Content-Type": "application/json", Accept: "audio/mpeg" },
       body: JSON.stringify({ text: guion, model_id: "eleven_multilingual_v2" }),
@@ -112,7 +130,7 @@ export async function generarVideo(variante: VariantePV, guion: string): Promise
       method: "POST",
       headers: { Authorization: authHeader, "Content-Type": "application/json", Accept: "application/json" },
       body: JSON.stringify({
-        image_url: IMAGE_URL_PLACEHOLDER,
+        image_url: imageUrl,
         prompt: guion.slice(0, 500),
       }),
     });

@@ -16,10 +16,6 @@ export default function AvatarProfesionalPage() {
   const [cargandoOwner, setCargandoOwner] = useState(true);
   const [errorOwner, setErrorOwner] = useState<string | null>(null);
 
-  const [archivo, setArchivo] = useState<File | null>(null);
-  const [subiendo, setSubiendo] = useState(false);
-  const [errorSubir, setErrorSubir] = useState<string | null>(null);
-
   const [fotosSoul, setFotosSoul] = useState<File[]>([]);
   const [estadoSoul, setEstadoSoul] = useState<EstadoSoul>("idle");
   const [mensajeSoul, setMensajeSoul] = useState<string | null>(null);
@@ -65,26 +61,6 @@ export default function AvatarProfesionalPage() {
       if (pollFotoRef.current) clearInterval(pollFotoRef.current);
     };
   }, []);
-
-  async function subirFoto() {
-    if (!owner || !archivo) return;
-    setSubiendo(true);
-    setErrorSubir(null);
-    try {
-      const form = new FormData();
-      form.append("ownerId", owner.ownerId);
-      form.append("foto", archivo);
-      const res = await fetch("/api/profesionales/avatar/subir", { method: "POST", body: form });
-      const json = await res.json();
-      if (!res.ok) {
-        setErrorSubir(json.error ?? "Error subiendo la foto.");
-        return;
-      }
-      setOwner({ ...owner, avatarUrl: json.avatarUrl });
-    } finally {
-      setSubiendo(false);
-    }
-  }
 
   function iniciarPollingSoul(id: string) {
     if (pollSoulRef.current) clearInterval(pollSoulRef.current);
@@ -219,7 +195,7 @@ export default function AvatarProfesionalPage() {
         </Link>
         <h1 className="mt-4 font-serif text-2xl">Tu avatar</h1>
         <p className="mt-2 text-sm text-[rgb(99,99,99)]">
-          Sube una foto rápida, o entrena un Soul ID con 20+ fotos para un avatar mucho más realista.
+          Entrena un Soul ID con 20+ fotos tuyas para un avatar mucho más realista.
         </p>
 
         {cargandoOwner && <p className="mt-6 text-sm text-[rgb(99,99,99)]">Cargando tu perfil...</p>}
@@ -231,37 +207,12 @@ export default function AvatarProfesionalPage() {
               Perfil: <span className="font-semibold text-black">{owner.ownerName}</span>
             </p>
 
-            <div className="space-y-3 rounded-xl border border-black/10 p-4">
-              <p className="text-sm font-semibold">1. Foto rápida (referencia simple)</p>
+            <div className="space-y-3 rounded-xl border border-[#1abc9c]/40 p-4">
+              <p className="text-sm font-semibold">1. Modo realista · Soul ID</p>
               {owner.avatarUrl && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={owner.avatarUrl} alt="Tu avatar" className="h-40 w-full rounded-lg object-cover" />
               )}
-              <label className="flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed border-black/20 bg-[rgb(250,250,250)] px-4 py-6 text-center hover:bg-[rgb(245,245,245)]">
-                <span className="text-2xl">📷</span>
-                <span className="text-sm font-semibold text-black">Subir archivo</span>
-                <span className="text-xs text-[rgb(120,120,120)]">
-                  {archivo ? archivo.name : "Haz clic para elegir una foto de tu ordenador"}
-                </span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setArchivo(e.target.files?.[0] ?? null)}
-                  className="hidden"
-                />
-              </label>
-              <button
-                onClick={subirFoto}
-                disabled={!archivo || subiendo}
-                className="w-full rounded-full bg-black px-6 py-3 text-sm font-semibold text-white disabled:opacity-40"
-              >
-                {subiendo ? "Subiendo..." : owner.avatarUrl ? "Actualizar foto →" : "Subir mi foto →"}
-              </button>
-              {errorSubir && <p className="text-xs text-red-600">{errorSubir}</p>}
-            </div>
-
-            <div className="space-y-3 rounded-xl border border-[#1abc9c]/40 p-4">
-              <p className="text-sm font-semibold">2. Modo realista · Soul ID (recomendado)</p>
               <p className="text-xs text-[rgb(99,99,99)]">
                 Entrena un personaje consistente con Higgsfield Soul ID a partir de {MIN_FOTOS_SOUL}+ fotos tuyas —
                 distintos ángulos y expresiones, buena luz, sin gafas de sol. Tarda unos minutos y el resultado es
@@ -319,7 +270,7 @@ export default function AvatarProfesionalPage() {
 
             {owner.avatarUrl && (
               <div className="space-y-3 rounded-xl border border-black/10 p-4">
-                <p className="text-sm font-semibold">3. Prueba y tunea (vídeo V2 · cuerpo en acción)</p>
+                <p className="text-sm font-semibold">2. Prueba y tunea (vídeo V2 · cuerpo en acción)</p>
                 <textarea
                   value={guion}
                   onChange={(e) => setGuion(e.target.value)}

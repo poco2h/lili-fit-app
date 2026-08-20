@@ -6,11 +6,14 @@ import { useSearchParams } from "next/navigation";
 import ConversarChat from "@/components/app/ConversarChat";
 import { leerDemoTwin, type DemoTwin } from "@/lib/demo/localTwin";
 import { OWNER_NOMBRE_DEMO } from "@/components/app/AppHeader";
+import { useOwnerSession } from "@/lib/session/useOwnerSession";
 
 function ConversarPageInner() {
   const [twin, setTwin] = useState<DemoTwin | null>(null);
   const searchParams = useSearchParams();
-  const ownerId = searchParams.get("ownerId") ?? undefined;
+  const { owner } = useOwnerSession();
+  const ownerId = owner?.ownerId ?? searchParams.get("ownerId") ?? undefined;
+  const ownerName = owner?.ownerName ?? OWNER_NOMBRE_DEMO;
 
   useEffect(() => {
     setTwin(leerDemoTwin());
@@ -29,7 +32,7 @@ function ConversarPageInner() {
             </Link>
           </div>
         )}
-        <ConversarChat ownerName={OWNER_NOMBRE_DEMO} role="owner" ownerId={ownerId} />
+        <ConversarChat ownerName={ownerName} role="owner" ownerId={ownerId} />
       </div>
     </div>
   );

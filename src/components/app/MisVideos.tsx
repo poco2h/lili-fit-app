@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { VariantePV, VideoJobResult } from "@/lib/videos/pipeline";
+import { useOwnerSession } from "@/lib/session/useOwnerSession";
 
 const VARIANTES: Array<{ key: VariantePV; nombre: string; desc: string; cuando: string }> = [
   { key: "v3", nombre: "V1 · Hablas a cámara", desc: "Tu cara y busto, con la boca sincronizada a lo que dices.", cuando: "Úsalo para Reels o TikToks donde explicas algo mirando a cámara." },
@@ -17,6 +18,7 @@ const PASOS = [
 ];
 
 export default function MisVideos() {
+  const { owner } = useOwnerSession();
   const [variante, setVariante] = useState<VariantePV>("v3");
   const [guion, setGuion] = useState("");
   const [resultado, setResultado] = useState<VideoJobResult | null>(null);
@@ -50,7 +52,7 @@ export default function MisVideos() {
       const res = await fetch("/api/videos/generar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ variante, guion }),
+        body: JSON.stringify({ variante, guion, ownerId: owner?.ownerId }),
       });
       const data: VideoJobResult = await res.json();
       setResultado(data);

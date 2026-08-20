@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import VideollamadaPanel from "./VideollamadaPanel";
 import VozPanel from "./VozPanel";
 import { leerMarcas } from "@/lib/demo/marcas";
@@ -47,6 +47,18 @@ export default function ConversarChat({
   const [sending, setSending] = useState(false);
   const [marcaYaMencionada, setMarcaYaMencionada] = useState(false);
   const billing = useSessionBilling(CANAL_BILLING[canal]);
+
+  // El saludo inicial se fija al montar, antes de que la sesión real del
+  // owner se resuelva de forma asíncrona (useOwnerSession) — se corrige
+  // aquí en cuanto llega el nombre real, solo si el usuario no ha escrito
+  // nada todavía (no pisar una conversación ya empezada).
+  useEffect(() => {
+    setMessages((m) =>
+      m.length === 1 && m[0].who === "MindTwin"
+        ? [{ ...m[0], text: `Hola. Soy el MindTwin de ${ownerName}, una IA. ¿En qué puedo ayudarte hoy?` }]
+        : m
+    );
+  }, [ownerName]);
 
   async function enviarTexto(mensaje: string) {
     if (!mensaje.trim() || sending) return;

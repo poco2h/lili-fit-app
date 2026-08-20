@@ -59,7 +59,12 @@ export async function contratarOwner(formData: FormData): Promise<ActionResult> 
       })
       .select("id")
       .single();
-    if (error) return { ok: false, error: error.message };
+    if (error) {
+      if (error.code === "23505") {
+        return { ok: false, error: "Ya existe una cuenta con este email. Inicia sesión en /login en vez de darte de alta otra vez." };
+      }
+      return { ok: false, error: error.message };
+    }
     simulated = false;
     ownerId = data.id;
   } else {

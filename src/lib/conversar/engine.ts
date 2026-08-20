@@ -8,6 +8,8 @@ import {
 import { buscarMencionMarca } from "@/lib/conversar/marcas";
 import type { Marca } from "@/lib/marcas/types";
 
+export type TurnoHistorial = { who: "MindTwin" | "Tú"; text: string };
+
 export type ConversarInput = {
   mensaje: string;
   role: Role;
@@ -15,6 +17,7 @@ export type ConversarInput = {
   marcas?: Marca[];
   marcaYaMencionada?: boolean;
   sportsContextResumen?: string; // solo Lili Celebs (V10 §7.3)
+  historial?: TurnoHistorial[]; // turnos previos de la conversación (sin el mensaje actual)
 };
 
 export type ConversarOutput = {
@@ -26,12 +29,34 @@ export type ConversarOutput = {
 async function llamarGemini(
   mensaje: string,
   ownerName: string,
-  sportsContextResumen?: string
+  sportsContextResumen?: string,
+  historial?: TurnoHistorial[]
 ): Promise<{ texto: string } | { errorApiKeyFalta: true } | null> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return { errorApiKeyFalta: true };
 
   const bloqueSports = sportsContextResumen ? ` Contexto deportivo actual: ${sportsContextResumen}` : "";
+
+  const systemInstruction = {
+    parts: [
+      {
+        text:
+          `Eres el MindTwin de ${ownerName}, un profesional del bienestar. Responde en español, en 2-3 frases, ` +
+          `con tono cercano y profesional. Nunca menciones precios ni tarifas.${bloqueSports}\n\n` +
+          `Además de responder a lo que te preguntan, tu objetivo es ir conociendo al usuario a lo largo de la ` +
+          `conversación: cuando encaje de forma natural (sin interrogar de golpe ni repetir algo que ya te haya ` +
+          `contado), pregúntale por sus hábitos — sobre todo de deporte/actividad física (qué practica, con qué ` +
+          `frecuencia, cómo se siente después) y, de vez en cuando, también sobre alimentación (qué suele comer, ` +
+          `horarios de comida, algún hábito que quiera mejorar). Como máximo una pregunta de seguimiento por ` +
+          `respuesta, y solo si tiene sentido con lo que el usuario acaba de decir — no fuerces la pregunta si no pega.`,
+      },
+    ],
+  };
+
+  const turnos = (historial ?? []).slice(-8).map((h) => ({
+    role: h.who === "MindTwin" ? "model" : "user",
+    parts: [{ text: h.text }],
+  }));
 
   try {
     const res = await fetch(
@@ -40,16 +65,8 @@ async function llamarGemini(
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          contents: [
-            {
-              role: "user",
-              parts: [
-                {
-                  text: `Eres el MindTwin de ${ownerName}, un profesional del bienestar. Responde en español, en 2-3 frases, con tono cercano y profesional. Nunca menciones precios ni tarifas.${bloqueSports} Mensaje del usuario: ${mensaje}`,
-                },
-              ],
-            },
-          ],
+          systemInstruction,
+          contents: [...turnos, { role: "user", parts: [{ text: mensaje }] }],
         }),
       }
     );
@@ -86,7 +103,7 @@ function conMencionMarca(
  * mención de marcas (V10 §6.2) se evalúa después, máx. 1 vez por sesión.
  */
 export async function responderConversar(input: ConversarInput): Promise<ConversarOutput> {
-  const { mensaje, role, ownerName, marcas, marcaYaMencionada, sportsContextResumen } = input;
+  const { mensaje, role, ownerName, marcas, marcaYaMencionada, sportsContextResumen, historial } = input;
 
   if (role === "follower" && esPreguntaDePrecio(mensaje)) {
     return { respuesta: respuestaBloqueadaPorPrecio(ownerName), capa: "n2-guardrail" };
@@ -98,7 +115,7 @@ export async function responderConversar(input: ConversarInput): Promise<Convers
     return { ...conMencionMarca(base, mensaje, marcas, marcaYaMencionada), capa: "n1-cache" };
   }
 
-  const generada = await llamarGemini(mensaje, ownerName, sportsContextResumen);
+  const generada = await llamarGemini(mensaje, ownerName, sportsContextResumen, historial);
   if (generada && "texto" in generada) {
     const base = aplicaGuardrailPrecio(role, mensaje, generada.texto, ownerName);
     return { ...conMencionMarca(base, mensaje, marcas, marcaYaMencionada), capa: "n3-gemini" };

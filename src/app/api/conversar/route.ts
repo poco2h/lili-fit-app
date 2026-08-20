@@ -11,6 +11,7 @@ export async function POST(req: NextRequest) {
   const marcas = Array.isArray(body?.marcas) ? body.marcas : [];
   const marcaYaMencionada = Boolean(body?.marcaYaMencionada);
   const celebId = body?.celebId ? String(body.celebId) : null; // solo Lili Celebs
+  const historial = Array.isArray(body?.historial) ? body.historial : undefined;
 
   if (!mensaje.trim()) {
     return NextResponse.json({ error: "Mensaje vacío" }, { status: 400 });
@@ -27,6 +28,7 @@ export async function POST(req: NextRequest) {
     marcas,
     marcaYaMencionada,
     sportsContextResumen,
+    historial,
   });
   return NextResponse.json(resultado);
 }

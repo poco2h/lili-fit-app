@@ -54,7 +54,14 @@ export default function VozPanel({ ownerName, ownerId, role = "follower" }: { ow
       const res = await fetch("/api/conversar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mensaje: texto, role, ownerName, marcas: [], marcaYaMencionada: false }),
+        body: JSON.stringify({
+          mensaje: texto,
+          role,
+          ownerName,
+          marcas: [],
+          marcaYaMencionada: false,
+          historial: mensajes,
+        }),
       });
       const data = await res.json();
       const respuesta = data.respuesta ?? "No he podido responder.";

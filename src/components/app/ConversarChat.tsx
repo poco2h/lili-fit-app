@@ -74,7 +74,14 @@ export default function ConversarChat({
       const res = await fetch("/api/conversar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mensaje, role, ownerName, marcas: leerMarcas(), marcaYaMencionada }),
+        body: JSON.stringify({
+          mensaje,
+          role,
+          ownerName,
+          marcas: leerMarcas(),
+          marcaYaMencionada,
+          historial: messages.map(({ who, text }) => ({ who, text })),
+        }),
       });
       const data = await res.json();
       const respuesta = data.respuesta ?? "No he podido responder.";

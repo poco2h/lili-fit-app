@@ -50,6 +50,77 @@ export async function generarVideoHeyGen(
   }
 }
 
+export type HeyGenAssetResult =
+  | { ok: true; assetId: string; url: string }
+  | { ok: false; error: string };
+
+/**
+ * Sube una imagen a HeyGen (POST /v3/assets, multipart) — primer paso para
+ * crear un Photo Avatar. Necesita el Buffer del archivo y su content-type.
+ */
+export async function subirAssetHeyGen(archivo: Buffer, nombreArchivo: string, contentType: string): Promise<HeyGenAssetResult> {
+  const apiKey = process.env.HEYGEN_API_KEY;
+  if (!apiKey) return { ok: false, error: "Falta configurar HEYGEN_API_KEY." };
+
+  try {
+    const form = new FormData();
+    form.append("file", new Blob([new Uint8Array(archivo)], { type: contentType }), nombreArchivo);
+
+    const res = await fetch("https://api.heygen.com/v3/assets", {
+      method: "POST",
+      headers: { "X-Api-Key": apiKey },
+      body: form,
+    });
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      return { ok: false, error: `HeyGen /v3/assets falló (${res.status}): ${body.slice(0, 300)}` };
+    }
+    const data = (await res.json()) as { data?: { asset_id: string; url: string } };
+    if (!data.data?.asset_id) return { ok: false, error: "HeyGen no devolvió asset_id." };
+
+    return { ok: true, assetId: data.data.asset_id, url: data.data.url };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Error desconocido" };
+  }
+}
+
+export type HeyGenPhotoAvatarResult =
+  | { ok: true; avatarId: string }
+  | { ok: false; error: string };
+
+/**
+ * Crea un Photo Avatar a partir de un asset ya subido (POST /v3/avatars,
+ * type: "photo"). El avatar_id resultante se usa igual que el de un Digital
+ * Twin de vídeo — generarVideoHeyGen() no distingue el origen del avatar.
+ */
+export async function crearPhotoAvatarHeyGen(assetId: string, nombre: string): Promise<HeyGenPhotoAvatarResult> {
+  const apiKey = process.env.HEYGEN_API_KEY;
+  if (!apiKey) return { ok: false, error: "Falta configurar HEYGEN_API_KEY." };
+
+  try {
+    const res = await fetch("https://api.heygen.com/v3/avatars", {
+      method: "POST",
+      headers: { "X-Api-Key": apiKey, "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({
+        type: "photo",
+        name: nombre,
+        file: { type: "asset_id", asset_id: assetId },
+      }),
+    });
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      return { ok: false, error: `HeyGen /v3/avatars falló (${res.status}): ${body.slice(0, 300)}` };
+    }
+    const data = (await res.json()) as { data?: { avatar_item?: { id: string }; id?: string } };
+    const avatarId = data.data?.avatar_item?.id ?? data.data?.id;
+    if (!avatarId) return { ok: false, error: "HeyGen no devolvió avatar_id." };
+
+    return { ok: true, avatarId };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Error desconocido" };
+  }
+}
+
 export async function consultarEstadoVideoHeyGen(videoId: string): Promise<HeyGenJobResult> {
   const apiKey = process.env.HEYGEN_API_KEY;
   if (!apiKey) return { estado: "error", mensaje: "Falta configurar HEYGEN_API_KEY." };

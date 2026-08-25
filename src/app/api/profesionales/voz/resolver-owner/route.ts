@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
 
   const { data: perfil } = await supabase
     .from("twin_profiles")
-    .select("voice_id, avatar_soul_id")
+    .select("voice_id, avatar_soul_id, heygen_avatar_id, heygen_voice_id")
     .eq("owner_id", owner.id)
     .is("follower_id", null)
     .maybeSingle();
@@ -51,5 +51,7 @@ export async function POST(req: NextRequest) {
     ownerName: owner.name,
     voiceId: perfil?.voice_id ?? null,
     avatarUrl: perfil?.avatar_soul_id ?? null,
+    heygenAvatarId: perfil?.heygen_avatar_id ?? null,
+    heygenVoiceId: perfil?.heygen_voice_id ?? null,
   });
 }

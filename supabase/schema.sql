@@ -54,6 +54,8 @@ CREATE TABLE IF NOT EXISTS twin_profiles (
   avatar_soul_id VARCHAR,                     -- Para vídeos RRSS (V3/V4)
   avatar_replica_id VARCHAR,                  -- Para videoconferencia RT (V1)
   voice_id VARCHAR,                           -- Voz clonada TTS
+  heygen_avatar_id VARCHAR,                   -- Digital Twin HeyGen (entrenado a mano en heygen.com), añadida 2026-08-25
+  heygen_voice_id VARCHAR,                    -- Voz del catálogo HeyGen (no ElevenLabs), añadida 2026-08-25
   fidelity_pct NUMERIC(4,1) DEFAULT 65.0,
   demo_twin JSONB DEFAULT '{}'::jsonb,         -- blob DemoTwin completo por owner (Mis Fuentes/Mi Cerebro/Onboarding), añadida 2026-08-20 vía SQL Editor
   updated_at TIMESTAMPTZ DEFAULT now()

@@ -35,15 +35,6 @@ export default function AvatarProfesionalPage() {
   const [generando, setGenerando] = useState(false);
   const [resultado, setResultado] = useState<{ estado: string; mensaje: string; videoUrl?: string; statusUrl?: string } | null>(null);
 
-  const [heygenAvatarId, setHeygenAvatarId] = useState("");
-  const [heygenVoiceId, setHeygenVoiceId] = useState("");
-  const [guardandoHeygen, setGuardandoHeygen] = useState(false);
-  const [mensajeHeygen, setMensajeHeygen] = useState<string | null>(null);
-  const [guionHeygen, setGuionHeygen] = useState("Hoy os cuento cómo recuperar mejor después de una sesión intensa.");
-  const [generandoHeygen, setGenerandoHeygen] = useState(false);
-  const [resultadoHeygen, setResultadoHeygen] = useState<{ estado: string; mensaje: string; videoUrl?: string } | null>(null);
-  const pollHeygenRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
   useEffect(() => {
     if (!supabase) {
       setCargandoOwner(false);
@@ -68,8 +59,6 @@ export default function AvatarProfesionalPage() {
         return;
       }
       setOwner(json);
-      if (json.heygenAvatarId) setHeygenAvatarId(json.heygenAvatarId);
-      if (json.heygenVoiceId) setHeygenVoiceId(json.heygenVoiceId);
     });
   }, [supabase]);
 
@@ -77,63 +66,8 @@ export default function AvatarProfesionalPage() {
     return () => {
       if (pollSoulRef.current) clearInterval(pollSoulRef.current);
       if (pollFotoRef.current) clearInterval(pollFotoRef.current);
-      if (pollHeygenRef.current) clearInterval(pollHeygenRef.current);
     };
   }, []);
-
-  async function guardarHeygen() {
-    if (!owner || !heygenAvatarId.trim() || !heygenVoiceId.trim()) return;
-    setGuardandoHeygen(true);
-    setMensajeHeygen(null);
-    try {
-      const res = await fetch("/api/profesionales/heygen/guardar", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ownerId: owner.ownerId, heygenAvatarId: heygenAvatarId.trim(), heygenVoiceId: heygenVoiceId.trim() }),
-      });
-      const json = await res.json();
-      if (res.ok) {
-        setMensajeHeygen("Guardado ✓");
-        setOwner({ ...owner, heygenAvatarId: heygenAvatarId.trim(), heygenVoiceId: heygenVoiceId.trim() });
-      } else {
-        setMensajeHeygen(json.error ?? "Error guardando.");
-      }
-    } finally {
-      setGuardandoHeygen(false);
-    }
-  }
-
-  function iniciarPollingHeygen(videoId: string) {
-    if (pollHeygenRef.current) clearInterval(pollHeygenRef.current);
-    pollHeygenRef.current = setInterval(async () => {
-      const res = await fetch(`/api/profesionales/heygen/estado?videoId=${encodeURIComponent(videoId)}`);
-      const data = await res.json();
-      setResultadoHeygen(data);
-      if (data.estado !== "procesando") clearInterval(pollHeygenRef.current!);
-    }, 5000);
-  }
-
-  async function generarVideoHeygen() {
-    if (!owner || !guionHeygen.trim()) return;
-    setGenerandoHeygen(true);
-    setResultadoHeygen(null);
-    try {
-      const res = await fetch("/api/profesionales/heygen/generar", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ownerId: owner.ownerId, guion: guionHeygen }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setResultadoHeygen({ estado: "error", mensaje: data.error ?? "Error generando el vídeo." });
-        return;
-      }
-      setResultadoHeygen(data);
-      if (data.estado === "procesando" && data.videoId) iniciarPollingHeygen(data.videoId);
-    } finally {
-      setGenerandoHeygen(false);
-    }
-  }
 
   function iniciarPollingSoul(id: string) {
     if (pollSoulRef.current) clearInterval(pollSoulRef.current);
@@ -341,81 +275,9 @@ export default function AvatarProfesionalPage() {
               )}
             </div>
 
-            <div className="space-y-3 rounded-xl border border-black/10 p-4">
-              <p className="text-sm font-semibold">2. Modo HeyGen · Digital Twin (avatar de vídeo)</p>
-              <p className="text-xs text-[rgb(99,99,99)]">
-                HeyGen entrena tu avatar a partir de un vídeo tuyo de <strong>2 minutos</strong> (webcam o móvil,
-                buena luz, sin gafas de sol, mirando a cámara). Ese entrenamiento se hace en su web, no aquí:
-              </p>
-              <ol className="list-decimal space-y-1 pl-4 text-xs text-[rgb(99,99,99)]">
-                <li>
-                  Entra en{" "}
-                  <a href="https://app.heygen.com/avatars" target="_blank" rel="noreferrer" className="font-semibold underline">
-                    app.heygen.com/avatars
-                  </a>{" "}
-                  → <em>Create Avatar</em> → sube o graba tu vídeo de 2 min (incluye la frase de consentimiento que te pida).
-                </li>
-                <li>Espera a que termine el entrenamiento (Avatar IV / Digital Twin).</li>
-                <li>Copia el <strong>Avatar ID</strong> y elige una voz en su catálogo para el <strong>Voice ID</strong>, y pégalos aquí abajo.</li>
-              </ol>
-              <label className="block text-xs">
-                <span className="mb-1 block text-[rgb(99,99,99)]">Avatar ID (HeyGen)</span>
-                <input
-                  value={heygenAvatarId}
-                  onChange={(e) => setHeygenAvatarId(e.target.value)}
-                  placeholder="p. ej. Marianne_Chair_Sitting_public"
-                  className="w-full rounded-lg border border-black/15 px-3 py-2"
-                />
-              </label>
-              <label className="block text-xs">
-                <span className="mb-1 block text-[rgb(99,99,99)]">Voice ID (HeyGen)</span>
-                <input
-                  value={heygenVoiceId}
-                  onChange={(e) => setHeygenVoiceId(e.target.value)}
-                  placeholder="p. ej. 1bd001e7e50f421d891986aad5158bc8"
-                  className="w-full rounded-lg border border-black/15 px-3 py-2"
-                />
-              </label>
-              <button
-                onClick={guardarHeygen}
-                disabled={guardandoHeygen || !heygenAvatarId.trim() || !heygenVoiceId.trim()}
-                className="w-full rounded-full bg-[#0e6b57] px-6 py-3 text-sm font-semibold text-white disabled:opacity-40"
-              >
-                {guardandoHeygen ? "Guardando…" : "Guardar Avatar ID / Voice ID →"}
-              </button>
-              {mensajeHeygen && <p className="text-xs text-[rgb(99,99,99)]">{mensajeHeygen}</p>}
-
-              {owner.heygenAvatarId && owner.heygenVoiceId && (
-                <div className="space-y-2 border-t border-black/10 pt-3">
-                  <textarea
-                    value={guionHeygen}
-                    onChange={(e) => setGuionHeygen(e.target.value)}
-                    rows={3}
-                    className="w-full rounded-lg border border-black/15 px-3 py-2 text-sm"
-                  />
-                  <button
-                    onClick={generarVideoHeygen}
-                    disabled={generandoHeygen || !guionHeygen.trim()}
-                    className="w-full rounded-full bg-black px-6 py-3 text-sm font-semibold text-white disabled:opacity-40"
-                  >
-                    {generandoHeygen ? "Enviando..." : "Generar vídeo con HeyGen →"}
-                  </button>
-                  {resultadoHeygen && (
-                    <div className="rounded-lg bg-black/5 p-3 text-xs">
-                      {resultadoHeygen.mensaje}
-                      {resultadoHeygen.estado === "completado" && resultadoHeygen.videoUrl && (
-                        // eslint-disable-next-line jsx-a11y/media-has-caption
-                        <video controls src={resultadoHeygen.videoUrl} className="mt-2 w-full rounded-lg" />
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
             {owner.avatarUrl && (
               <div className="space-y-3 rounded-xl border border-black/10 p-4">
-                <p className="text-sm font-semibold">3. Prueba y tunea (vídeo V2 · cuerpo en acción)</p>
+                <p className="text-sm font-semibold">2. Prueba y tunea (vídeo V2 · cuerpo en acción)</p>
                 <textarea
                   value={guion}
                   onChange={(e) => setGuion(e.target.value)}

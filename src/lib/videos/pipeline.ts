@@ -1,4 +1,4 @@
-export type VariantePV = "v3" | "v4" | "combo";
+export type VariantePV = "v3" | "v4" | "combo" | "heygen";
 
 export type VideoJobResult = {
   estado: "completado" | "procesando" | "simulado" | "error";
@@ -77,7 +77,16 @@ export function higgsfieldAuthHeader(): string | null {
  * (los planes de Vercel cortan la función mucho antes de que Higgsfield
  * termine de generar el vídeo — probado: FUNCTION_INVOCATION_TIMEOUT).
  */
+const HEYGEN_STATUS_PREFIX = "heygen://";
+
 export async function consultarEstadoVideo(statusUrl: string): Promise<VideoJobResult> {
+  if (statusUrl.startsWith(HEYGEN_STATUS_PREFIX)) {
+    const { consultarEstadoVideoHeyGen } = await import("@/lib/videos/heygen");
+    const videoId = statusUrl.slice(HEYGEN_STATUS_PREFIX.length);
+    const r = await consultarEstadoVideoHeyGen(videoId);
+    return { estado: r.estado, mensaje: r.mensaje, videoUrl: r.videoUrl, statusUrl };
+  }
+
   const authHeader = higgsfieldAuthHeader();
   if (!authHeader) return { estado: "error", mensaje: "Falta configurar Higgsfield." };
 
@@ -111,6 +120,10 @@ export async function consultarEstadoVideo(statusUrl: string): Promise<VideoJobR
  * ENVÍA el trabajo; el cliente sondea /api/videos/estado con el status_url.
  */
 export async function generarVideo(variante: VariantePV, guion: string, ownerId?: string): Promise<VideoJobResult> {
+  if (variante === "heygen") {
+    return generarVideoHeygenComoVariante(guion, ownerId);
+  }
+
   const elevenlabsKey = process.env.ELEVENLABS_API_KEY;
   const authHeader = higgsfieldAuthHeader();
 
@@ -181,4 +194,41 @@ export async function generarVideo(variante: VariantePV, guion: string, ownerId?
   } catch (e) {
     return { estado: "error", mensaje: e instanceof Error ? e.message : "Error desconocido" };
   }
+}
+
+/**
+ * Variante HeyGen · Máxima calidad — requiere que el owner ya haya
+ * entrenado su Digital Twin en heygen.com y guardado su avatar_id/voice_id
+ * (twin_profiles.heygen_avatar_id/heygen_voice_id).
+ */
+async function generarVideoHeygenComoVariante(guion: string, ownerId?: string): Promise<VideoJobResult> {
+  if (!ownerId) {
+    return { estado: "error", mensaje: "Necesitas iniciar sesión como profesional para usar HeyGen." };
+  }
+
+  const { getSupabaseAdmin } = await import("@/lib/supabase/server");
+  const supabase = getSupabaseAdmin();
+  if (!supabase) return { estado: "error", mensaje: "Supabase no configurado." };
+
+  const { data } = await supabase
+    .from("twin_profiles")
+    .select("heygen_avatar_id, heygen_voice_id")
+    .eq("owner_id", ownerId)
+    .is("follower_id", null)
+    .maybeSingle();
+
+  if (!data?.heygen_avatar_id || !data?.heygen_voice_id) {
+    return {
+      estado: "error",
+      mensaje: "Todavía no has entrenado tu Digital Twin en heygen.com ni guardado tu avatar_id/voice_id.",
+    };
+  }
+
+  const { generarVideoHeyGen } = await import("@/lib/videos/heygen");
+  const r = await generarVideoHeyGen(guion, data.heygen_avatar_id, data.heygen_voice_id);
+
+  if (r.estado === "procesando" && r.videoId) {
+    return { estado: "procesando", mensaje: r.mensaje, statusUrl: `${HEYGEN_STATUS_PREFIX}${r.videoId}` };
+  }
+  return { estado: r.estado, mensaje: r.mensaje, videoUrl: r.videoUrl };
 }

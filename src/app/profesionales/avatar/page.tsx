@@ -146,7 +146,7 @@ export default function AvatarProfesionalPage() {
     });
     const json = await res.json();
     if (!res.ok) {
-      setMensajeSoul(json.error ?? "Error generando la foto.");
+      setMensajeSoul(json.details ? `${json.error} ${json.details}` : json.error ?? "Error generando la foto.");
       return;
     }
     if (json.estado === "completado" && json.imageUrl) {

@@ -25,6 +25,9 @@ export async function POST(req: NextRequest) {
         prompt,
         custom_reference_id: soulId,
         custom_reference_strength: 1,
+        width_and_height: "1536x2048",
+        quality: "1080p",
+        batch_size: 1,
       }),
     });
 

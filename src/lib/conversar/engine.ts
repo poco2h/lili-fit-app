@@ -220,7 +220,7 @@ export async function responderConversar(input: ConversarInput): Promise<Convers
 
   const twinOwner = ownerId ? await leerTwinServer(ownerId) : null;
   const twinFollower = followerUuid ? await leerTwinServer(ownerId!, followerUuid) : null;
-  const talesBloque = [bloqueTalesPrompt(twinOwner), bloqueContextoFollower(twinFollower)].filter(Boolean).join("\n\n");
+  const talesBloque = [bloqueTalesPrompt(twinOwner, mensaje), bloqueContextoFollower(twinFollower)].filter(Boolean).join("\n\n");
   const generada = await llamarGemini(systemInstructionBase(ownerName, sportsContextResumen, talesBloque), mensaje, historial, null);
   if (generada && "texto" in generada) {
     const base = aplicaGuardrailPrecio(role, mensaje, generada.texto, ownerName);

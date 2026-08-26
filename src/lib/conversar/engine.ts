@@ -7,8 +7,17 @@ import {
 } from "@/lib/conversar/guardrails";
 import { buscarMencionMarca } from "@/lib/conversar/marcas";
 import type { Marca } from "@/lib/marcas/types";
-import { aplicarExtraccion, avanzarProgreso, esquemaExtraccion, estadoTurno, instruccionOnboarding, twinVacio } from "@/lib/conversar/onboarding";
+import {
+  aplicarExtraccion,
+  avanzarProgreso,
+  esquemaExtraccion,
+  estadoTurno,
+  instruccionOnboarding,
+  twinVacio,
+  type ContextoOnboarding,
+} from "@/lib/conversar/onboarding";
 import { leerTwinServer, guardarTwinServer } from "@/lib/session/twinProfileServer";
+import { resolveFollowerUuid } from "@/lib/demo/identities";
 
 export type TurnoHistorial = { who: "MindTwin" | "Tú"; text: string };
 
@@ -17,6 +26,7 @@ export type ConversarInput = {
   role: Role;
   ownerName: string;
   ownerId?: string;
+  followerId?: string;
   marcas?: Marca[];
   marcaYaMencionada?: boolean;
   sportsContextResumen?: string; // solo Lili Celebs (V10 §7.3)
@@ -118,20 +128,28 @@ function conMencionMarca(
 }
 
 /**
- * Turno de onboarding conversacional (V10 §5.1 R1): mientras el Owner no
- * haya terminado S1-S4, cada mensaje suyo alimenta la sesión activa en vez
- * de un chat libre — se le pregunta, en una sola frase natural por grupo de
- * rasgos, y la respuesta se traduce a los mismos ítems Likert 1-5 que ya
- * usa el flujo determinista de /app/onboarding (src/lib/ego, sin cambios en
- * el scoring). Bloquea implícitamente el chat libre: mientras esta función
- * decida seguir en onboarding, nunca se llega al chat genérico.
+ * Turno de onboarding conversacional (V10 §5.1 R1 para Owner; landing PASO
+ * 03 para Follower): mientras la persona no haya terminado sus sesiones
+ * (S1-S4 Owner, S1-S3 Follower), cada mensaje suyo alimenta la sesión activa
+ * en vez de un chat libre — se le pregunta, en una sola frase natural por
+ * grupo de rasgos, y la respuesta se traduce a los mismos ítems Likert 1-5
+ * que ya usa el flujo determinista de /app/onboarding (src/lib/ego, sin
+ * cambios en el scoring). Bloquea implícitamente el chat libre: mientras
+ * esta función decida seguir en onboarding, nunca se llega al chat genérico.
+ *
+ * followerUuid presente = turno del Follower (su propia fila en
+ * twin_profiles); ausente = turno del Owner.
  */
-async function turnoOnboarding(input: ConversarInput): Promise<ConversarOutput | null> {
+async function turnoOnboarding(
+  input: ConversarInput,
+  contexto: ContextoOnboarding,
+  followerUuid?: string
+): Promise<ConversarOutput | null> {
   const { mensaje, ownerName, ownerId, historial } = input;
   if (!ownerId) return null;
 
-  const twin = await leerTwinServer(ownerId);
-  const turno = estadoTurno(twin);
+  const twin = await leerTwinServer(ownerId, followerUuid);
+  const turno = estadoTurno(twin, contexto);
   if (!turno) return null; // onboarding ya completo — cae al chat libre
 
   const instruccion = instruccionOnboarding(turno.sesion, turno.pasoActual, turno.pasoSiguiente);
@@ -152,9 +170,9 @@ async function turnoOnboarding(input: ConversarInput): Promise<ConversarOutput |
   if (turno.pasoActual && generada.extraccion) {
     twinActualizado = aplicarExtraccion(twinActualizado, turno.pasoActual, generada.extraccion);
   }
-  twinActualizado = avanzarProgreso(twinActualizado, turno.sesion);
+  twinActualizado = avanzarProgreso(twinActualizado, turno.sesion, contexto);
 
-  await guardarTwinServer(ownerId, twinActualizado);
+  await guardarTwinServer(ownerId, twinActualizado, followerUuid);
 
   return { respuesta: generada.texto, capa: "n3-onboarding" };
 }
@@ -171,11 +189,19 @@ async function turnoOnboarding(input: ConversarInput): Promise<ConversarOutput |
  * progreso guardado, no solo del texto del mensaje.
  */
 export async function responderConversar(input: ConversarInput): Promise<ConversarOutput> {
-  const { mensaje, role, ownerName, ownerId, marcas, marcaYaMencionada, sportsContextResumen, historial } = input;
+  const { mensaje, role, ownerName, ownerId, followerId, marcas, marcaYaMencionada, sportsContextResumen, historial } = input;
 
   if (role === "owner" && ownerId) {
-    const resultado = await turnoOnboarding(input);
+    const resultado = await turnoOnboarding(input, "owner");
     if (resultado) return { ...conMencionMarca(resultado.respuesta, mensaje, marcas, marcaYaMencionada), capa: resultado.capa };
+  }
+
+  if (role === "follower" && ownerId && followerId) {
+    const followerUuid = await resolveFollowerUuid(followerId, ownerId);
+    if (followerUuid) {
+      const resultado = await turnoOnboarding(input, "follower", followerUuid);
+      if (resultado) return { ...conMencionMarca(resultado.respuesta, mensaje, marcas, marcaYaMencionada), capa: resultado.capa };
+    }
   }
 
   if (role === "follower" && esPreguntaDePrecio(mensaje)) {

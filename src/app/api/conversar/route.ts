@@ -9,6 +9,7 @@ export async function POST(req: NextRequest) {
   const role: Role = body?.role === "owner" ? "owner" : "follower";
   const ownerName = String(body?.ownerName ?? "tu profesional");
   const ownerId = body?.ownerId ? String(body.ownerId) : undefined;
+  const followerId = body?.followerId ? String(body.followerId) : undefined;
   const marcas = Array.isArray(body?.marcas) ? body.marcas : [];
   const marcaYaMencionada = Boolean(body?.marcaYaMencionada);
   const celebId = body?.celebId ? String(body.celebId) : null; // solo Lili Celebs
@@ -27,6 +28,7 @@ export async function POST(req: NextRequest) {
     role,
     ownerName,
     ownerId,
+    followerId,
     marcas,
     marcaYaMencionada,
     sportsContextResumen,

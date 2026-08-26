@@ -1,10 +1,12 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import ConversarChat from "@/components/app/ConversarChat";
 import { OWNER_NOMBRE_DEMO } from "@/components/app/AppHeader";
 import { useTwin } from "@/lib/session/useTwin";
+import { obtenerFollowerLocalId } from "@/lib/session/followerLocalId";
+import type { DemoTwin } from "@/lib/demo/localTwin";
 
 function ConversarPageInner() {
   const searchParams = useSearchParams();
@@ -14,10 +16,27 @@ function ConversarPageInner() {
   const ownerName = owner?.ownerName ?? OWNER_NOMBRE_DEMO;
   const canalParam = searchParams.get("canal");
   const canalInicial = canalParam === "voz" || canalParam === "video" ? canalParam : canalParam === "texto" ? "texto" : undefined;
-  // Mientras el owner no haya terminado S1-S4, la propia conversación conduce
-  // el onboarding (V10 §5.1 R1) — sin banners ni CTAs, solo texto conversacional.
-  const onboardingCompleto = twin ? twin.sesion_actual === "completo" : role === "follower";
-  const sesionActual = twin && twin.sesion_actual !== "completo" ? twin.sesion_actual : undefined;
+
+  const [followerId, setFollowerId] = useState<string | undefined>(undefined);
+  const [followerTwin, setFollowerTwin] = useState<DemoTwin | null>(null);
+
+  // El Follower no tiene login todavía — su progreso de sesiones se guarda
+  // contra un id local persistente por profesional (followerLocalId.ts).
+  useEffect(() => {
+    if (role !== "follower" || !ownerId) return;
+    const id = obtenerFollowerLocalId(ownerId);
+    setFollowerId(id);
+    fetch(`/api/twin/follower-profile?ownerId=${encodeURIComponent(ownerId)}&followerId=${encodeURIComponent(id)}`)
+      .then((r) => r.json())
+      .then((d) => setFollowerTwin(d.twin ?? null));
+  }, [role, ownerId]);
+
+  // Mientras la persona no haya terminado sus sesiones (S1-S4 Owner, S1-S3
+  // Follower), la propia conversación conduce el onboarding — sin banners
+  // ni CTAs, solo texto conversacional.
+  const twinActivo = role === "follower" ? followerTwin : twin;
+  const onboardingCompleto = twinActivo ? twinActivo.sesion_actual === "completo" : false;
+  const sesionActual = twinActivo && twinActivo.sesion_actual !== "completo" ? twinActivo.sesion_actual : undefined;
 
   return (
     <div className="mt-app">
@@ -26,6 +45,7 @@ function ConversarPageInner() {
           ownerName={ownerName}
           role={role}
           ownerId={ownerId}
+          followerId={followerId}
           canalInicial={canalInicial}
           onboardingCompleto={onboardingCompleto}
           sesionActual={sesionActual}

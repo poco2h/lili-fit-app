@@ -53,21 +53,31 @@ const CAMPOS_SPORTS: Array<{ campos: Array<keyof SportsProfile>; pregunta: strin
   { campos: ["restricciones"], pregunta: "Restricciones médicas, articulares, de tiempo disponible o de equipamiento" },
 ];
 
-function pasosDeSesion(sesion: "S1" | "S2" | "S3" | "S4"): Paso[] {
+export type ContextoOnboarding = "owner" | "follower";
+
+/**
+ * El Follower construye su propio EGO ID en 3 sesiones (V10 landing PASO 03:
+ * "3 conversaciones de 20 min · EGO ID y voz") — sin GUT ID (es del Owner) ni
+ * Sesión 4 de datos deportivos (esos datos los recoge el Owner sobre él, no
+ * al revés). El Owner sí tiene las 4 completas (V10 §5.2/§5.3).
+ */
+function pasosDeSesion(sesion: "S1" | "S2" | "S3" | "S4", contexto: ContextoOnboarding): Paso[] {
   if (sesion === "S1") {
     return agruparPorDimension(SESIONES.S1).map((items) => ({ tipo: "likert", items }));
   }
   if (sesion === "S2") {
     const likert = agruparPorDimension(SESIONES.S2).map((items): Paso => ({ tipo: "likert", items }));
+    if (contexto === "follower") return likert;
     const gut = PREGUNTAS_BASELINE.slice(0, 5).map((pregunta): Paso => ({ tipo: "gut", pregunta }));
     return [...likert, ...gut];
   }
   if (sesion === "S3") {
     const likert = agruparPorDimension(SESIONES.S3).map((items): Paso => ({ tipo: "likert", items }));
+    if (contexto === "follower") return likert;
     const gut = PREGUNTAS_BASELINE.slice(5).map((pregunta): Paso => ({ tipo: "gut", pregunta }));
     return [...likert, ...gut];
   }
-  // S4 — datos deportivos/antropométricos, conversación libre sin tests.
+  // S4 — datos deportivos/antropométricos, solo Owner (conversación libre sin tests).
   return CAMPOS_SPORTS.map((c) => ({ tipo: "sports", campos: c.campos, pregunta: c.pregunta }));
 }
 
@@ -78,12 +88,13 @@ export type EstadoTurno = {
 };
 
 /** Determina qué toca hacer en este turno según el progreso guardado. Devuelve null si el onboarding ya está completo. */
-export function estadoTurno(twin: DemoTwin | null): EstadoTurno | null {
+export function estadoTurno(twin: DemoTwin | null, contexto: ContextoOnboarding): EstadoTurno | null {
   const sesion = (twin?.sesion_actual ?? "S1") as DemoTwin["sesion_actual"];
   if (sesion === "completo") return null;
+  if (contexto === "follower" && sesion === "S4") return null; // red de seguridad, no debería ocurrir nunca
 
   const progreso = twin?.onboarding_progress ?? ONBOARDING_PROGRESS_INICIAL;
-  const pasos = pasosDeSesion(sesion);
+  const pasos = pasosDeSesion(sesion, contexto);
 
   if (!progreso.iniciado) {
     return { sesion, pasoActual: null, pasoSiguiente: pasos[0] ?? null };
@@ -209,10 +220,10 @@ export function aplicarExtraccion(
   };
 }
 
-/** Avanza el puntero de progreso; si la sesión actual se termina, pasa a la siguiente (o a "completo" tras S4). */
-export function avanzarProgreso(twin: DemoTwin, sesionDelTurno: "S1" | "S2" | "S3" | "S4"): DemoTwin {
+/** Avanza el puntero de progreso; si la sesión actual se termina, pasa a la siguiente (Owner pasa por S4, Follower va S3 -> completo). */
+export function avanzarProgreso(twin: DemoTwin, sesionDelTurno: "S1" | "S2" | "S3" | "S4", contexto: ContextoOnboarding): DemoTwin {
   const progreso = twin.onboarding_progress ?? ONBOARDING_PROGRESS_INICIAL;
-  const pasos = pasosDeSesion(sesionDelTurno);
+  const pasos = pasosDeSesion(sesionDelTurno, contexto);
   const nuevoIdx = progreso.iniciado ? progreso.pasoIdx + 1 : 0;
 
   if (nuevoIdx < pasos.length) {
@@ -220,7 +231,15 @@ export function avanzarProgreso(twin: DemoTwin, sesionDelTurno: "S1" | "S2" | "S
   }
 
   const siguienteSesion: DemoTwin["sesion_actual"] =
-    sesionDelTurno === "S1" ? "S2" : sesionDelTurno === "S2" ? "S3" : sesionDelTurno === "S3" ? "S4" : "completo";
+    sesionDelTurno === "S1"
+      ? "S2"
+      : sesionDelTurno === "S2"
+        ? "S3"
+        : sesionDelTurno === "S3"
+          ? contexto === "follower"
+            ? "completo"
+            : "S4"
+          : "completo";
 
   return { ...twin, sesion_actual: siguienteSesion, onboarding_progress: ONBOARDING_PROGRESS_INICIAL };
 }

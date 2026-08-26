@@ -26,7 +26,7 @@ function now() {
   return new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
 }
 
-function saludoOnboarding(ownerName: string) {
+function saludoOnboardingOwner(ownerName: string) {
   return (
     `Hola, ${ownerName}. Soy tu MindTwin.\n\n` +
     "Para conocerte bien voy a hacerte unas preguntas, repartidas en 4 sesiones de unos 20 minutos cada una:\n" +
@@ -39,9 +39,26 @@ function saludoOnboarding(ownerName: string) {
   );
 }
 
+function saludoOnboardingFollower(ownerName: string) {
+  return (
+    `Soy el MindTwin de ${ownerName}, una IA entrenada con su perfil.\n\n` +
+    "Antes de nada, voy a conocerte un poco mejor para poder darte respuestas hechas a tu medida. Son unas preguntas " +
+    "repartidas en 3 sesiones de unos 20 minutos cada una:\n" +
+    "• Sesión 1: Personalidad · Eneagrama · Apego\n" +
+    "• Sesión 2: Foco regulatorio · Inteligencia emocional\n" +
+    "• Sesión 3: Fortalezas de carácter · Tu voz\n\n" +
+    "Responde con sinceridad — solo tú verás esto. Si te cansas, dímelo y seguimos cuando quieras.\n\n" +
+    "¿Empezamos con la Sesión 1?"
+  );
+}
+
 function saludoInicial(role: "owner" | "follower", ownerName: string, onboardingCompleto: boolean) {
-  if (role === "follower") return `Soy el MindTwin de ${ownerName}, una IA entrenada con su perfil. ¿En qué puedo ayudarte hoy?`;
-  return onboardingCompleto ? `Hola. Soy tu MindTwin. ¿En qué trabajamos hoy?` : saludoOnboarding(ownerName);
+  if (role === "follower") {
+    return onboardingCompleto
+      ? `Soy el MindTwin de ${ownerName}, una IA entrenada con su perfil. ¿En qué puedo ayudarte hoy?`
+      : saludoOnboardingFollower(ownerName);
+  }
+  return onboardingCompleto ? `Hola. Soy tu MindTwin. ¿En qué trabajamos hoy?` : saludoOnboardingOwner(ownerName);
 }
 
 const NUMERO_SESION: Record<string, string> = { S1: "1", S2: "2", S3: "3", S4: "4" };
@@ -50,6 +67,7 @@ export default function ConversarChat({
   ownerName,
   role,
   ownerId,
+  followerId,
   canalInicial,
   onboardingCompleto = true,
   sesionActual,
@@ -57,6 +75,7 @@ export default function ConversarChat({
   ownerName: string;
   role: "owner" | "follower";
   ownerId?: string;
+  followerId?: string;
   canalInicial?: Canal;
   onboardingCompleto?: boolean;
   sesionActual?: "S1" | "S2" | "S3" | "S4";
@@ -97,6 +116,7 @@ export default function ConversarChat({
           role,
           ownerName,
           ownerId,
+          followerId,
           marcas: leerMarcas(),
           marcaYaMencionada,
           historial: messages.map(({ who, text }) => ({ who, text })),

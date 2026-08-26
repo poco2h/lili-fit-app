@@ -202,6 +202,16 @@ CREATE TABLE IF NOT EXISTS receta_nutriente (
   PRIMARY KEY (receta_id, nutriente_id)
 );
 
+-- 13.5 VÍDEOS GENERADOS (galería persistente — antes se perdían al recargar)
+CREATE TABLE IF NOT EXISTS generated_videos (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  owner_id UUID NOT NULL REFERENCES owners(id) ON DELETE CASCADE,
+  variante TEXT NOT NULL, -- v3 (hablar a cámara) / v4 (cuerpo en acción) / combo / heygen
+  guion TEXT,
+  video_url TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 -- 14. ROW LEVEL SECURITY (RLS) — REGLAS ESTRICTAS DE PRIVACIDAD
 ALTER TABLE owners ENABLE ROW LEVEL SECURITY;
 ALTER TABLE followers ENABLE ROW LEVEL SECURITY;
@@ -213,3 +223,4 @@ ALTER TABLE session_billing ENABLE ROW LEVEL SECURITY;
 ALTER TABLE habits ENABLE ROW LEVEL SECURITY;
 ALTER TABLE habit_evaluations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE agenda_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE generated_videos ENABLE ROW LEVEL SECURITY;

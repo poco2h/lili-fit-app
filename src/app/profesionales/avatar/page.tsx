@@ -34,6 +34,7 @@ export default function AvatarProfesionalPage() {
   const [guion, setGuion] = useState("Hoy os cuento cómo recuperar mejor después de una sesión intensa.");
   const [generando, setGenerando] = useState(false);
   const [resultado, setResultado] = useState<{ estado: string; mensaje: string; videoUrl?: string; statusUrl?: string } | null>(null);
+  const [videosGuardados, setVideosGuardados] = useState<Array<{ id: string; video_url: string; guion: string | null; created_at: string }>>([]);
 
   useEffect(() => {
     if (!supabase) {
@@ -59,8 +60,15 @@ export default function AvatarProfesionalPage() {
         return;
       }
       setOwner(json);
+      cargarVideos(json.ownerId);
     });
   }, [supabase]);
+
+  function cargarVideos(ownerId: string) {
+    fetch(`/api/videos/listar?ownerId=${encodeURIComponent(ownerId)}`)
+      .then((r) => r.json())
+      .then((d) => setVideosGuardados(d.videos ?? []));
+  }
 
   useEffect(() => {
     return () => {
@@ -167,12 +175,25 @@ export default function AvatarProfesionalPage() {
     setOwner({ ...owner, avatarUrl: fotoGenerada });
   }
 
+  async function guardarVideoGenerado(videoUrl: string) {
+    if (!owner) return;
+    await fetch("/api/videos/guardar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ownerId: owner.ownerId, variante: "v4", guion, videoUrl }),
+    });
+    cargarVideos(owner.ownerId);
+  }
+
   function iniciarPolling(statusUrl: string) {
     const interval = setInterval(async () => {
       const res = await fetch(`/api/videos/estado?statusUrl=${encodeURIComponent(statusUrl)}`);
       const data = await res.json();
       setResultado(data);
-      if (data.estado !== "procesando") clearInterval(interval);
+      if (data.estado !== "procesando") {
+        clearInterval(interval);
+        if (data.estado === "completado" && data.videoUrl) guardarVideoGenerado(data.videoUrl);
+      }
     }, 3000);
   }
 
@@ -189,6 +210,7 @@ export default function AvatarProfesionalPage() {
       const data = await res.json();
       setResultado(data);
       if (data.estado === "procesando" && data.statusUrl) iniciarPolling(data.statusUrl);
+      else if (data.estado === "completado" && data.videoUrl) guardarVideoGenerado(data.videoUrl);
     } finally {
       setGenerando(false);
     }
@@ -298,6 +320,19 @@ export default function AvatarProfesionalPage() {
                       // eslint-disable-next-line jsx-a11y/media-has-caption
                       <video controls src={resultado.videoUrl} className="mt-2 w-full rounded-lg" />
                     )}
+                  </div>
+                )}
+
+                {videosGuardados.length > 0 && (
+                  <div className="space-y-2 border-t border-black/10 pt-3">
+                    <p className="text-xs font-semibold text-[rgb(99,99,99)]">Tus vídeos guardados</p>
+                    {videosGuardados.map((v) => (
+                      <div key={v.id} className="space-y-1">
+                        {v.guion && <p className="text-xs text-[rgb(120,120,120)]">{v.guion}</p>}
+                        {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+                        <video controls src={v.video_url} className="w-full rounded-lg" />
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>

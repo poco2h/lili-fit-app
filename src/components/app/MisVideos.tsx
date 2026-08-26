@@ -18,12 +18,15 @@ const PASOS = [
   "Espera unos segundos. Cuando esté listo, podrás descargarlo y subirlo directamente a Reels o TikTok.",
 ];
 
+type VideoGuardado = { id: string; video_url: string; variante: string; guion: string | null; created_at: string };
+
 export default function MisVideos() {
   const { owner } = useOwnerSession();
   const [variante, setVariante] = useState<VariantePV>("v3");
   const [guion, setGuion] = useState("");
   const [resultado, setResultado] = useState<VideoJobResult | null>(null);
   const [loading, setLoading] = useState(false);
+  const [videosGuardados, setVideosGuardados] = useState<VideoGuardado[]>([]);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -31,6 +34,26 @@ export default function MisVideos() {
       if (pollRef.current) clearInterval(pollRef.current);
     };
   }, []);
+
+  useEffect(() => {
+    if (owner?.ownerId) cargarVideos(owner.ownerId);
+  }, [owner?.ownerId]);
+
+  function cargarVideos(ownerId: string) {
+    fetch(`/api/videos/listar?ownerId=${encodeURIComponent(ownerId)}`)
+      .then((r) => r.json())
+      .then((d) => setVideosGuardados(d.videos ?? []));
+  }
+
+  async function guardarVideoGenerado(videoUrl: string) {
+    if (!owner?.ownerId) return;
+    await fetch("/api/videos/guardar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ownerId: owner.ownerId, variante, guion, videoUrl }),
+    });
+    cargarVideos(owner.ownerId);
+  }
 
   function iniciarPolling(statusUrl: string) {
     if (pollRef.current) clearInterval(pollRef.current);
@@ -41,6 +64,7 @@ export default function MisVideos() {
       if (data.estado !== "procesando" && pollRef.current) {
         clearInterval(pollRef.current);
         pollRef.current = null;
+        if (data.estado === "completado" && data.videoUrl) guardarVideoGenerado(data.videoUrl);
       }
     }, 3000);
   }
@@ -59,6 +83,8 @@ export default function MisVideos() {
       setResultado(data);
       if (data.estado === "procesando" && data.statusUrl) {
         iniciarPolling(data.statusUrl);
+      } else if (data.estado === "completado" && data.videoUrl) {
+        guardarVideoGenerado(data.videoUrl);
       }
     } finally {
       setLoading(false);
@@ -153,6 +179,21 @@ export default function MisVideos() {
           </div>
         )}
       </div>
+
+      {videosGuardados.length > 0 && (
+        <div className="mt-glass space-y-3 p-5">
+          <p className="text-xs font-bold uppercase tracking-wide text-white/50">Tus vídeos guardados</p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {videosGuardados.map((v) => (
+              <div key={v.id} className="space-y-1">
+                {v.guion && <p className="text-xs text-white/50">{v.guion}</p>}
+                {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+                <video controls src={v.video_url} className="w-full rounded-lg" />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

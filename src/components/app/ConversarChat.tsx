@@ -225,6 +225,24 @@ export default function ConversarChat({
             {sending && <div className="text-xs text-white/40">MindTwin está escribiendo…</div>}
           </div>
           <div className="flex items-center gap-2 border-t border-white/10 p-3">
+            <button
+              type="button"
+              onClick={() => setCanal("voz")}
+              aria-label="Cambiar a llamada de voz"
+              title="Llamada de voz"
+              className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white/5 text-base text-white/60 hover:bg-white/10 hover:text-white transition"
+            >
+              🎙️
+            </button>
+            <button
+              type="button"
+              onClick={() => setCanal("video")}
+              aria-label="Cambiar a videollamada"
+              title="Videollamada"
+              className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white/5 text-base text-white/60 hover:bg-white/10 hover:text-white transition"
+            >
+              📷
+            </button>
             <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}

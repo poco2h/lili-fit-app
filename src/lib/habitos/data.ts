@@ -151,7 +151,34 @@ export const HABITOS_MICROBIOMA: HabitoDeporte[] = [
   { emoji: "🐟", nombre: "Omega-3 post-entreno", categoria: "Microbiota · Antiinflamatorio" },
 ];
 
-export const DEPORTES = ["Boxeo", "Running", "Fuerza", "Yoga"] as const;
+export const DEPORTES = [
+  "Boxeo",
+  "Running",
+  "Fuerza",
+  "Yoga",
+  "Fútbol",
+  "Baloncesto",
+  "Tenis",
+  "Pádel",
+  "Natación",
+  "Ciclismo",
+  "Crossfit",
+  "Pilates",
+  "Escalada",
+  "Artes marciales",
+  "Voleibol",
+  "Golf",
+  "Atletismo",
+  "Triatlón",
+  "Senderismo",
+  "Remo",
+  "Esquí",
+  "Surf",
+  "Baile",
+  "Calistenia",
+  "HIIT / Funcional",
+  "Rugby",
+] as const;
 export type Deporte = (typeof DEPORTES)[number];
 
 /**
@@ -210,5 +237,115 @@ export const HABITOS_POR_DEPORTE: Record<Deporte, HabitoDeporte[]> = {
     { emoji: "🧘", nombre: "Vinyasa flow · 45 min", categoria: "Yoga · Movilidad" },
     { emoji: "🌬️", nombre: "Pranayama / respiración", categoria: "Yoga · Recuperación" },
     { emoji: "🧠", nombre: "Meditación guiada", categoria: "Yoga · Mente" },
+  ],
+  "Fútbol": [
+    { emoji: "⚽", nombre: "Técnica de control y pase", categoria: "Fútbol · Técnica" },
+    { emoji: "🏃", nombre: "Trabajo de resistencia intermitente", categoria: "Fútbol · Físico" },
+    { emoji: "🦵", nombre: "Fuerza y prevención de isquios", categoria: "Fútbol · Prevención lesiones" },
+  ],
+  Baloncesto: [
+    { emoji: "🏀", nombre: "Tiro y manejo de balón", categoria: "Baloncesto · Técnica" },
+    { emoji: "🤾", nombre: "Pliometría / salto", categoria: "Baloncesto · Potencia" },
+    { emoji: "🦶", nombre: "Estabilidad de tobillo", categoria: "Baloncesto · Prevención lesiones" },
+  ],
+  Tenis: [
+    { emoji: "🎾", nombre: "Golpe de fondo y saque", categoria: "Tenis · Técnica" },
+    { emoji: "🔄", nombre: "Trabajo de rotación de tronco", categoria: "Tenis · Potencia" },
+    { emoji: "🦿", nombre: "Agilidad lateral", categoria: "Tenis · Movilidad" },
+  ],
+  "Pádel": [
+    { emoji: "🎾", nombre: "Volea y bandeja", categoria: "Pádel · Técnica" },
+    { emoji: "🧠", nombre: "Lectura de juego / posicionamiento", categoria: "Pádel · Táctica" },
+    { emoji: "💪", nombre: "Fuerza de hombro y muñeca", categoria: "Pádel · Prevención lesiones" },
+  ],
+  "Natación": [
+    { emoji: "🏊", nombre: "Técnica de crol · series", categoria: "Natación · Técnica" },
+    { emoji: "🌬️", nombre: "Trabajo de respiración", categoria: "Natación · Resistencia" },
+    { emoji: "💪", nombre: "Fuerza de tren superior en seco", categoria: "Natación · Fuerza" },
+  ],
+  Ciclismo: [
+    { emoji: "🚴", nombre: "Rodaje base · Z2", categoria: "Ciclismo · Base aeróbica" },
+    { emoji: "⚡", nombre: "Series de umbral", categoria: "Ciclismo · Rendimiento" },
+    { emoji: "🦵", nombre: "Fuerza de piernas fuera de bici", categoria: "Ciclismo · Fuerza" },
+  ],
+  Crossfit: [
+    { emoji: "🏋️", nombre: "WOD del día", categoria: "Crossfit · Metabólico" },
+    { emoji: "🤸", nombre: "Técnica de levantamientos olímpicos", categoria: "Crossfit · Técnica" },
+    { emoji: "🔄", nombre: "Movilidad articular", categoria: "Crossfit · Prevención" },
+  ],
+  Pilates: [
+    { emoji: "🧘", nombre: "Core y control postural", categoria: "Pilates · Centro" },
+    { emoji: "🔄", nombre: "Movilidad de columna", categoria: "Pilates · Movilidad" },
+    { emoji: "🌬️", nombre: "Respiración y control", categoria: "Pilates · Mente-cuerpo" },
+  ],
+  Escalada: [
+    { emoji: "🧗", nombre: "Bloque / técnica de pies", categoria: "Escalada · Técnica" },
+    { emoji: "💪", nombre: "Fuerza de dedos y antebrazo", categoria: "Escalada · Fuerza" },
+    { emoji: "🔄", nombre: "Movilidad de hombro y cadera", categoria: "Escalada · Prevención" },
+  ],
+  "Artes marciales": [
+    { emoji: "🥋", nombre: "Técnica de golpeo/agarre", categoria: "Artes marciales · Técnica" },
+    { emoji: "🤼", nombre: "Sparring / randori controlado", categoria: "Artes marciales · Aplicación" },
+    { emoji: "🧘", nombre: "Movilidad y recuperación", categoria: "Artes marciales · Recuperación" },
+  ],
+  Voleibol: [
+    { emoji: "🏐", nombre: "Remate y colocación", categoria: "Voleibol · Técnica" },
+    { emoji: "🤾", nombre: "Salto y potencia de tren inferior", categoria: "Voleibol · Potencia" },
+    { emoji: "🦶", nombre: "Prevención de tobillo y hombro", categoria: "Voleibol · Prevención lesiones" },
+  ],
+  Golf: [
+    { emoji: "⛳", nombre: "Swing y putt", categoria: "Golf · Técnica" },
+    { emoji: "🔄", nombre: "Rotación de tronco y cadera", categoria: "Golf · Movilidad" },
+    { emoji: "💪", nombre: "Estabilidad de core", categoria: "Golf · Fuerza" },
+  ],
+  "Atletismo": [
+    { emoji: "🏃", nombre: "Series según prueba (velocidad/fondo)", categoria: "Atletismo · Rendimiento" },
+    { emoji: "⚡", nombre: "Técnica de carrera", categoria: "Atletismo · Técnica" },
+    { emoji: "🦵", nombre: "Fuerza y prevención de lesiones", categoria: "Atletismo · Prevención" },
+  ],
+  "Triatlón": [
+    { emoji: "🏊", nombre: "Sesión de natación", categoria: "Triatlón · Natación" },
+    { emoji: "🚴", nombre: "Sesión de bici", categoria: "Triatlón · Ciclismo" },
+    { emoji: "🏃", nombre: "Sesión de carrera / brick", categoria: "Triatlón · Running" },
+  ],
+  Senderismo: [
+    { emoji: "🥾", nombre: "Ruta larga · desnivel", categoria: "Senderismo · Resistencia" },
+    { emoji: "🦵", nombre: "Fuerza de piernas y core", categoria: "Senderismo · Fuerza" },
+    { emoji: "🎒", nombre: "Entrenamiento con carga (mochila)", categoria: "Senderismo · Específico" },
+  ],
+  Remo: [
+    { emoji: "🚣", nombre: "Técnica de remada", categoria: "Remo · Técnica" },
+    { emoji: "⚡", nombre: "Series de umbral en ergómetro", categoria: "Remo · Rendimiento" },
+    { emoji: "💪", nombre: "Fuerza de tirón (espalda/piernas)", categoria: "Remo · Fuerza" },
+  ],
+  "Esquí": [
+    { emoji: "⛷️", nombre: "Técnica de curva y equilibrio", categoria: "Esquí · Técnica" },
+    { emoji: "🦵", nombre: "Fuerza de piernas (sentadilla isométrica)", categoria: "Esquí · Preparación física" },
+    { emoji: "🔄", nombre: "Propiocepción y equilibrio", categoria: "Esquí · Prevención lesiones" },
+  ],
+  Surf: [
+    { emoji: "🏄", nombre: "Remada y pop-up", categoria: "Surf · Técnica" },
+    { emoji: "💪", nombre: "Fuerza de hombro y core", categoria: "Surf · Fuerza" },
+    { emoji: "🔄", nombre: "Movilidad de cadera y tobillo", categoria: "Surf · Movilidad" },
+  ],
+  Baile: [
+    { emoji: "💃", nombre: "Coreografía / técnica", categoria: "Baile · Técnica" },
+    { emoji: "🔄", nombre: "Movilidad y flexibilidad", categoria: "Baile · Movilidad" },
+    { emoji: "🫀", nombre: "Resistencia cardiovascular", categoria: "Baile · Resistencia" },
+  ],
+  Calistenia: [
+    { emoji: "💪", nombre: "Dominadas y fondos", categoria: "Calistenia · Fuerza" },
+    { emoji: "🤸", nombre: "Progresiones (muscle-up, plancha)", categoria: "Calistenia · Técnica" },
+    { emoji: "🔄", nombre: "Movilidad de hombro", categoria: "Calistenia · Prevención" },
+  ],
+  "HIIT / Funcional": [
+    { emoji: "⚡", nombre: "Circuito de alta intensidad", categoria: "HIIT · Metabólico" },
+    { emoji: "🏋️", nombre: "Patrones funcionales (empuje/tirón/bisagra)", categoria: "HIIT · Fuerza funcional" },
+    { emoji: "🧘", nombre: "Movilidad post-entreno", categoria: "HIIT · Recuperación" },
+  ],
+  Rugby: [
+    { emoji: "🏉", nombre: "Placaje y contacto", categoria: "Rugby · Técnica" },
+    { emoji: "🏋️", nombre: "Fuerza y potencia general", categoria: "Rugby · Físico" },
+    { emoji: "🏃", nombre: "Resistencia intermitente", categoria: "Rugby · Resistencia" },
   ],
 };

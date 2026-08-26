@@ -64,7 +64,7 @@ function AppNavFollower({ pathname, search }: { pathname: string; search: URLSea
 
   return (
     <nav className="relative z-10 flex flex-col border-b border-[#1abc9c]/18 bg-black/55 backdrop-blur-md">
-      <div className="flex flex-wrap items-center gap-1 px-3 py-2">
+      <div className="flex flex-wrap items-center justify-center gap-1 px-3 py-2">
         {GRUPOS_FOLLOWER.map((g) => (
           <button
             key={g.key}
@@ -78,7 +78,7 @@ function AppNavFollower({ pathname, search }: { pathname: string; search: URLSea
           </button>
         ))}
       </div>
-      <div className="flex flex-wrap items-center gap-1 border-t border-white/5 px-3 py-1.5">
+      <div className="flex flex-wrap items-center justify-center gap-1 border-t border-white/5 px-3 py-1.5">
         {grupo.hijos.map((h) => (
           <Link
             key={h.href}
@@ -98,7 +98,7 @@ function AppNavFollower({ pathname, search }: { pathname: string; search: URLSea
 
 function AppNavOwner({ pathname }: { pathname: string }) {
   return (
-    <nav className="relative z-10 flex flex-wrap items-center gap-1 border-b border-[#1abc9c]/18 bg-black/55 px-3 py-2 backdrop-blur-md">
+    <nav className="relative z-10 flex flex-wrap items-center justify-center gap-1 border-b border-[#1abc9c]/18 bg-black/55 px-3 py-2 backdrop-blur-md">
       {LINKS_OWNER.map((l) => (
         <Link
           key={l.href}

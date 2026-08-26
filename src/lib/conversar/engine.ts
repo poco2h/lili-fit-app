@@ -60,7 +60,7 @@ async function llamarGemini(
 
   try {
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -68,6 +68,7 @@ async function llamarGemini(
           systemInstruction,
           contents: [...turnos, { role: "user", parts: [{ text: mensaje }] }],
         }),
+        signal: AbortSignal.timeout(15000),
       }
     );
     if (!res.ok) {

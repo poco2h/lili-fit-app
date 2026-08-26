@@ -10,6 +10,7 @@ import Autoevaluacion from "./Autoevaluacion";
 const MODULOS = [
   { key: "microbiota", label: "🦠 Microbiota" },
   { key: "deportes", label: "🏃 Deportes" },
+  { key: "constancia", label: "🔥 Constancia" },
 ] as const;
 type Modulo = (typeof MODULOS)[number]["key"];
 
@@ -83,19 +84,32 @@ export default function MisHabitos() {
     setSub("autoevaluacion");
   }
 
+  const tabsModulo = (
+    <div className="flex gap-2">
+      {MODULOS.map((m) => (
+        <button
+          key={m.key}
+          onClick={() => cambiarModulo(m.key)}
+          className={"rounded-full px-4 py-2 text-sm font-semibold " + (modulo === m.key ? "bg-white text-black" : "bg-white/10 text-white/70")}
+        >
+          {m.label}
+        </button>
+      ))}
+    </div>
+  );
+
+  if (modulo === "constancia") {
+    return (
+      <div className="space-y-6">
+        {tabsModulo}
+        <div className="mt-glass p-6 text-sm text-white/50">Próximamente.</div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      <div className="flex gap-2">
-        {MODULOS.map((m) => (
-          <button
-            key={m.key}
-            onClick={() => cambiarModulo(m.key)}
-            className={"rounded-full px-4 py-2 text-sm font-semibold " + (modulo === m.key ? "bg-white text-black" : "bg-white/10 text-white/70")}
-          >
-            {m.label}
-          </button>
-        ))}
-      </div>
+      {tabsModulo}
 
       <p className="text-[10px] uppercase tracking-wide text-white/40">
         Semana del {fechaHoy()} · {modulo === "deportes" && <>{deporte} · </>}Hábitos activos: {habitosActivos.length}

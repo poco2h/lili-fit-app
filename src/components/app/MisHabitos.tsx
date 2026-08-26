@@ -35,8 +35,19 @@ function fechaHoy() {
   return new Date().toLocaleDateString("es-ES", { day: "numeric", month: "short" }).toUpperCase();
 }
 
+const FRECUENCIAS = Array.from({ length: 14 }, (_, i) => i + 1);
+const CANALES = [
+  { key: "email", label: "Email" },
+  { key: "whatsapp", label: "WhatsApp" },
+  { key: "ambos", label: "Ambos" },
+] as const;
+
 export default function MisHabitos() {
-  const { twin } = useTwin();
+  const { twin, guardar } = useTwin();
+  const [recHabito, setRecHabito] = useState("");
+  const [recFrecuencia, setRecFrecuencia] = useState(7);
+  const [recHora, setRecHora] = useState("09:00");
+  const [recCanal, setRecCanal] = useState<"email" | "whatsapp" | "ambos">("email");
   const [modulo, setModulo] = useState<Modulo>("microbiota");
   const [sub, setSub] = useState<string>("autoevaluacion");
   const [enviando, setEnviando] = useState(false);
@@ -70,6 +81,27 @@ export default function MisHabitos() {
     setNuevoNombre("");
     setNuevaCategoria("");
     setNuevoAbierto(false);
+  }
+
+  function guardarRecordatorio() {
+    if (!twin || !recHabito.trim()) return;
+    const nuevo = {
+      id: crypto.randomUUID(),
+      habito: recHabito.trim(),
+      frecuenciaDias: recFrecuencia,
+      hora: recHora,
+      canal: recCanal,
+    };
+    guardar({ ...twin, recordatorios: [...(twin.recordatorios ?? []), nuevo] });
+    setRecHabito("");
+    setRecFrecuencia(7);
+    setRecHora("09:00");
+    setRecCanal("email");
+  }
+
+  function borrarRecordatorio(id: string) {
+    if (!twin) return;
+    guardar({ ...twin, recordatorios: (twin.recordatorios ?? []).filter((r) => r.id !== id) });
   }
 
   async function enviarAgenda() {
@@ -302,6 +334,103 @@ export default function MisHabitos() {
               </div>
             ))
           )}
+
+          {(twin?.recordatorios ?? []).length > 0 && (
+            <div className="mt-glass p-4">
+              <p className="mb-3 text-[10px] font-bold uppercase tracking-wide text-white/40">Tus recordatorios</p>
+              <div className="space-y-2">
+                {(twin?.recordatorios ?? []).map((r) => (
+                  <div key={r.id} className="flex items-center justify-between rounded-lg bg-white/5 px-3 py-2 text-xs">
+                    <div>
+                      <span className="font-semibold">{r.habito}</span>
+                      <span className="ml-2 text-white/40">
+                        Cada {r.frecuenciaDias} día{r.frecuenciaDias > 1 ? "s" : ""} · {r.hora} · {CANALES.find((c) => c.key === r.canal)?.label}
+                      </span>
+                    </div>
+                    <button onClick={() => borrarRecordatorio(r.id)} className="text-white/40 hover:text-white">✕</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="mt-glass p-4">
+            <p className="mb-3 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide text-white/40">⚙️ Configurar alertas</p>
+
+            <label className="mb-1 block text-[10px] uppercase tracking-wide text-white/40">Hábito o recordatorio</label>
+            <input
+              value={recHabito}
+              onChange={(e) => setRecHabito(e.target.value)}
+              placeholder="Ej: Respiración matutina, Ducha fría..."
+              className="mb-4 w-full rounded-lg bg-white/5 px-3 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none"
+            />
+
+            <label className="mb-1.5 block text-[10px] uppercase tracking-wide text-white/40">Frecuencia</label>
+            <div className="mb-4 flex flex-wrap gap-1.5">
+              {FRECUENCIAS.map((d) => (
+                <button
+                  key={d}
+                  onClick={() => setRecFrecuencia(d)}
+                  className={
+                    "rounded-full border px-2.5 py-1 text-[11px] font-semibold " +
+                    (recFrecuencia === d
+                      ? "border-[#1abc9c] bg-[#1abc9c]/15 text-[#1abc9c]"
+                      : "border-white/10 bg-white/5 text-white/50")
+                  }
+                >
+                  Cada {d} día{d > 1 ? "s" : ""}
+                </button>
+              ))}
+            </div>
+
+            <label className="mb-1 block text-[10px] uppercase tracking-wide text-white/40">Hora de notificación</label>
+            <input
+              type="time"
+              value={recHora}
+              onChange={(e) => setRecHora(e.target.value)}
+              className="mb-4 w-full rounded-lg bg-white/5 px-3 py-2 text-sm text-white focus:outline-none"
+            />
+
+            <label className="mb-1.5 block text-[10px] uppercase tracking-wide text-white/40">Canal de notificación</label>
+            <div className="mb-4 flex gap-2">
+              {CANALES.map((c) => (
+                <button
+                  key={c.key}
+                  onClick={() => setRecCanal(c.key)}
+                  className={
+                    "flex-1 rounded-full border px-3 py-1.5 text-xs font-semibold " +
+                    (recCanal === c.key
+                      ? "border-[#1abc9c] bg-[#1abc9c]/15 text-[#1abc9c]"
+                      : "border-white/10 bg-white/5 text-white/50")
+                  }
+                >
+                  {c.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => {
+                  setRecHabito("");
+                  setRecFrecuencia(7);
+                  setRecHora("09:00");
+                  setRecCanal("email");
+                }}
+                className="rounded-full bg-white/5 px-4 py-2 text-xs text-white/60"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={guardarRecordatorio}
+                disabled={!recHabito.trim()}
+                className="rounded-full bg-white px-4 py-2 text-xs font-bold text-black disabled:opacity-40"
+              >
+                Guardar recordatorio
+              </button>
+            </div>
+          </div>
+
           <div className="mt-glass p-4">
             <p className="mb-3 text-[10px] font-bold uppercase tracking-wide text-white/40">Definir hábitos activos (máx. 4)</p>
             <div className="flex flex-wrap gap-2">

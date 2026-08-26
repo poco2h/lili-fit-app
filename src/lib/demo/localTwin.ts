@@ -57,6 +57,22 @@ export type OnboardingProgress = {
 
 export const ONBOARDING_PROGRESS_INICIAL: OnboardingProgress = { iniciado: false, pasoIdx: 0 };
 
+/** Datos que el usuario aportó al pulsar "Conectar" en Mis Fuentes (email, usuario, archivo .txt de WhatsApp...). */
+export type ConexionFuente = {
+  detalle: string;
+  fileUrl?: string;
+  conectadoEn: string;
+};
+
+/** Recordatorio configurado en Mis Hábitos › Alertas (V10 §Alertas). */
+export type Recordatorio = {
+  id: string;
+  habito: string;
+  frecuenciaDias: number;
+  hora: string;
+  canal: "email" | "whatsapp" | "ambos";
+};
+
 export type DemoTwin = {
   ego: EgoId;
   tales_weights: Record<Filosofo, number>;
@@ -73,6 +89,10 @@ export type DemoTwin = {
   sports_profile?: SportsProfile;
   /** Vídeo de 15-20s leyendo un guion, grabado en /profesionales/avatar — origen del avatar_soul_id y del Photo Avatar de HeyGen. */
   avatar_video_url?: string;
+  /** Info aportada al conectar cada fuente externa en Mis Fuentes (email, usuario, archivo...). */
+  sources_data?: Partial<Record<keyof Sources, ConexionFuente>>;
+  /** Recordatorios configurados en Mis Hábitos › Alertas. */
+  recordatorios?: Recordatorio[];
 };
 
 const KEY = "mindtwin_demo_profile";

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { Sources } from "@/lib/demo/localTwin";
 import { calcularFidelidadDemo } from "@/lib/fidelity/calcularDemo";
 import { useTwin } from "@/lib/session/useTwin";
@@ -70,8 +71,168 @@ const CONECTORES_EXTERNOS: Array<{
   },
 ];
 
+type CampoConector = {
+  tipo: "text" | "email" | "tel" | "select" | "file";
+  label: string;
+  placeholder?: string;
+  opciones?: string[];
+  ayuda?: string;
+};
+
+/** Qué información pedimos al pulsar "Conectar" — no hay OAuth real todavía para ninguna de estas fuentes, así que recogemos el dato mínimo necesario para que el profesional pueda activar la sincronización manualmente. */
+const CAMPOS_CONECTOR: Record<keyof Sources, CampoConector> = {
+  google: { tipo: "email", label: "Tu cuenta de Google", placeholder: "tucorreo@gmail.com" },
+  instagram: { tipo: "text", label: "Tu usuario de Instagram", placeholder: "@tuusuario" },
+  tiktok: { tipo: "text", label: "Tu usuario de TikTok", placeholder: "@tuusuario" },
+  whatsapp: {
+    tipo: "file",
+    label: "Exporta tu chat y súbelo aquí",
+    ayuda: "WhatsApp → Chat → ⋮ → Más → Exportar chat → Sin multimedia. Sube el .txt resultante.",
+  },
+  wearables: {
+    tipo: "select",
+    label: "Tu dispositivo",
+    opciones: ["Fitbit", "Garmin", "Apple Health", "Oura", "Whoop"],
+    ayuda: "Además del dispositivo, déjanos tu email de contacto para activar la sincronización.",
+  },
+};
+
+function ConectarModal({
+  sourceKey,
+  nombre,
+  onClose,
+  onConectado,
+  ownerId,
+}: {
+  sourceKey: keyof Sources;
+  nombre: string;
+  onClose: () => void;
+  onConectado: (detalle: string, fileUrl?: string) => void;
+  ownerId: string | undefined;
+}) {
+  const campo = CAMPOS_CONECTOR[sourceKey];
+  const [valor, setValor] = useState(campo.tipo === "select" ? campo.opciones?.[0] ?? "" : "");
+  const [email, setEmail] = useState("");
+  const [archivo, setArchivo] = useState<File | null>(null);
+  const [enviando, setEnviando] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function confirmar() {
+    setError(null);
+    if (campo.tipo === "file" && !archivo) {
+      setError("Sube el archivo .txt exportado de WhatsApp.");
+      return;
+    }
+    if (campo.tipo !== "file" && !valor.trim()) {
+      setError("Rellena este campo para continuar.");
+      return;
+    }
+    setEnviando(true);
+    try {
+      let fileUrl: string | undefined;
+      if (archivo) {
+        const form = new FormData();
+        form.append("ownerId", ownerId ?? "demo");
+        form.append("sourceKey", sourceKey);
+        form.append("archivo", archivo);
+        const res = await fetch("/api/fuentes/subir-archivo", { method: "POST", body: form });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error ?? "Error subiendo el archivo.");
+        fileUrl = json.url as string;
+      }
+      const detalle =
+        campo.tipo === "file"
+          ? archivo!.name
+          : campo.tipo === "select"
+            ? `${valor}${email ? ` · ${email}` : ""}`
+            : valor.trim();
+      onConectado(detalle, fileUrl);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Algo falló conectando esta fuente.");
+    } finally {
+      setEnviando(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={onClose}>
+      <div
+        className="w-full max-w-sm rounded-2xl border border-[#1abc9c]/25 bg-[#0a0f0e] p-5"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <p className="mb-1 text-sm font-bold text-white">Conectar {nombre}</p>
+        <p className="mb-4 text-[11px] text-white/40">
+          Necesitamos este dato para activar la sincronización — todavía no hay autenticación automática para esta fuente.
+        </p>
+
+        {campo.tipo === "select" ? (
+          <>
+            <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-white/50">{campo.label}</label>
+            <select
+              value={valor}
+              onChange={(e) => setValor(e.target.value)}
+              className="mb-3 w-full rounded-lg bg-white/5 px-3 py-2 text-sm text-white focus:outline-none"
+            >
+              {campo.opciones?.map((o) => (
+                <option key={o} value={o} className="bg-[#0a0f0e]">
+                  {o}
+                </option>
+              ))}
+            </select>
+            <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-white/50">Tu email de contacto</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="tucorreo@ejemplo.com"
+              className="mb-1 w-full rounded-lg bg-white/5 px-3 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none"
+            />
+          </>
+        ) : campo.tipo === "file" ? (
+          <>
+            <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-white/50">{campo.label}</label>
+            <input
+              type="file"
+              accept=".txt"
+              onChange={(e) => setArchivo(e.target.files?.[0] ?? null)}
+              className="mb-1 w-full rounded-lg bg-white/5 px-3 py-2 text-xs text-white file:mr-2 file:rounded-full file:border-0 file:bg-white/10 file:px-3 file:py-1 file:text-xs file:text-white"
+            />
+          </>
+        ) : (
+          <>
+            <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-white/50">{campo.label}</label>
+            <input
+              type={campo.tipo}
+              value={valor}
+              onChange={(e) => setValor(e.target.value)}
+              placeholder={campo.placeholder}
+              className="mb-1 w-full rounded-lg bg-white/5 px-3 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none"
+            />
+          </>
+        )}
+        {campo.ayuda && <p className="mb-3 mt-1 text-[10px] text-white/35">{campo.ayuda}</p>}
+        {error && <p className="mb-3 text-[11px] text-red-400">{error}</p>}
+
+        <div className="mt-4 flex justify-end gap-2">
+          <button onClick={onClose} className="rounded-full bg-white/5 px-3 py-1.5 text-xs text-white/60">
+            Cancelar
+          </button>
+          <button
+            onClick={confirmar}
+            disabled={enviando}
+            className="rounded-full bg-white px-4 py-1.5 text-xs font-bold text-black disabled:opacity-50"
+          >
+            {enviando ? "Conectando…" : "Conectar"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function MisFuentes() {
-  const { twin, guardar } = useTwin();
+  const { twin, guardar, ownerId } = useTwin();
+  const [modalKey, setModalKey] = useState<keyof Sources | null>(null);
 
   if (!twin) {
     return (
@@ -88,10 +249,23 @@ export default function MisFuentes() {
   const gutCompleto = twin.gut.gut_baseline_score !== null || twin.gut.n1_connected;
   const internasAvanzadas = egoCompleto && gutCompleto;
 
-  function toggle(key: keyof Sources) {
+  function desconectar(key: keyof Sources) {
     if (!twin) return;
-    const actual = twin.sources[key] ?? false;
-    guardar({ ...twin, sources: { ...twin.sources, [key]: !actual } });
+    const { [key]: _fuera, ...restoData } = twin.sources_data ?? {};
+    guardar({ ...twin, sources: { ...twin.sources, [key]: false }, sources_data: restoData });
+  }
+
+  function conectar(key: keyof Sources, detalle: string, fileUrl?: string) {
+    if (!twin) return;
+    guardar({
+      ...twin,
+      sources: { ...twin.sources, [key]: true },
+      sources_data: {
+        ...twin.sources_data,
+        [key]: { detalle, fileUrl, conectadoEn: new Date().toISOString() },
+      },
+    });
+    setModalKey(null);
   }
 
   const activasExternas = CONECTORES_EXTERNOS.filter((c) => twin.sources[c.key]).length;
@@ -284,6 +458,7 @@ export default function MisFuentes() {
         <div className="space-y-2">
           {CONECTORES_EXTERNOS.map((c) => {
             const activo = twin.sources[c.key];
+            const datos = twin.sources_data?.[c.key];
             return (
               <Card key={c.key} activo={activo}>
                 <div className="flex items-center gap-2.5">
@@ -294,13 +469,16 @@ export default function MisFuentes() {
                   </div>
                   <EstadoDot estado={activo ? "done" : "empty"} />
                   <button
-                    onClick={() => toggle(c.key)}
+                    onClick={() => (activo ? desconectar(c.key) : setModalKey(c.key))}
                     className={"rounded-full px-3 py-1.5 text-[10px] font-bold " + (activo ? "bg-white/10 text-white/50" : "bg-white text-black")}
                   >
                     {activo ? "Desconectar" : "Conectar"}
                   </button>
                 </div>
                 <p className="mt-2 text-[10px] text-white/40">{c.mecanismo}</p>
+                {activo && datos && (
+                  <p className="mt-1.5 text-[10px] text-[#1abc9c]/80">✓ Conectado · {datos.detalle}</p>
+                )}
                 <div className="mt-1.5 flex items-center justify-between">
                   <span className="text-[10px] text-white/35">{c.filosofos}</span>
                   {activo && <span className="text-[9px] font-bold text-[#1abc9c]">{c.gain} fidelidad</span>}
@@ -310,6 +488,16 @@ export default function MisFuentes() {
           })}
         </div>
       </div>
+
+      {modalKey && (
+        <ConectarModal
+          sourceKey={modalKey}
+          nombre={CONECTORES_EXTERNOS.find((c) => c.key === modalKey)!.nombre}
+          onClose={() => setModalKey(null)}
+          onConectado={(detalle, fileUrl) => conectar(modalKey, detalle, fileUrl)}
+          ownerId={ownerId}
+        />
+      )}
 
       <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 

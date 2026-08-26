@@ -19,6 +19,7 @@ import {
 import { leerTwinServer, guardarTwinServer } from "@/lib/session/twinProfileServer";
 import { resolveFollowerUuid } from "@/lib/demo/identities";
 import { bloqueTalesPrompt } from "@/lib/conversar/tales";
+import { bloqueContextoFollower } from "@/lib/conversar/followerContext";
 
 export type TurnoHistorial = { who: "MindTwin" | "Tú"; text: string };
 
@@ -198,8 +199,9 @@ export async function responderConversar(input: ConversarInput): Promise<Convers
     if (resultado) return { ...conMencionMarca(resultado.respuesta, mensaje, marcas, marcaYaMencionada), capa: resultado.capa };
   }
 
+  let followerUuid: string | null = null;
   if (role === "follower" && ownerId && followerId) {
-    const followerUuid = await resolveFollowerUuid(followerId, ownerId);
+    followerUuid = await resolveFollowerUuid(followerId, ownerId);
     if (followerUuid) {
       const resultado = await turnoOnboarding(input, "follower", followerUuid);
       if (resultado) return { ...conMencionMarca(resultado.respuesta, mensaje, marcas, marcaYaMencionada), capa: resultado.capa };
@@ -217,7 +219,8 @@ export async function responderConversar(input: ConversarInput): Promise<Convers
   }
 
   const twinOwner = ownerId ? await leerTwinServer(ownerId) : null;
-  const talesBloque = bloqueTalesPrompt(twinOwner);
+  const twinFollower = followerUuid ? await leerTwinServer(ownerId!, followerUuid) : null;
+  const talesBloque = [bloqueTalesPrompt(twinOwner), bloqueContextoFollower(twinFollower)].filter(Boolean).join("\n\n");
   const generada = await llamarGemini(systemInstructionBase(ownerName, sportsContextResumen, talesBloque), mensaje, historial, null);
   if (generada && "texto" in generada) {
     const base = aplicaGuardrailPrecio(role, mensaje, generada.texto, ownerName);

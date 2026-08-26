@@ -63,6 +63,26 @@ function saludoInicial(role: "owner" | "follower", ownerName: string, onboarding
 
 const NUMERO_SESION: Record<string, string> = { S1: "1", S2: "2", S3: "3", S4: "4" };
 
+function IconoMicrofono() {
+  return (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="9" y="2" width="6" height="11" rx="3" />
+      <path d="M5 10a7 7 0 0 0 14 0" />
+      <line x1="12" y1="19" x2="12" y2="22" />
+      <line x1="8" y1="22" x2="16" y2="22" />
+    </svg>
+  );
+}
+
+function IconoCamara() {
+  return (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="6" width="14" height="12" rx="2.5" />
+      <path d="M22 8.5l-6 3.5 6 3.5v-7z" />
+    </svg>
+  );
+}
+
 export default function ConversarChat({
   ownerName,
   role,
@@ -230,18 +250,18 @@ export default function ConversarChat({
               onClick={() => setCanal("voz")}
               aria-label="Cambiar a llamada de voz"
               title="Llamada de voz"
-              className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white/5 text-base text-white/60 hover:bg-white/10 hover:text-white transition"
+              className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white/10 text-white/80 hover:bg-white/20 hover:text-white transition"
             >
-              🎙️
+              <IconoMicrofono />
             </button>
             <button
               type="button"
               onClick={() => setCanal("video")}
               aria-label="Cambiar a videollamada"
               title="Videollamada"
-              className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white/5 text-base text-white/60 hover:bg-white/10 hover:text-white transition"
+              className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white/10 text-white/80 hover:bg-white/20 hover:text-white transition"
             >
-              📷
+              <IconoCamara />
             </button>
             <textarea
               value={input}

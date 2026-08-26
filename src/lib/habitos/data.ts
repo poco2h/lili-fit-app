@@ -151,35 +151,40 @@ export const HABITOS_MICROBIOMA: HabitoDeporte[] = [
   { emoji: "🐟", nombre: "Omega-3 post-entreno", categoria: "Microbiota · Antiinflamatorio" },
 ];
 
-export const DEPORTES = [
-  "Boxeo",
-  "Running",
-  "Fuerza",
-  "Yoga",
-  "Fútbol",
+const DEPORTES_PREDEFINIDOS = [
+  "Artes marciales",
+  "Atletismo",
+  "Baile",
   "Baloncesto",
-  "Tenis",
-  "Pádel",
-  "Natación",
+  "Boxeo",
+  "Calistenia",
   "Ciclismo",
   "Crossfit",
-  "Pilates",
   "Escalada",
-  "Artes marciales",
-  "Voleibol",
-  "Golf",
-  "Atletismo",
-  "Triatlón",
-  "Senderismo",
-  "Remo",
   "Esquí",
-  "Surf",
-  "Baile",
-  "Calistenia",
+  "Fuerza",
+  "Fútbol",
+  "Golf",
   "HIIT / Funcional",
+  "Natación",
+  "Pádel",
+  "Pilates",
+  "Remo",
   "Rugby",
+  "Running",
+  "Senderismo",
+  "Surf",
+  "Tenis",
+  "Triatlón",
+  "Voleibol",
+  "Yoga",
 ] as const;
-export type Deporte = (typeof DEPORTES)[number];
+
+/** Lista de disciplinas en orden alfabético + "Otros" al final, para que el usuario escriba una que no esté. */
+export const DEPORTES = [...DEPORTES_PREDEFINIDOS, "Otros"] as const;
+
+/** string (no unión estricta) porque "Otros" permite escribir cualquier disciplina que no esté en la lista. */
+export type Deporte = string;
 
 /**
  * Mi School — versión Follower (cliente): explica los conceptos desde su
@@ -217,7 +222,7 @@ export const MI_SCHOOL_FOLLOWER = [
   },
 ];
 
-export const HABITOS_POR_DEPORTE: Record<Deporte, HabitoDeporte[]> = {
+export const HABITOS_POR_DEPORTE: Partial<Record<Deporte, HabitoDeporte[]>> = {
   Boxeo: [
     { emoji: "🥊", nombre: "Técnica de golpeo · 45 min", categoria: "Boxeo · Técnica" },
     { emoji: "🏃", nombre: "Road work · 5km", categoria: "Boxeo · Resistencia" },

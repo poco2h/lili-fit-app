@@ -45,13 +45,15 @@ export default function MisHabitos() {
   const [nuevoAbierto, setNuevoAbierto] = useState(false);
   const [nuevoNombre, setNuevoNombre] = useState("");
   const [nuevaCategoria, setNuevaCategoria] = useState("");
+  const [otroDeporteAbierto, setOtroDeporteAbierto] = useState(false);
+  const [otroDeporteTexto, setOtroDeporteTexto] = useState("");
 
   const gatillos = twin?.gut.gatillos ?? [];
   const bacteriasDeficientes = twin?.gut.bacterias_deficientes ?? [];
   const agenda = generarAgendaFallback(bacteriasDeficientes, twin?.direcciones?.domicilioPersonal);
   const recetasRecomendadas = recetasParaBacterias(nombresABacteriaIds(bacteriasDeficientes));
   const claveHabitos = modulo === "microbiota" ? "microbiota" : deporte;
-  const habitosBase = modulo === "microbiota" ? HABITOS_MICROBIOMA : HABITOS_POR_DEPORTE[deporte];
+  const habitosBase = modulo === "microbiota" ? HABITOS_MICROBIOMA : (HABITOS_POR_DEPORTE[deporte] ?? []);
   const habitosActivos = [...habitosBase, ...(habitosExtra[claveHabitos] ?? [])];
   const subTabs = modulo === "microbiota" ? SUB_MICROBIOTA : SUB_DEPORTES;
 
@@ -103,16 +105,55 @@ export default function MisHabitos() {
         <div>
           <p className="mb-2 text-sm font-bold uppercase tracking-wide text-white">Disciplinas</p>
           <div className="flex flex-wrap gap-2">
-            {DEPORTES.map((d) => (
-              <button
-                key={d}
-                onClick={() => setDeporte(d)}
-                className={"rounded-full px-3 py-1.5 text-xs font-semibold " + (deporte === d ? "bg-[#1abc9c]/20 text-[#1abc9c]" : "bg-white/5 text-white/50 hover:text-white")}
-              >
-                {d}
-              </button>
-            ))}
+            {DEPORTES.map((d) => {
+              const esOtros = d === "Otros";
+              const seleccionado = esOtros ? otroDeporteAbierto || (otroDeporteTexto && deporte === otroDeporteTexto) : deporte === d;
+              return (
+                <button
+                  key={d}
+                  onClick={() => {
+                    if (esOtros) {
+                      setOtroDeporteAbierto(true);
+                      return;
+                    }
+                    setOtroDeporteAbierto(false);
+                    setDeporte(d);
+                  }}
+                  className={"rounded-full px-3 py-1.5 text-xs font-semibold " + (seleccionado ? "bg-[#1abc9c]/20 text-[#1abc9c]" : "bg-white/5 text-white/50 hover:text-white")}
+                >
+                  {d}
+                </button>
+              );
+            })}
           </div>
+          {otroDeporteAbierto && (
+            <div className="mt-2 flex items-center gap-2">
+              <input
+                autoFocus
+                value={otroDeporteTexto}
+                onChange={(e) => setOtroDeporteTexto(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && otroDeporteTexto.trim()) {
+                    setDeporte(otroDeporteTexto.trim());
+                    setOtroDeporteAbierto(false);
+                  }
+                }}
+                placeholder="Escribe tu deporte..."
+                className="rounded-full bg-white/5 px-3 py-1.5 text-xs text-white placeholder:text-white/30 focus:outline-none"
+              />
+              <button
+                onClick={() => {
+                  if (!otroDeporteTexto.trim()) return;
+                  setDeporte(otroDeporteTexto.trim());
+                  setOtroDeporteAbierto(false);
+                }}
+                disabled={!otroDeporteTexto.trim()}
+                className="rounded-full bg-white px-3 py-1.5 text-xs font-bold text-black disabled:opacity-40"
+              >
+                Usar →
+              </button>
+            </div>
+          )}
         </div>
       )}
 

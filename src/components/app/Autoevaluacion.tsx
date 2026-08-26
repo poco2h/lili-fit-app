@@ -48,7 +48,7 @@ function Opciones<T extends string>({ opciones, valor, onChange, cols }: { opcio
 }
 
 export default function Autoevaluacion({ modo, deporte }: { modo: Modo; deporte?: Deporte }) {
-  const habitos: HabitoDeporte[] = modo === "microbiota" ? HABITOS_MICROBIOMA : deporte ? HABITOS_POR_DEPORTE[deporte] : [];
+  const habitos: HabitoDeporte[] = modo === "microbiota" ? HABITOS_MICROBIOMA : deporte ? (HABITOS_POR_DEPORTE[deporte] ?? []) : [];
   const [ratings, setRatings] = useState<Record<string, number>>({});
 
   const [estadoDigestivo, setEstadoDigestivo] = useState(ESTADO_DIGESTIVO[2]);

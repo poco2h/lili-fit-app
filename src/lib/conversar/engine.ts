@@ -7,6 +7,8 @@ import {
 } from "@/lib/conversar/guardrails";
 import { buscarMencionMarca } from "@/lib/conversar/marcas";
 import type { Marca } from "@/lib/marcas/types";
+import { aplicarExtraccion, avanzarProgreso, esquemaExtraccion, estadoTurno, instruccionOnboarding, twinVacio } from "@/lib/conversar/onboarding";
+import { leerTwinServer, guardarTwinServer } from "@/lib/session/twinProfileServer";
 
 export type TurnoHistorial = { who: "MindTwin" | "Tú"; text: string };
 
@@ -14,6 +16,7 @@ export type ConversarInput = {
   mensaje: string;
   role: Role;
   ownerName: string;
+  ownerId?: string;
   marcas?: Marca[];
   marcaYaMencionada?: boolean;
   sportsContextResumen?: string; // solo Lili Celebs (V10 §7.3)
@@ -22,41 +25,50 @@ export type ConversarInput = {
 
 export type ConversarOutput = {
   respuesta: string;
-  capa: "n2-guardrail" | "n1-cache" | "n3-gemini" | "n3-fallback";
+  capa: "n2-guardrail" | "n1-cache" | "n3-gemini" | "n3-onboarding" | "n3-fallback";
   marcaMencionada?: string; // id de la marca, si se mencionó en esta respuesta
 };
 
+const REDIRECCION_TEMA = (ownerName: string) =>
+  `Si el usuario intenta hablar de temas totalmente ajenos a tu especialidad como profesional del bienestar (actualidad, ` +
+  `política, resultados deportivos de terceros, etc.), redirígelo con amabilidad de vuelta a tu área, en el estilo de: ` +
+  `"Mi especialidad es [tu área]. ¿Quieres que hablemos de [tema relevante]?". No lo hagas si lo que pregunta sí tiene ` +
+  `relación, aunque sea indirecta, con bienestar, entrenamiento, nutrición o cómo se siente.`;
+
+function systemInstructionBase(ownerName: string, sportsContextResumen?: string): string {
+  const bloqueSports = sportsContextResumen ? ` Contexto deportivo actual: ${sportsContextResumen}` : "";
+  return (
+    `Eres el MindTwin de ${ownerName}, un profesional del bienestar. Responde en español, en 2-3 frases, ` +
+    `con tono cercano y profesional. Nunca menciones precios ni tarifas.${bloqueSports}\n\n${REDIRECCION_TEMA(ownerName)}`
+  );
+}
+
+type RespuestaGemini = { texto: string; extraccion?: Record<string, number | string> };
+
 async function llamarGemini(
+  systemInstructionText: string,
   mensaje: string,
-  ownerName: string,
-  sportsContextResumen?: string,
-  historial?: TurnoHistorial[]
-): Promise<{ texto: string } | { errorApiKeyFalta: true } | null> {
+  historial: TurnoHistorial[] | undefined,
+  responseSchema: Record<string, unknown> | null
+): Promise<RespuestaGemini | { errorApiKeyFalta: true } | null> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return { errorApiKeyFalta: true };
-
-  const bloqueSports = sportsContextResumen ? ` Contexto deportivo actual: ${sportsContextResumen}` : "";
-
-  const systemInstruction = {
-    parts: [
-      {
-        text:
-          `Eres el MindTwin de ${ownerName}, un profesional del bienestar. Responde en español, en 2-3 frases, ` +
-          `con tono cercano y profesional. Nunca menciones precios ni tarifas.${bloqueSports}\n\n` +
-          `Además de responder a lo que te preguntan, tu objetivo es ir conociendo al usuario a lo largo de la ` +
-          `conversación: cuando encaje de forma natural (sin interrogar de golpe ni repetir algo que ya te haya ` +
-          `contado), pregúntale por sus hábitos — sobre todo de deporte/actividad física (qué practica, con qué ` +
-          `frecuencia, cómo se siente después) y, de vez en cuando, también sobre alimentación (qué suele comer, ` +
-          `horarios de comida, algún hábito que quiera mejorar). Como máximo una pregunta de seguimiento por ` +
-          `respuesta, y solo si tiene sentido con lo que el usuario acaba de decir — no fuerces la pregunta si no pega.`,
-      },
-    ],
-  };
 
   const turnos = (historial ?? []).slice(-8).map((h) => ({
     role: h.who === "MindTwin" ? "model" : "user",
     parts: [{ text: h.text }],
   }));
+
+  const generationConfig = responseSchema
+    ? {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: "OBJECT",
+          properties: { respuesta: { type: "STRING" }, extraccion: responseSchema },
+          required: ["respuesta", "extraccion"],
+        },
+      }
+    : undefined;
 
   try {
     const res = await fetch(
@@ -65,8 +77,9 @@ async function llamarGemini(
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          systemInstruction,
+          systemInstruction: { parts: [{ text: systemInstructionText }] },
           contents: [...turnos, { role: "user", parts: [{ text: mensaje }] }],
+          ...(generationConfig ? { generationConfig } : {}),
         }),
         signal: AbortSignal.timeout(15000),
       }
@@ -78,7 +91,15 @@ async function llamarGemini(
     }
     const data = await res.json();
     const texto = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-    return texto ? { texto } : null;
+    if (!texto) return null;
+
+    if (!responseSchema) return { texto };
+    try {
+      const parsed = JSON.parse(texto);
+      return { texto: parsed.respuesta ?? texto, extraccion: parsed.extraccion };
+    } catch {
+      return { texto };
+    }
   } catch (e) {
     console.error("[Conversar] Gemini fetch error:", e);
     return null;
@@ -97,14 +118,65 @@ function conMencionMarca(
 }
 
 /**
+ * Turno de onboarding conversacional (V10 §5.1 R1): mientras el Owner no
+ * haya terminado S1-S4, cada mensaje suyo alimenta la sesión activa en vez
+ * de un chat libre — se le pregunta, en una sola frase natural por grupo de
+ * rasgos, y la respuesta se traduce a los mismos ítems Likert 1-5 que ya
+ * usa el flujo determinista de /app/onboarding (src/lib/ego, sin cambios en
+ * el scoring). Bloquea implícitamente el chat libre: mientras esta función
+ * decida seguir en onboarding, nunca se llega al chat genérico.
+ */
+async function turnoOnboarding(input: ConversarInput): Promise<ConversarOutput | null> {
+  const { mensaje, ownerName, ownerId, historial } = input;
+  if (!ownerId) return null;
+
+  const twin = await leerTwinServer(ownerId);
+  const turno = estadoTurno(twin);
+  if (!turno) return null; // onboarding ya completo — cae al chat libre
+
+  const instruccion = instruccionOnboarding(turno.sesion, turno.pasoActual, turno.pasoSiguiente);
+  const systemInstructionText = `${systemInstructionBase(ownerName)}\n\n${instruccion}`;
+  const schema = esquemaExtraccion(turno.pasoActual);
+
+  const generada = await llamarGemini(systemInstructionText, mensaje, historial, schema);
+
+  if (!generada || "errorApiKeyFalta" in generada) {
+    const mensajeError =
+      generada && "errorApiKeyFalta" in generada
+        ? "Ahora mismo no puedo generar una respuesta completa (falta configurar GEMINI_API_KEY), pero he registrado tu mensaje."
+        : "Ahora mismo no puedo generar una respuesta completa (fallo temporal al conectar con el modelo), pero he registrado tu mensaje.";
+    return { respuesta: mensajeError, capa: "n3-fallback" };
+  }
+
+  let twinActualizado = twin ?? twinVacio();
+  if (turno.pasoActual && generada.extraccion) {
+    twinActualizado = aplicarExtraccion(twinActualizado, turno.pasoActual, generada.extraccion);
+  }
+  twinActualizado = avanzarProgreso(twinActualizado, turno.sesion);
+
+  await guardarTwinServer(ownerId, twinActualizado);
+
+  return { respuesta: generada.texto, capa: "n3-onboarding" };
+}
+
+/**
  * Orquestador de las 3 capas de Conversar (V10 §4.1): N2 determinista →
  * N1 caché → N3 Gemini. El guardrail de precios para followers se evalúa
  * ANTES de tocar cache/LLM (evita coste y evita que una respuesta cacheada
  * o generada se filtre) y se reaplica después como red de seguridad. La
  * mención de marcas (V10 §6.2) se evalúa después, máx. 1 vez por sesión.
+ * Antes de cualquiera de las 3 capas, si el Owner todavía no ha terminado
+ * sus sesiones iniciales (V10 §5.1 R1), el turno se desvía al onboarding
+ * conversacional — el caché no aplica ahí porque cada turno depende del
+ * progreso guardado, no solo del texto del mensaje.
  */
 export async function responderConversar(input: ConversarInput): Promise<ConversarOutput> {
-  const { mensaje, role, ownerName, marcas, marcaYaMencionada, sportsContextResumen, historial } = input;
+  const { mensaje, role, ownerName, ownerId, marcas, marcaYaMencionada, sportsContextResumen, historial } = input;
+
+  if (role === "owner" && ownerId) {
+    const resultado = await turnoOnboarding(input);
+    if (resultado) return { ...conMencionMarca(resultado.respuesta, mensaje, marcas, marcaYaMencionada), capa: resultado.capa };
+  }
 
   if (role === "follower" && esPreguntaDePrecio(mensaje)) {
     return { respuesta: respuestaBloqueadaPorPrecio(ownerName), capa: "n2-guardrail" };
@@ -116,7 +188,7 @@ export async function responderConversar(input: ConversarInput): Promise<Convers
     return { ...conMencionMarca(base, mensaje, marcas, marcaYaMencionada), capa: "n1-cache" };
   }
 
-  const generada = await llamarGemini(mensaje, ownerName, sportsContextResumen, historial);
+  const generada = await llamarGemini(systemInstructionBase(ownerName, sportsContextResumen), mensaje, historial, null);
   if (generada && "texto" in generada) {
     const base = aplicaGuardrailPrecio(role, mensaje, generada.texto, ownerName);
     return { ...conMencionMarca(base, mensaje, marcas, marcaYaMencionada), capa: "n3-gemini" };

@@ -26,24 +26,32 @@ function now() {
   return new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
 }
 
+const SALUDO_ONBOARDING =
+  "Hola, soy tu gemelo y necesito conocerte mejor para poder elaborar tu MindTwin. Voy a hacerte unas preguntas. " +
+  "Te pueden parecer muchas — duran 1 hora repartida en tres sesiones de 20 minutos. Si te cansas, dímelo y seguimos " +
+  "en cualquier momento que te venga bien.";
+
+function saludoInicial(role: "owner" | "follower", ownerName: string, onboardingCompleto: boolean) {
+  if (role === "follower") return `Soy el MindTwin de ${ownerName}, una IA entrenada con su perfil. ¿En qué puedo ayudarte hoy?`;
+  return onboardingCompleto ? `Hola. Soy tu MindTwin. ¿En qué trabajamos hoy?` : SALUDO_ONBOARDING;
+}
+
 export default function ConversarChat({
   ownerName,
   role,
   ownerId,
   canalInicial,
+  onboardingCompleto = true,
 }: {
   ownerName: string;
   role: "owner" | "follower";
   ownerId?: string;
   canalInicial?: Canal;
+  onboardingCompleto?: boolean;
 }) {
   const [canal, setCanal] = useState<Canal>(canalInicial ?? "texto");
   const [messages, setMessages] = useState<Msg[]>([
-    {
-      who: "MindTwin",
-      time: now(),
-      text: `Hola. Soy el MindTwin de ${ownerName}, una IA. ¿En qué puedo ayudarte hoy?`,
-    },
+    { who: "MindTwin", time: now(), text: saludoInicial(role, ownerName, onboardingCompleto) },
   ]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
@@ -51,16 +59,12 @@ export default function ConversarChat({
   const billing = useSessionBilling(CANAL_BILLING[canal]);
 
   // El saludo inicial se fija al montar, antes de que la sesión real del
-  // owner se resuelva de forma asíncrona (useOwnerSession) — se corrige
-  // aquí en cuanto llega el nombre real, solo si el usuario no ha escrito
-  // nada todavía (no pisar una conversación ya empezada).
+  // owner (nombre, progreso de onboarding) se resuelva de forma asíncrona
+  // (useOwnerSession/useTwin) — se corrige aquí en cuanto llega, solo si el
+  // usuario no ha escrito nada todavía (no pisar una conversación ya empezada).
   useEffect(() => {
-    setMessages((m) =>
-      m.length === 1 && m[0].who === "MindTwin"
-        ? [{ ...m[0], text: `Hola. Soy el MindTwin de ${ownerName}, una IA. ¿En qué puedo ayudarte hoy?` }]
-        : m
-    );
-  }, [ownerName]);
+    setMessages((m) => (m.length === 1 && m[0].who === "MindTwin" ? [{ ...m[0], text: saludoInicial(role, ownerName, onboardingCompleto) }] : m));
+  }, [ownerName, role, onboardingCompleto]);
 
   async function enviarTexto(mensaje: string) {
     if (!mensaje.trim() || sending) return;
@@ -80,6 +84,7 @@ export default function ConversarChat({
           mensaje,
           role,
           ownerName,
+          ownerId,
           marcas: leerMarcas(),
           marcaYaMencionada,
           historial: messages.map(({ who, text }) => ({ who, text })),

@@ -1,7 +1,6 @@
 "use client";
 
 import { Suspense } from "react";
-import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import ConversarChat from "@/components/app/ConversarChat";
 import { OWNER_NOMBRE_DEMO } from "@/components/app/AppHeader";
@@ -15,21 +14,20 @@ function ConversarPageInner() {
   const ownerName = owner?.ownerName ?? OWNER_NOMBRE_DEMO;
   const canalParam = searchParams.get("canal");
   const canalInicial = canalParam === "voz" || canalParam === "video" ? canalParam : canalParam === "texto" ? "texto" : undefined;
+  // Mientras el owner no haya terminado S1-S4, la propia conversación conduce
+  // el onboarding (V10 §5.1 R1) — sin banners ni CTAs, solo texto conversacional.
+  const onboardingCompleto = twin ? twin.sesion_actual === "completo" : role === "follower";
 
   return (
     <div className="mt-app">
       <div className="relative z-10 mx-auto flex min-h-[calc(100vh-104px)] max-w-3xl flex-col p-4">
-        {role === "owner" && !twin && (
-          <div className="mt-glass mb-3 flex items-center justify-between px-4 py-3 text-sm">
-            <span className="text-white/60">
-              Las sesiones S1-S3 de tu EGO ID se hacen aquí, conversando de forma natural.
-            </span>
-            <Link href="/app/onboarding" className="rounded-full bg-white px-4 py-1.5 text-xs font-bold text-black">
-              Empezar →
-            </Link>
-          </div>
-        )}
-        <ConversarChat ownerName={ownerName} role={role} ownerId={ownerId} canalInicial={canalInicial} />
+        <ConversarChat
+          ownerName={ownerName}
+          role={role}
+          ownerId={ownerId}
+          canalInicial={canalInicial}
+          onboardingCompleto={onboardingCompleto}
+        />
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
-import type { EgoId } from "@/lib/ego/types";
+import type { EgoId, Respuestas } from "@/lib/ego/types";
 import type { Filosofo } from "@/lib/ego/talesWeights";
 import type { GutData } from "@/lib/gut/types";
+import type { RespuestasBaseline } from "@/lib/gut/baseline";
 
 /**
  * Persistencia de demo en localStorage mientras no hay Supabase conectado.
@@ -30,14 +31,46 @@ export type Direcciones = {
 
 export const DIRECCIONES_VACIAS: Direcciones = { domicilioPersonal: "", domicilioProfesional: "" };
 
+/** Datos deportivos/antropométricos recogidos en la Sesión 4 (V10 §5.3, conversacional, sin tests). */
+export type SportsProfile = {
+  deporte?: string;
+  nivel?: string;
+  objetivo?: string;
+  frecuenciaActual?: string;
+  frecuenciaObjetivo?: string;
+  lesiones?: string;
+  edad?: string;
+  altura?: string;
+  peso?: string;
+  pesoObjetivo?: string;
+  grasaEstimada?: string;
+  restricciones?: string;
+};
+
+export const SPORTS_PROFILE_VACIO: SportsProfile = {};
+
+/** Puntero de progreso dentro de la sesión activa de Mis Conversaciones (V10 §5) — qué paso toca a continuación. */
+export type OnboardingProgress = {
+  iniciado: boolean;
+  pasoIdx: number;
+};
+
+export const ONBOARDING_PROGRESS_INICIAL: OnboardingProgress = { iniciado: false, pasoIdx: 0 };
+
 export type DemoTwin = {
   ego: EgoId;
   tales_weights: Record<Filosofo, number>;
   gut: GutData;
   tales_data: Record<Filosofo, number>;
   sources: Sources;
-  sesion_actual: "S1" | "S2" | "S3" | "completo";
+  sesion_actual: "S1" | "S2" | "S3" | "S4" | "completo";
   direcciones: Direcciones;
+  /** Acumulador de respuestas Likert 1-5 de EGO ID a través de S1+S2+S3 — recalcula calcularEgoId en cada avance. */
+  respuestas_raw?: Respuestas;
+  /** Acumulador de respuestas del baseline GUT conversacional (S2+S3). */
+  gut_respuestas_raw?: RespuestasBaseline;
+  onboarding_progress?: OnboardingProgress;
+  sports_profile?: SportsProfile;
 };
 
 const KEY = "mindtwin_demo_profile";

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import Logo from "@/components/Logo";
 import { calcularFidelidadDemo } from "@/lib/fidelity/calcularDemo";
 import { useTwin } from "@/lib/session/useTwin";
 
@@ -48,12 +49,8 @@ function AppHeaderInner() {
           </span>
         </div>
       </div>
-      <Link
-        href="/"
-        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap text-[17px] font-extrabold text-white hover:text-[#1abc9c] transition"
-        aria-label="Volver a la landing"
-      >
-        {owner?.ownerName ?? OWNER_NOMBRE_DEMO}
+      <Link href="/" className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" aria-label="Volver a la landing">
+        <Logo variant="dark" size={56} />
       </Link>
       <div className="text-right">
         <div className="text-[22px] font-extrabold leading-none text-[#1abc9c]">{mindscore ?? "—"}%</div>

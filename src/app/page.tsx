@@ -5,6 +5,7 @@ import Link from "next/link";
 import Logo from "@/components/Logo";
 import Footer from "@/components/Footer";
 import ConversarPreview from "@/components/landing/ConversarPreview";
+import LiliGuideSearch from "@/components/landing/LiliGuideSearch";
 import { MI_SCHOOL } from "@/lib/habitos/data";
 
 const PASOS = [
@@ -42,7 +43,7 @@ export default function FollowerLanding() {
           <nav className="hidden md:flex items-center gap-6 text-[11px] text-[rgb(99,99,99)]">
             <a href="#school" className="hover:text-black">Cómo funciona</a>
             <a href="#canales" className="hover:text-black">Canales</a>
-            <Link href="/app/fuentes" className="font-bold text-[#1abc9c] hover:text-black">Demo</Link>
+            <Link href="/app/conversar?role=follower" className="font-bold text-[#1abc9c] hover:text-black">Demo</Link>
             <Link href="/profesionales" className="hover:text-black">Soy profesional</Link>
           </nav>
           <div className="flex items-center gap-3">
@@ -67,7 +68,7 @@ export default function FollowerLanding() {
           <nav className="mt-3 flex flex-col gap-4 border-t border-black/10 pt-3 text-sm md:hidden">
             <a href="#school" onClick={() => setMenuAbierto(false)} className="text-black/70">Cómo funciona</a>
             <a href="#canales" onClick={() => setMenuAbierto(false)} className="text-black/70">Canales</a>
-            <Link href="/app/fuentes" onClick={() => setMenuAbierto(false)} className="font-bold text-[#1abc9c]">Demo</Link>
+            <Link href="/app/conversar?role=follower" onClick={() => setMenuAbierto(false)} className="font-bold text-[#1abc9c]">Demo</Link>
             <Link href="/profesionales" onClick={() => setMenuAbierto(false)} className="text-black/70">Soy profesional</Link>
             <Link
               href="/clientes/buscar"
@@ -130,6 +131,8 @@ export default function FollowerLanding() {
           </div>
           <ConversarPreview />
         </section>
+
+        <LiliGuideSearch marca="Lili Fit" />
 
         {/* BLOQUE 2 · PASOS — NEGRO */}
         <section className="bg-black px-6 py-20 text-white">

@@ -5,6 +5,7 @@ import Link from "next/link";
 import Logo from "@/components/Logo";
 import Footer from "@/components/Footer";
 import ConversarPreview from "@/components/landing/ConversarPreview";
+import LiliGuideSearch from "@/components/landing/LiliGuideSearch";
 import { MI_SCHOOL } from "@/lib/habitos/data";
 
 const SECCIONES = [
@@ -130,6 +131,8 @@ export default function ProfesionalesLanding() {
           </div>
           <ConversarPreview />
         </section>
+
+        <LiliGuideSearch marca="Lili Fit" />
 
         {/* BLOQUE 2 · EL SISTEMA — NEGRO */}
         <section id="sistema" className="bg-black px-6 py-20 text-white">

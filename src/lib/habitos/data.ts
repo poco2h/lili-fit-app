@@ -169,8 +169,20 @@ export const MI_SCHOOL_FOLLOWER = [
     respuesta: "El perfil de microbioma de tu profesional (o el tuyo, si tu plan lo incluye): qué bacterias dominan, cuáles faltan y qué síntomas digestivos son frecuentes. Se usa para personalizar tus recomendaciones.",
   },
   {
+    pregunta: "Mis Canales (Texto/Voz/Vídeo) — ¿qué es y cómo interactúo?",
+    respuesta: "Es donde hablas con el MindTwin de tu profesional ahora mismo, disponible 24/7. Elige texto, voz o videollamada según lo que te apetezca en cada momento — el twin responde igual en los tres, con su tono y su metodología, no genéricas.",
+  },
+  {
     pregunta: "Mis Conversaciones — ¿qué es y cómo interactúo?",
-    respuesta: "Es el chat con el MindTwin de tu profesional, en texto, voz o vídeo, disponible 24/7. Pregunta lo que necesites y recibe respuestas con su tono y su metodología, no genéricas.",
+    respuesta: "Es el historial de tus charlas anteriores con el MindTwin: fecha, canal usado y duración. Sirve para repasar lo que hablasteis — para empezar una charla nueva, usa Mis Canales.",
+  },
+  {
+    pregunta: "Mis Fuentes — ¿qué es y cómo interactúo?",
+    respuesta: "Aquí ves qué fuentes ha conectado tu profesional para entrenar su MindTwin (redes sociales, documentos, etc.) — te da transparencia sobre de dónde saca su forma de responder.",
+  },
+  {
+    pregunta: "Mi Cerebro — ¿qué es y cómo interactúo?",
+    respuesta: "Es la radiografía del perfil de tu profesional: su Eneagrama, Big Five, apego y fortalezas explicados en lenguaje humano, y las lentes que usa la IA para responderte como él o ella lo haría. Solo lectura, no se edita.",
   },
   {
     pregunta: "Mis Hábitos — ¿qué es y cómo interactúo?",

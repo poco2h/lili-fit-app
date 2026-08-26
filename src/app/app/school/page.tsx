@@ -1,9 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { MI_SCHOOL } from "@/lib/habitos/data";
+import { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { MI_SCHOOL, MI_SCHOOL_FOLLOWER } from "@/lib/habitos/data";
 
-export default function SchoolPage() {
+function SchoolPageInner() {
+  const searchParams = useSearchParams();
+  const esFollower = searchParams.get("role") === "follower";
+  const preguntas = esFollower ? MI_SCHOOL_FOLLOWER : MI_SCHOOL;
   const [abierta, setAbierta] = useState<number | null>(null);
 
   return (
@@ -11,7 +15,7 @@ export default function SchoolPage() {
       <div className="relative z-10 mx-auto max-w-2xl px-4 py-10">
         <h1 className="mb-6 text-xl font-bold">Mi School</h1>
         <div className="space-y-3">
-          {MI_SCHOOL.map((item, i) => {
+          {preguntas.map((item, i) => {
             const abiertaAhora = abierta === i;
             return (
               <div key={item.pregunta} className="mt-glass overflow-hidden">
@@ -32,5 +36,13 @@ export default function SchoolPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SchoolPage() {
+  return (
+    <Suspense>
+      <SchoolPageInner />
+    </Suspense>
   );
 }

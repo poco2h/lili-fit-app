@@ -140,3 +140,22 @@ export async function listarSesiones(): Promise<SessionBilling[]> {
   if (error) throw new Error(`No se pudieron listar las sesiones de billing: ${error.message}`);
   return (data ?? []).map(mapRow);
 }
+
+/** Historial de "Mis Conversaciones" del follower — mismas filas de session_billing, filtradas por su par owner+follower. */
+export async function listarSesionesFollower(ownerIdExternal: string, followerIdExternal: string): Promise<SessionBilling[]> {
+  const supabase = getSupabaseAdmin();
+  if (!supabase) return Array.from(memSesiones.values());
+
+  const ownerUuid = await resolveOwnerUuid(ownerIdExternal);
+  const followerUuid = ownerUuid ? await resolveFollowerUuid(followerIdExternal, ownerUuid) : null;
+  if (!ownerUuid || !followerUuid) return [];
+
+  const { data, error } = await supabase
+    .from("session_billing")
+    .select("*")
+    .eq("owner_id", ownerUuid)
+    .eq("follower_id", followerUuid)
+    .order("started_at", { ascending: false });
+  if (error) throw new Error(`No se pudo listar el historial de conversaciones: ${error.message}`);
+  return (data ?? []).map(mapRow);
+}

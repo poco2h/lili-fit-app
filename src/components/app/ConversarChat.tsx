@@ -30,12 +30,14 @@ export default function ConversarChat({
   ownerName,
   role,
   ownerId,
+  canalInicial,
 }: {
   ownerName: string;
   role: "owner" | "follower";
   ownerId?: string;
+  canalInicial?: Canal;
 }) {
-  const [canal, setCanal] = useState<Canal>("texto");
+  const [canal, setCanal] = useState<Canal>(canalInicial ?? "texto");
   const [messages, setMessages] = useState<Msg[]>([
     {
       who: "MindTwin",

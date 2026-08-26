@@ -18,6 +18,7 @@ import {
 } from "@/lib/conversar/onboarding";
 import { leerTwinServer, guardarTwinServer } from "@/lib/session/twinProfileServer";
 import { resolveFollowerUuid } from "@/lib/demo/identities";
+import { bloqueTalesPrompt } from "@/lib/conversar/tales";
 
 export type TurnoHistorial = { who: "MindTwin" | "Tú"; text: string };
 
@@ -45,11 +46,12 @@ const REDIRECCION_TEMA = (ownerName: string) =>
   `"Mi especialidad es [tu área]. ¿Quieres que hablemos de [tema relevante]?". No lo hagas si lo que pregunta sí tiene ` +
   `relación, aunque sea indirecta, con bienestar, entrenamiento, nutrición o cómo se siente.`;
 
-function systemInstructionBase(ownerName: string, sportsContextResumen?: string): string {
+function systemInstructionBase(ownerName: string, sportsContextResumen?: string, talesBloque?: string): string {
   const bloqueSports = sportsContextResumen ? ` Contexto deportivo actual: ${sportsContextResumen}` : "";
+  const bloqueTales = talesBloque ? `\n\n${talesBloque}` : "";
   return (
     `Eres el MindTwin de ${ownerName}, un profesional del bienestar. Responde en español, en 2-3 frases, ` +
-    `con tono cercano y profesional. Nunca menciones precios ni tarifas.${bloqueSports}\n\n${REDIRECCION_TEMA(ownerName)}`
+    `con tono cercano y profesional. Nunca menciones precios ni tarifas.${bloqueSports}${bloqueTales}\n\n${REDIRECCION_TEMA(ownerName)}`
   );
 }
 
@@ -214,7 +216,9 @@ export async function responderConversar(input: ConversarInput): Promise<Convers
     return { ...conMencionMarca(base, mensaje, marcas, marcaYaMencionada), capa: "n1-cache" };
   }
 
-  const generada = await llamarGemini(systemInstructionBase(ownerName, sportsContextResumen), mensaje, historial, null);
+  const twinOwner = ownerId ? await leerTwinServer(ownerId) : null;
+  const talesBloque = bloqueTalesPrompt(twinOwner);
+  const generada = await llamarGemini(systemInstructionBase(ownerName, sportsContextResumen, talesBloque), mensaje, historial, null);
   if (generada && "texto" in generada) {
     const base = aplicaGuardrailPrecio(role, mensaje, generada.texto, ownerName);
     return { ...conMencionMarca(base, mensaje, marcas, marcaYaMencionada), capa: "n3-gemini" };

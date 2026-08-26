@@ -11,6 +11,7 @@ const LINKS_OWNER = [
   { href: "/app/habitos", label: "Mis Hábitos", icon: "💚" },
   { href: "/app/videos", label: "Mis Vídeos", icon: "🎬" },
   { href: "/app/clientes", label: "Mis Clientes", icon: "👥" },
+  { href: "/app/followers", label: "Mis Followers", icon: "🧑‍🤝‍🧑" },
   { href: "/app/school", label: "Mi School", icon: "🎓" },
 ];
 

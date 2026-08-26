@@ -71,6 +71,8 @@ export type DemoTwin = {
   gut_respuestas_raw?: RespuestasBaseline;
   onboarding_progress?: OnboardingProgress;
   sports_profile?: SportsProfile;
+  /** Vídeo de 15-20s leyendo un guion, grabado en /profesionales/avatar — origen del avatar_soul_id y del Photo Avatar de HeyGen. */
+  avatar_video_url?: string;
 };
 
 const KEY = "mindtwin_demo_profile";

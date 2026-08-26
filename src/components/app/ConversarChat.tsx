@@ -228,9 +228,6 @@ export default function ConversarChat({
               const isTwin = m.who === "MindTwin";
               return (
                 <div key={i} className={isTwin ? "flex flex-col items-start" : "flex flex-col items-end"}>
-                  <span className={"mb-1 text-[10px] font-extrabold " + (isTwin ? "text-[#1abc9c]" : "text-white")}>
-                    {m.who} <span className="ml-1 font-normal text-white/30">{m.time}</span>
-                  </span>
                   <div
                     className={
                       "max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed " +

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Logo from "@/components/Logo";
 import { getSupabaseBrowser } from "@/lib/supabase/browserClient";
@@ -13,9 +13,46 @@ type Owner = {
   heygenAvatarId: string | null;
   heygenVoiceId: string | null;
 };
-type EstadoSoul = "idle" | "subiendo" | "entrenando" | "listo" | "error";
 
-const MIN_FOTOS_SOUL = 20;
+const GUION_LECTURA =
+  "Hola, soy [tu nombre] y este es mi MindTwin. Estoy grabando este vídeo para entrenar mi avatar digital y " +
+  "mi forma de hablar, para poder ayudar a mis clientes las 24 horas del día con mi mismo tono y mi misma " +
+  "manera de explicar las cosas. Gracias por confiar en mí.";
+
+/** Extrae un fotograma (a ~1s o mitad del clip) del vídeo subido, para usarlo como foto de referencia del avatar. */
+function extraerFotograma(archivo: File): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const video = document.createElement("video");
+    video.preload = "metadata";
+    video.muted = true;
+    video.playsInline = true;
+    video.src = URL.createObjectURL(archivo);
+    video.onloadedmetadata = () => {
+      video.currentTime = Math.min(1, video.duration / 2 || 0);
+    };
+    video.onseeked = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        reject(new Error("No se pudo procesar el vídeo."));
+        return;
+      }
+      ctx.drawImage(video, 0, 0);
+      canvas.toBlob(
+        (blob) => {
+          URL.revokeObjectURL(video.src);
+          if (blob) resolve(blob);
+          else reject(new Error("No se pudo extraer el fotograma del vídeo."));
+        },
+        "image/jpeg",
+        0.92
+      );
+    };
+    video.onerror = () => reject(new Error("No se pudo leer el archivo de vídeo."));
+  });
+}
 
 export default function AvatarProfesionalPage() {
   const supabase = getSupabaseBrowser();
@@ -23,13 +60,10 @@ export default function AvatarProfesionalPage() {
   const [cargandoOwner, setCargandoOwner] = useState(true);
   const [errorOwner, setErrorOwner] = useState<string | null>(null);
 
-  const [fotosSoul, setFotosSoul] = useState<File[]>([]);
-  const [estadoSoul, setEstadoSoul] = useState<EstadoSoul>("idle");
-  const [mensajeSoul, setMensajeSoul] = useState<string | null>(null);
-  const [soulId, setSoulId] = useState<string | null>(null);
-  const [fotoGenerada, setFotoGenerada] = useState<string | null>(null);
-  const pollSoulRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const pollFotoRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [videoArchivo, setVideoArchivo] = useState<File | null>(null);
+  const [videoPreviewUrl, setVideoPreviewUrl] = useState<string | null>(null);
+  const [procesandoAvatar, setProcesandoAvatar] = useState(false);
+  const [mensajeAvatar, setMensajeAvatar] = useState<string | null>(null);
 
   const [guion, setGuion] = useState("Hoy os cuento cómo recuperar mejor después de una sesión intensa.");
   const [generando, setGenerando] = useState(false);
@@ -70,109 +104,78 @@ export default function AvatarProfesionalPage() {
       .then((d) => setVideosGuardados(d.videos ?? []));
   }
 
-  useEffect(() => {
-    return () => {
-      if (pollSoulRef.current) clearInterval(pollSoulRef.current);
-      if (pollFotoRef.current) clearInterval(pollFotoRef.current);
-    };
-  }, []);
-
-  function iniciarPollingSoul(id: string) {
-    if (pollSoulRef.current) clearInterval(pollSoulRef.current);
-    pollSoulRef.current = setInterval(async () => {
-      const res = await fetch(`/api/profesionales/avatar/estado-soul?id=${encodeURIComponent(id)}`);
-      const data = await res.json();
-      setMensajeSoul(data.mensaje ?? null);
-      if (data.estado === "completado") {
-        clearInterval(pollSoulRef.current!);
-        setEstadoSoul("listo");
-        setSoulId(data.soulId ?? id);
-      } else if (data.estado === "error") {
-        clearInterval(pollSoulRef.current!);
-        setEstadoSoul("error");
-      }
-    }, 5000);
+  function elegirVideo(archivo: File | null) {
+    setVideoArchivo(archivo);
+    setMensajeAvatar(null);
+    if (videoPreviewUrl) URL.revokeObjectURL(videoPreviewUrl);
+    setVideoPreviewUrl(archivo ? URL.createObjectURL(archivo) : null);
   }
 
-  async function entrenarSoul() {
-    if (!owner || fotosSoul.length < MIN_FOTOS_SOUL) return;
-    setEstadoSoul("subiendo");
-    setMensajeSoul(`Subiendo fotos… (0/${fotosSoul.length})`);
+  async function procesarVideoAvatar() {
+    if (!owner || !videoArchivo) return;
+    setProcesandoAvatar(true);
+    setMensajeAvatar("Procesando tu vídeo…");
     try {
-      const urls: string[] = [];
-      for (let i = 0; i < fotosSoul.length; i++) {
-        const form = new FormData();
-        form.append("ownerId", owner.ownerId);
-        form.append("foto", fotosSoul[i]);
-        const res = await fetch("/api/profesionales/avatar/subir-lote", { method: "POST", body: form });
-        const json = await res.json();
-        if (!res.ok) throw new Error(json.error ?? "Error subiendo una foto.");
-        urls.push(json.url);
-        setMensajeSoul(`Subiendo fotos… (${i + 1}/${fotosSoul.length})`);
-      }
+      // 1) Fotograma de referencia + subida del vídeo en paralelo.
+      const [fotograma, subidaVideo] = await Promise.all([
+        extraerFotograma(videoArchivo),
+        (async () => {
+          const form = new FormData();
+          form.append("ownerId", owner.ownerId);
+          form.append("video", videoArchivo, videoArchivo.name || "avatar.mp4");
+          const res = await fetch("/api/profesionales/avatar/subir-video", { method: "POST", body: form });
+          const json = await res.json();
+          if (!res.ok) throw new Error(json.error ?? "Error subiendo el vídeo.");
+          return json.url as string;
+        })(),
+      ]);
 
-      setEstadoSoul("entrenando");
-      setMensajeSoul("Entrenando tu Soul ID (3-5 min)…");
-      const res = await fetch("/api/profesionales/avatar/entrenar-soul", {
+      // 2) Subir el fotograma y fijarlo como avatar (alimenta ya el pipeline de vídeo V2 existente).
+      const formFoto = new FormData();
+      formFoto.append("ownerId", owner.ownerId);
+      formFoto.append("foto", fotograma, "fotograma.jpg");
+      const resFoto = await fetch("/api/profesionales/avatar/subir-lote", { method: "POST", body: formFoto });
+      const jsonFoto = await resFoto.json();
+      if (!resFoto.ok) throw new Error(jsonFoto.error ?? "Error subiendo el fotograma.");
+
+      await fetch("/api/profesionales/avatar/guardar-foto", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ownerId: owner.ownerId, ownerName: owner.ownerName, photoUrls: urls }),
+        body: JSON.stringify({ ownerId: owner.ownerId, avatarUrl: jsonFoto.url }),
       });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error ? `${json.error}${json.details ? " — " + json.details : ""}` : "Error entrenando el Soul.");
-      iniciarPollingSoul(json.soulTrainingId);
-    } catch (e) {
-      setEstadoSoul("error");
-      setMensajeSoul(e instanceof Error ? e.message : "Error desconocido.");
-    }
-  }
 
-  function iniciarPollingFoto(statusUrl: string) {
-    if (pollFotoRef.current) clearInterval(pollFotoRef.current);
-    pollFotoRef.current = setInterval(async () => {
-      const res = await fetch(`/api/profesionales/avatar/estado-foto?statusUrl=${encodeURIComponent(statusUrl)}`);
-      const data = await res.json();
-      if (data.estado === "completado" && data.imageUrl) {
-        clearInterval(pollFotoRef.current!);
-        setFotoGenerada(data.imageUrl);
-        setMensajeSoul(null);
-      } else if (data.estado === "error") {
-        clearInterval(pollFotoRef.current!);
-        setMensajeSoul(data.mensaje ?? "Error generando la foto.");
+      // 3) Guardar la referencia del vídeo en el perfil.
+      await fetch("/api/profesionales/avatar/guardar-video", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ownerId: owner.ownerId, videoUrl: subidaVideo }),
+      });
+
+      setOwner({ ...owner, avatarUrl: jsonFoto.url });
+      setMensajeAvatar("Avatar guardado ✓ Intentando crear tu Photo Avatar de HeyGen…");
+
+      // 4) Intento (opcional) de crear el Photo Avatar en HeyGen — si falla (p. ej. sin HEYGEN_API_KEY), no bloquea nada.
+      try {
+        const formHeygen = new FormData();
+        formHeygen.append("ownerId", owner.ownerId);
+        formHeygen.append("ownerName", owner.ownerName);
+        formHeygen.append("foto", fotograma, "fotograma.jpg");
+        const resHeygen = await fetch("/api/profesionales/heygen/photo-avatar", { method: "POST", body: formHeygen });
+        const jsonHeygen = await resHeygen.json();
+        if (resHeygen.ok && jsonHeygen.avatarId) {
+          setOwner((o) => (o ? { ...o, heygenAvatarId: jsonHeygen.avatarId } : o));
+          setMensajeAvatar("Avatar guardado ✓ y Photo Avatar de HeyGen creado ✓");
+        } else {
+          setMensajeAvatar(`Avatar guardado ✓ (HeyGen todavía no disponible: ${jsonHeygen.error ?? "sin configurar"})`);
+        }
+      } catch {
+        setMensajeAvatar("Avatar guardado ✓ (HeyGen no disponible ahora mismo)");
       }
-    }, 4000);
-  }
-
-  async function generarFotoRealista() {
-    if (!soulId) return;
-    setMensajeSoul("Generando tu foto realista…");
-    setFotoGenerada(null);
-    const res = await fetch("/api/profesionales/avatar/generar-foto", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ soulId }),
-    });
-    const json = await res.json();
-    if (!res.ok) {
-      setMensajeSoul(json.details ? `${json.error} ${json.details}` : json.error ?? "Error generando la foto.");
-      return;
+    } catch (e) {
+      setMensajeAvatar(e instanceof Error ? e.message : "Error procesando el vídeo.");
+    } finally {
+      setProcesandoAvatar(false);
     }
-    if (json.estado === "completado" && json.imageUrl) {
-      setFotoGenerada(json.imageUrl);
-      setMensajeSoul(null);
-    } else if (json.statusUrl) {
-      iniciarPollingFoto(json.statusUrl);
-    }
-  }
-
-  async function usarFotoGenerada() {
-    if (!owner || !fotoGenerada) return;
-    await fetch("/api/profesionales/avatar/guardar-foto", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ownerId: owner.ownerId, avatarUrl: fotoGenerada }),
-    });
-    setOwner({ ...owner, avatarUrl: fotoGenerada });
   }
 
   async function guardarVideoGenerado(videoUrl: string) {
@@ -224,7 +227,7 @@ export default function AvatarProfesionalPage() {
         </Link>
         <h1 className="mt-4 font-serif text-2xl">Tu avatar</h1>
         <p className="mt-2 text-sm text-[rgb(99,99,99)]">
-          Entrena un Soul ID con 20+ fotos tuyas para un avatar mucho más realista.
+          Graba un vídeo corto leyendo un guion y creamos tu avatar automáticamente.
         </p>
 
         {cargandoOwner && <p className="mt-6 text-sm text-[rgb(99,99,99)]">Cargando tu perfil...</p>}
@@ -237,64 +240,45 @@ export default function AvatarProfesionalPage() {
             </p>
 
             <div className="space-y-3 rounded-xl border border-[#1abc9c]/40 p-4">
-              <p className="text-sm font-semibold">1. Modo realista · Soul ID</p>
+              <p className="text-sm font-semibold">1. Tu avatar · vídeo leyendo un guion</p>
               {owner.avatarUrl && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={owner.avatarUrl} alt="Tu avatar" className="h-40 w-full rounded-lg object-cover" />
               )}
+              <div className="rounded-lg bg-[#1abc9c]/[0.06] p-3">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-[#0e6b57]">Lee esto en tu vídeo (15-20s)</p>
+                <p className="mt-1 text-xs text-black">{GUION_LECTURA}</p>
+              </div>
               <p className="text-xs text-[rgb(99,99,99)]">
-                Entrena un personaje consistente con Higgsfield Soul ID a partir de {MIN_FOTOS_SOUL}+ fotos tuyas —
-                distintos ángulos y expresiones, buena luz, sin gafas de sol. Tarda unos minutos y el resultado es
-                mucho más fiel que con una sola foto.
+                Graba con el móvil o la cámara del ordenador — buena luz, mirando a cámara, sin gafas de sol — y sube
+                aquí el archivo. Se usa para crear tu avatar y, si tenéis HeyGen configurado, tu Photo Avatar
+                automáticamente.
               </p>
               <label className="flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed border-[#1abc9c]/40 bg-[#1abc9c]/[0.04] px-4 py-6 text-center hover:bg-[#1abc9c]/[0.08]">
-                <span className="text-2xl">🖼️</span>
+                <span className="text-2xl">🎬</span>
                 <span className="text-sm font-semibold text-black">
-                  {fotosSoul.length > 0 ? `${fotosSoul.length} fotos elegidas` : "Subir fotos (mínimo 20)"}
+                  {videoArchivo ? videoArchivo.name : "Subir vídeo (15-20 segundos)"}
                 </span>
-                <span className="text-xs text-[rgb(120,120,120)]">
-                  {fotosSoul.length > 0 && fotosSoul.length < MIN_FOTOS_SOUL
-                    ? `Necesitas ${MIN_FOTOS_SOUL - fotosSoul.length} más`
-                    : "Selecciona varias fotos a la vez (Ctrl/Cmd + clic)"}
-                </span>
+                <span className="text-xs text-[rgb(120,120,120)]">MP4, MOV o WebM</span>
                 <input
                   type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={(e) => setFotosSoul(Array.from(e.target.files ?? []))}
+                  accept="video/*"
+                  onChange={(e) => elegirVideo(e.target.files?.[0] ?? null)}
                   className="hidden"
                 />
               </label>
+              {videoPreviewUrl && (
+                // eslint-disable-next-line jsx-a11y/media-has-caption
+                <video controls src={videoPreviewUrl} className="w-full rounded-lg" />
+              )}
               <button
-                onClick={entrenarSoul}
-                disabled={fotosSoul.length < MIN_FOTOS_SOUL || estadoSoul === "subiendo" || estadoSoul === "entrenando"}
+                onClick={procesarVideoAvatar}
+                disabled={!videoArchivo || procesandoAvatar}
                 className="w-full rounded-full bg-[#0e6b57] px-6 py-3 text-sm font-semibold text-white disabled:opacity-40"
               >
-                {estadoSoul === "subiendo" || estadoSoul === "entrenando" ? "Procesando…" : "Entrenar mi Soul ID →"}
+                {procesandoAvatar ? "Procesando…" : "Usar este vídeo para mi avatar →"}
               </button>
-              {mensajeSoul && <p className="text-xs text-[rgb(99,99,99)]">{mensajeSoul}</p>}
-
-              {estadoSoul === "listo" && !fotoGenerada && (
-                <button
-                  onClick={generarFotoRealista}
-                  className="w-full rounded-full bg-black px-6 py-3 text-sm font-semibold text-white"
-                >
-                  Generar foto realista →
-                </button>
-              )}
-
-              {fotoGenerada && (
-                <div className="space-y-2">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={fotoGenerada} alt="Foto generada" className="h-48 w-full rounded-lg object-cover" />
-                  <button
-                    onClick={usarFotoGenerada}
-                    className="w-full rounded-full bg-[#0e6b57] px-6 py-3 text-sm font-semibold text-white"
-                  >
-                    Usar esta foto como mi avatar →
-                  </button>
-                </div>
-              )}
+              {mensajeAvatar && <p className="text-xs text-[rgb(99,99,99)]">{mensajeAvatar}</p>}
             </div>
 
             {owner.avatarUrl && (

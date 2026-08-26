@@ -17,6 +17,7 @@ function ConversarPageInner() {
   // Mientras el owner no haya terminado S1-S4, la propia conversación conduce
   // el onboarding (V10 §5.1 R1) — sin banners ni CTAs, solo texto conversacional.
   const onboardingCompleto = twin ? twin.sesion_actual === "completo" : role === "follower";
+  const sesionActual = twin && twin.sesion_actual !== "completo" ? twin.sesion_actual : undefined;
 
   return (
     <div className="mt-app">
@@ -27,6 +28,7 @@ function ConversarPageInner() {
           ownerId={ownerId}
           canalInicial={canalInicial}
           onboardingCompleto={onboardingCompleto}
+          sesionActual={sesionActual}
         />
       </div>
     </div>

@@ -26,15 +26,25 @@ function now() {
   return new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
 }
 
-const SALUDO_ONBOARDING =
-  "Hola, soy tu gemelo y necesito conocerte mejor para poder elaborar tu MindTwin. Voy a hacerte unas preguntas. " +
-  "Te pueden parecer muchas — duran 1 hora repartida en tres sesiones de 20 minutos. Si te cansas, dímelo y seguimos " +
-  "en cualquier momento que te venga bien.";
+function saludoOnboarding(ownerName: string) {
+  return (
+    `Hola, ${ownerName}. Soy tu MindTwin.\n\n` +
+    "Para conocerte bien voy a hacerte unas preguntas, repartidas en 4 sesiones de unos 20 minutos cada una:\n" +
+    "• Sesión 1: Personalidad · Eneagrama · Apego\n" +
+    "• Sesión 2: Foco regulatorio · Inteligencia emocional · Microbiota (inicio)\n" +
+    "• Sesión 3: Fortalezas de carácter · Microbiota (resto) · Voz y avatar\n" +
+    "• Sesión 4: Tus datos deportivos y objetivos\n\n" +
+    "Responde con sinceridad — solo tú verás esto. Si te cansas, dímelo y seguimos cuando quieras.\n\n" +
+    "¿Empezamos con la Sesión 1?"
+  );
+}
 
 function saludoInicial(role: "owner" | "follower", ownerName: string, onboardingCompleto: boolean) {
   if (role === "follower") return `Soy el MindTwin de ${ownerName}, una IA entrenada con su perfil. ¿En qué puedo ayudarte hoy?`;
-  return onboardingCompleto ? `Hola. Soy tu MindTwin. ¿En qué trabajamos hoy?` : SALUDO_ONBOARDING;
+  return onboardingCompleto ? `Hola. Soy tu MindTwin. ¿En qué trabajamos hoy?` : saludoOnboarding(ownerName);
 }
+
+const NUMERO_SESION: Record<string, string> = { S1: "1", S2: "2", S3: "3", S4: "4" };
 
 export default function ConversarChat({
   ownerName,
@@ -42,12 +52,14 @@ export default function ConversarChat({
   ownerId,
   canalInicial,
   onboardingCompleto = true,
+  sesionActual,
 }: {
   ownerName: string;
   role: "owner" | "follower";
   ownerId?: string;
   canalInicial?: Canal;
   onboardingCompleto?: boolean;
+  sesionActual?: "S1" | "S2" | "S3" | "S4";
 }) {
   const [canal, setCanal] = useState<Canal>(canalInicial ?? "texto");
   const [messages, setMessages] = useState<Msg[]>([
@@ -101,6 +113,11 @@ export default function ConversarChat({
 
   return (
     <div className="mt-glass flex flex-1 flex-col overflow-hidden">
+      {!onboardingCompleto && sesionActual && (
+        <div className="flex items-center gap-2 border-b border-white/10 px-4 pt-3 pb-1 text-sm font-bold text-white/90">
+          💬 Sesión {NUMERO_SESION[sesionActual] ?? sesionActual}
+        </div>
+      )}
       {/* Barra superior de canales y bolsa de minutos */}
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 p-3">
         <div className="flex items-center gap-1.5">

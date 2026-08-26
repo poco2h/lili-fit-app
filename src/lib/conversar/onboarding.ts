@@ -116,8 +116,11 @@ export function instruccionOnboarding(sesion: string, pasoActual: Paso | null, p
   }
 
   if (pasoSiguiente) {
+    const avisoPrimeraVez = !pasoActual
+      ? " El usuario ya ha visto el saludo y el resumen de las 4 sesiones — NO vuelvas a saludarte ni a presentarte, solo una frase corta de transición (tipo '¡Genial, empecemos!') seguida directamente de la pregunta."
+      : "";
     partes.push(
-      `Ahora, de forma breve y conversacional (1-2 frases, nunca listando afirmaciones), pregúntale algo que te dé pistas sobre esto:\n${describirPaso(pasoSiguiente)}`
+      `Ahora, de forma breve y conversacional (1-2 frases, nunca listando afirmaciones), pregúntale algo que te dé pistas sobre esto:\n${describirPaso(pasoSiguiente)}${avisoPrimeraVez}`
     );
   } else {
     partes.push(

@@ -96,20 +96,33 @@ export const MI_SCHOOL = [
   },
   {
     pregunta: "¿Qué es el GUT ID?",
-    respuesta: "Tu perfil de microbioma: bacterias dominantes/deficientes, gatillos digestivos y síntomas, en 7 dimensiones. Se actualiza con tus autoevaluaciones semanales en Mis Hábitos.",
+    respuesta: "Tu perfil de microbioma: bacterias dominantes/deficientes, gatillos digestivos y síntomas, en 7 dimensiones (Z/Y/X/W/V/U/T). Se calcula con un cribado inicial de 28 preguntas + 1 pregunta de cribado clínico (ardor/dolor, que nunca diagnostica, solo activa una alerta de \"consulta con un profesional de salud\") y se va afinando con tus autoevaluaciones semanales en Mis Hábitos.",
   },
   {
-    pregunta: "Mis Conversaciones — ¿qué es y cómo interactúo?",
+    pregunta: "Mis Conversaciones — ¿qué es?",
     respuesta:
-      "Es el chat con tu MindTwin, en texto, voz o vídeo. Las 3 primeras veces que entres aquí NO es un chat normal: son tus 3 sesiones de creación de perfil (S1, S2, S3), de unos 20 minutos cada una, donde vas respondiendo con normalidad y el sistema construye tu EGO ID sin que rellenes ningún formulario. Después de esas 3 sesiones, Mis Conversaciones se convierte en tu chat habitual con el MindTwin.\n\n" +
-      "· Sesión 1 (S1, ~20 min): Big Five (personalidad), Eneagrama corto y tu estilo de apego. Al terminar, tu twin ya tiene un primer nivel de fidelidad (65-70%).\n" +
-      "· Sesión 2 (S2, ~20 min): tu foco regulatorio (si te mueves por metas o por seguridad) y tu inteligencia emocional. Sube la fidelidad al 82%.\n" +
-      "· Sesión 3 (S3, ~20-25 min + grabación de voz): tus fortalezas de carácter (VIA) y, si quieres, clonas tu voz real para que el twin pueda hablar contigo. Al terminar, tu MindTwin queda activo para todos tus clientes, con un 87% de fidelidad.",
+      "Es el chat con tu MindTwin, en texto, voz o vídeo. Las 3 primeras veces que entres aquí NO es un chat normal: son tus 3 sesiones de creación de perfil (S1, S2, S3), de unos 20 minutos cada una, donde vas respondiendo con normalidad y el sistema construye tu EGO ID sin que rellenes ningún formulario. Después de esas 3 sesiones, Mis Conversaciones se convierte en tu chat habitual con el MindTwin — puedes volver cuando quieras.",
+  },
+  {
+    pregunta: "¿Qué pasa en la Sesión 1 (S1)?",
+    respuesta: "Se calibran tu Big Five (los cinco grandes rasgos de personalidad), un Eneagrama corto y tu estilo de apego. Dura unos 20 minutos y, al terminar, tu twin ya tiene un primer nivel de fidelidad (65-70%).",
+  },
+  {
+    pregunta: "¿Qué pasa en la Sesión 2 (S2)?",
+    respuesta: "Se calibran tu foco regulatorio (si te mueves por metas o por evitar riesgos) y tu inteligencia emocional. También empieza a integrarse tu GUT ID si no tienes N1 conectado. Dura unos 20 minutos y sube tu fidelidad al 82%.",
+  },
+  {
+    pregunta: "¿Qué pasa en la Sesión 3 (S3)?",
+    respuesta: "Se calibran tus fortalezas de carácter (VIA) y, si quieres, clonas tu voz real para que el twin pueda hablar contigo. Dura unos 20-25 minutos + la grabación de voz. Al terminar, tu MindTwin queda activo para todos tus clientes, con un 87% de fidelidad.",
+  },
+  {
+    pregunta: "¿Y la Sesión 4 (S4)?",
+    respuesta: "Es la única sesión deportiva: tus datos de entrenamiento y objetivos (deporte, nivel, frecuencia, lesiones, antropometría). No suma fidelidad del EGO ID, pero permite que tu MindTwin dé recomendaciones deportivas ajustadas a ti, no genéricas.",
   },
   {
     pregunta: "Mis Fuentes — ¿qué es y cómo interactúo?",
     respuesta:
-      "Es donde conectas redes sociales, email o documentos (Google, Instagram, TikTok, WhatsApp, wearables) para que tu MindTwin aprenda más rápido cómo hablas y piensas realmente, sin que tengas que contárselo tú. Cada fuente que conectas sube tu % de fidelidad. Es opcional y lo haces a tu ritmo, después de terminar tus 3 sesiones.",
+      "Aquí ves y activas todo lo que alimenta a tu MindTwin, en 3 bloques: (1) Internas automáticas — EGO ID, GUT ID, autoevaluaciones y tu historial de conversaciones, se activan solas al completar tus sesiones. (2) Externas automatizadas — Google, Instagram, TikTok, WhatsApp y Wearables: pulsas \"Conectar\", nos das el dato mínimo necesario (tu cuenta, tu usuario o el archivo exportado) y esa fuente empieza a sumar fidelidad. (3) Manuales — bioimpedancia y test de microbioma de laboratorio, que subes tú en PDF/CSV para la máxima precisión. Es todo opcional y a tu ritmo, después de terminar tus 3 sesiones.",
   },
   {
     pregunta: "Mi Cerebro — ¿qué es y cómo interactúo?",
@@ -117,23 +130,42 @@ export const MI_SCHOOL = [
       "Es la radiografía de tu perfil: no se edita aquí, solo se lee. Tiene 2 pestañas: \"Quién soy\" (tu Eneagrama, Big Five, apego, VIA y GUT ID explicados en lenguaje humano) y \"Cómo me interpreta la IA\" (las 10 lentes filosóficas que usa tu twin para responder, con el peso de cada una). Sirve para que veas exactamente cómo te representa tu gemelo digital.",
   },
   {
-    pregunta: "Mis Hábitos — ¿qué es y cómo interactúo?",
-    respuesta:
-      "Aquí rellenas tu autoevaluación semanal (cómo has dormido, tu energía, tu ánimo) y ves tu agenda: qué ejercicio te toca, qué debes comer y a qué restaurante ir si sales fuera. Cada autoevaluación recalibra tu GUT ID y tu agenda de la semana siguiente.",
+    pregunta: "Mis Hábitos — ¿qué es?",
+    respuesta: "Es tu seguimiento semanal, dividido en dos módulos — Microbiota y Deportes — cada uno con Autoevaluación, Estadísticas, Alertas y Agenda propias.",
+  },
+  {
+    pregunta: "Mis Hábitos — Autoevaluación y Estadísticas",
+    respuesta: "En Autoevaluación respondes cada semana cómo has dormido, tu energía y tu ánimo (o tu adherencia deportiva, en el módulo Deportes). Esa respuesta recalibra tu GUT ID o tu plan y genera tu agenda de la semana siguiente. En Estadísticas ves esa evolución en gráficas, semana a semana.",
+  },
+  {
+    pregunta: "Mis Hábitos — Alertas",
+    respuesta: "Aquí ves los gatillos que tu MindTwin detecta automáticamente en tus autoevaluaciones (por ejemplo, un patrón de síntomas o falta de adherencia repetida). También puedes configurar tus propios recordatorios: qué hábito quieres recordar, cada cuántos días, a qué hora y si el aviso te llega por email, WhatsApp o ambos.",
+  },
+  {
+    pregunta: "Mis Hábitos — Recetas y Restaurantes",
+    respuesta: "Solo en el módulo Microbiota. Recetas te propone platos ordenados según cuántos nutrientes cubren para tus bacterias deficientes. Restaurantes te sugiere sitios cercanos a tu dirección que encajan con lo que necesitas comer esta semana.",
+  },
+  {
+    pregunta: "Mis Hábitos — Constancia",
+    respuesta: "Un módulo nuevo, todavía sin contenido activo — tu profesional lo irá completando próximamente. Cuando lo active aparecerá aquí automáticamente, sin que tengas que hacer nada.",
   },
   {
     pregunta: "Mis Vídeos — ¿qué es y cómo interactúo?",
     respuesta:
-      "Genera vídeos con tu avatar digital para redes sociales. Escribes lo que quieres que diga tu MindTwin y el sistema clona tu voz y anima tu imagen automáticamente — no grabas nada tú. Puedes elegir hablar a cámara (V1), aparecer en movimiento/acción (V2), o combinar ambos.",
+      "Genera vídeos con tu avatar digital para redes sociales. Primero grabas un único vídeo de 15-20 segundos leyendo un guion corto — con eso el sistema entrena tu avatar y clona tu voz, no hace falta que subas fotos ni grabes nada más. A partir de ahí, escribes lo que quieres que diga tu MindTwin y elige entre hablar a cámara (V1), aparecer en movimiento/acción (V2), combinar ambos, o la variante HeyGen si tu profesional la tiene activada. Todos los vídeos que generas quedan guardados en tu galería.",
   },
   {
     pregunta: "Mis Clientes — ¿qué es y cómo interactúo?",
     respuesta:
-      "Tu panel de seguimiento de clientes: rachas, logros y alertas — nunca el contenido de sus conversaciones ni sus tests psicológicos, eso es privado. Sirve para saber a quién atender antes.",
+      "Tu panel de facturación y seguimiento de sesiones: para cada cliente ves sus sesiones de la semana (canal usado y minutos), sus alertas activas y cuánto llevas facturado. Nunca ves el contenido de sus conversaciones ni sus tests psicológicos — eso es privado. Sirve para saber a quién atender antes y para tu control de ingresos.",
+  },
+  {
+    pregunta: "Mis Followers — ¿qué es y cómo interactúo?",
+    respuesta: "El listado real de las personas que están hablando con tu MindTwin: cuándo se dieron de alta, en qué sesión de su onboarding van y su Mindscore actual. Se va llenando solo, en cuanto alguien empieza a conversar con tu twin — no hace falta que invites a nadie manualmente.",
   },
   {
     pregunta: "Mi Facturación — ¿qué es y cómo interactúo?",
-    respuesta: "Aquí ves tus facturas mensuales (licencia + sesiones de tus clientes), su estado de pago y puedes descargarlas. No hace falta que hagas nada — se genera automáticamente cada mes.",
+    respuesta: "Aquí ves tus facturas mensuales (tu licencia + las sesiones de tus clientes), su estado de pago y puedes descargarlas. Se genera automáticamente cada mes — no hace falta que hagas nada, salvo tener conectado Stripe para poder cobrar.",
   },
 ];
 
@@ -194,31 +226,46 @@ export type Deporte = string;
 export const MI_SCHOOL_FOLLOWER = [
   {
     pregunta: "¿Qué es el EGO ID?",
-    respuesta: "El perfil psicológico completo de tu profesional — cómo piensa, decide y se comunica. Su MindTwin lo usa para responderte igual que lo haría él o ella en persona.",
+    respuesta: "El perfil psicológico completo de tu profesional — cómo piensa, decide y se comunica. Se calcula con 6 tests validados (Big Five, Eneagrama, apego, foco regulatorio, inteligencia emocional y fortalezas VIA). Su MindTwin lo usa para responderte igual que lo haría él o ella en persona.",
   },
   {
     pregunta: "¿Qué es el GUT ID?",
-    respuesta: "El perfil de microbioma de tu profesional (o el tuyo, si tu plan lo incluye): qué bacterias dominan, cuáles faltan y qué síntomas digestivos son frecuentes. Se usa para personalizar tus recomendaciones.",
+    respuesta: "El perfil de microbioma de tu profesional (o el tuyo, si tu plan lo incluye): qué bacterias dominan, cuáles faltan y qué síntomas digestivos son frecuentes, en 7 dimensiones. Se usa para personalizar tus recomendaciones de alimentación y hábitos.",
   },
   {
-    pregunta: "Mis Canales (Texto/Voz/Vídeo) — ¿qué es y cómo interactúo?",
-    respuesta: "Es donde hablas con el MindTwin de tu profesional ahora mismo, disponible 24/7. Elige texto, voz o videollamada según lo que te apetezca en cada momento — el twin responde igual en los tres, con su tono y su metodología, no genéricas.",
+    pregunta: "Mis Canales (Texto/Voz/Vídeo) — ¿qué es?",
+    respuesta: "Es donde hablas con el MindTwin de tu profesional ahora mismo, disponible 24/7. Elige texto, voz o videollamada según lo que te apetezca en cada momento — el twin responde igual en los tres, con su tono y su metodología, no con respuestas genéricas.",
   },
   {
-    pregunta: "Mis Conversaciones — ¿qué es y cómo interactúo?",
+    pregunta: "¿Necesito hacer sesiones antes de poder hablar con el twin?",
+    respuesta: "Sí, las 3 primeras veces que entres en Mis Canales no es un chat normal: son tus 3 sesiones de creación de perfil (S1, S2, S3), de unos 20 minutos cada una. Después de esas 3 sesiones, Mis Canales se convierte en tu chat habitual con el MindTwin de tu profesional.",
+  },
+  {
+    pregunta: "¿Qué se calibra en cada sesión?",
+    respuesta:
+      "Sesión 1: tu Big Five (personalidad), Eneagrama corto y tu estilo de apego.\n" +
+      "Sesión 2: tu foco regulatorio (si te mueves por metas o por seguridad) y tu inteligencia emocional.\n" +
+      "Sesión 3: tus fortalezas de carácter (VIA) y, si quieres, tu voz — para que puedas hablar por voz con el twin.",
+  },
+  {
+    pregunta: "Mis Conversaciones — ¿qué es?",
     respuesta: "Es el historial de tus charlas anteriores con el MindTwin: fecha, canal usado y duración. Sirve para repasar lo que hablasteis — para empezar una charla nueva, usa Mis Canales.",
   },
   {
-    pregunta: "Mis Fuentes — ¿qué es y cómo interactúo?",
-    respuesta: "Aquí ves qué fuentes ha conectado tu profesional para entrenar su MindTwin (redes sociales, documentos, etc.) — te da transparencia sobre de dónde saca su forma de responder.",
+    pregunta: "Mis Fuentes — ¿qué es?",
+    respuesta: "Aquí ves qué fuentes ha conectado tu profesional para entrenar su MindTwin (Google, Instagram, TikTok, WhatsApp, wearables) — te da transparencia sobre de dónde saca su forma de responder. Es de solo lectura: quien las conecta o desconecta es tu profesional, no tú.",
   },
   {
-    pregunta: "Mi Cerebro — ¿qué es y cómo interactúo?",
-    respuesta: "Es la radiografía del perfil de tu profesional: su Eneagrama, Big Five, apego y fortalezas explicados en lenguaje humano, y las lentes que usa la IA para responderte como él o ella lo haría. Solo lectura, no se edita.",
+    pregunta: "Mi Cerebro — ¿qué es?",
+    respuesta: "Es la radiografía del perfil de tu profesional: su Eneagrama, Big Five, apego y fortalezas explicados en lenguaje humano, y las 10 lentes filosóficas que usa la IA para responderte como él o ella lo haría, con el peso de cada una. Solo lectura, no se edita.",
   },
   {
-    pregunta: "Mis Hábitos — ¿qué es y cómo interactúo?",
-    respuesta: "Aquí rellenas tu autoevaluación (cómo has dormido, tu energía, tu ánimo) y ves los hábitos que tu profesional recomienda para tu perfil y tu deporte.",
+    pregunta: "Mis Hábitos — ¿qué es?",
+    respuesta: "Tu seguimiento semanal, con Autoevaluación (cómo has dormido, tu energía, tu ánimo o tu adherencia deportiva), Estadísticas de tu evolución, Alertas y los hábitos que tu profesional recomienda para tu perfil y tu deporte.",
+  },
+  {
+    pregunta: "Mis Hábitos — Alertas",
+    respuesta: "Puedes configurar tus propios recordatorios de hábitos: qué quieres recordar, cada cuántos días, a qué hora y si el aviso te llega por email, WhatsApp o ambos.",
   },
 ];
 

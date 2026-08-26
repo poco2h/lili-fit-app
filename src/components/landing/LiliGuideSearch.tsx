@@ -4,15 +4,37 @@ import { useEffect, useRef, useState } from "react";
 
 type RespuestaKey = "funciona" | "ego" | "gut" | "precio" | "default";
 
-const RESPUESTAS: Record<RespuestaKey, string> = {
-  funciona:
+const RESPUESTAS: Record<RespuestaKey, string[]> = {
+  funciona: [
     "Tu entrenador o nutricionista construye su MindTwin en 3 sesiones de 20 min (EGO ID, GUT ID, voz clonada y avatar). Tú te das de alta, generas tu propio perfil EGO ID en otra conversación de 20 min, y a partir de ahí hablas con su gemelo cerebral cuando quieras — texto, voz o videollamada, 24/7.",
-  ego: "Tu EGO ID es el perfil psicológico que el sistema construye contigo conversando de forma natural: Big Five, Eneagrama y estilo de apego. Gracias a él, las respuestas de tu MindTwin no son genéricas — están adaptadas a cómo eres tú, qué te motiva y cómo te comunicas.",
-  gut: "Tu GUT ID es tu perfil de microbioma: qué bacterias dominan, cuáles te faltan y qué síntomas digestivos son frecuentes. Se actualiza con tus autoevaluaciones semanales en Mis Hábitos y personaliza tus recomendaciones de nutrición y entrenamiento.",
-  precio: "Los precios los fija cada profesional. Pagas solo las sesiones que uses — sin permanencia, sin suscripción fija. Puedes ver la tarifa exacta de cada entrenador o nutricionista en su perfil antes de contratar.",
-  default:
+    "Es sencillo: tu profesional entrena su MindTwin con 3 conversaciones cortas, y tú haces lo mismo con tu propio perfil en otra sesión de 20 min. Desde ese momento, su gemelo cerebral está disponible para ti a cualquier hora, por texto, voz o videollamada.",
+    "Primero tu entrenador o nutricionista crea su MindTwin conversando (no rellenando formularios). Luego tú generas tu perfil EGO ID de la misma forma. A partir de ahí, hablas con su gemelo digital cuando lo necesites, 24/7 y por el canal que prefieras.",
+  ],
+  ego: [
+    "Tu EGO ID es el perfil psicológico que el sistema construye contigo conversando de forma natural: Big Five, Eneagrama y estilo de apego. Gracias a él, las respuestas de tu MindTwin no son genéricas — están adaptadas a cómo eres tú, qué te motiva y cómo te comunicas.",
+    "El EGO ID es tu retrato psicológico: personalidad (Big Five), Eneagrama y forma de vincularte (apego), calculado charlando, no con un test tradicional. Con eso, tu MindTwin te habla adaptado a ti, no con respuestas iguales para todo el mundo.",
+    "Piensa en el EGO ID como la \"personalidad\" que aprende tu MindTwin sobre ti: rasgos, motivaciones y estilo de comunicación. Se construye en conversación normal y hace que cada respuesta encaje contigo específicamente.",
+  ],
+  gut: [
+    "Tu GUT ID es tu perfil de microbioma: qué bacterias dominan, cuáles te faltan y qué síntomas digestivos son frecuentes. Se actualiza con tus autoevaluaciones semanales en Mis Hábitos y personaliza tus recomendaciones de nutrición y entrenamiento.",
+    "El GUT ID recoge el estado de tu microbiota: bacterias dominantes, deficientes y tus gatillos digestivos habituales. Cada autoevaluación semanal lo afina más, y con eso se ajustan tus recomendaciones de comida y entrenamiento.",
+    "Es tu mapa de microbioma — qué te sobra, qué te falta y qué síntomas se repiten. Se recalibra cada semana con tus autoevaluaciones y sirve para personalizar qué comes y cómo entrenas.",
+  ],
+  precio: [
+    "Los precios los fija cada profesional. Pagas solo las sesiones que uses — sin permanencia, sin suscripción fija. Puedes ver la tarifa exacta de cada entrenador o nutricionista en su perfil antes de contratar.",
+    "No hay una tarifa única: cada entrenador o nutricionista pone su propio precio por minuto. Solo pagas lo que consumes, sin cuotas fijas ni permanencia, y siempre puedes verlo en su perfil antes de empezar.",
+    "El precio depende del profesional que elijas, y solo pagas las sesiones reales que uses — nada de suscripciones obligatorias. La tarifa exacta está siempre visible en su perfil.",
+  ],
+  default: [
     "Con Mindtwins · Lili Fit accedes al gemelo cerebral de tu entrenador o nutricionista: texto, voz real o videollamada, cuando lo necesites. El sistema usa tu EGO ID y tu GUT ID para personalizar cada sesión. ¿Quieres saber más sobre algo en concreto?",
+    "Mindtwins · Lili Fit conecta contigo con el gemelo digital de tu profesional — disponible por texto, voz o vídeo cuando quieras, con tu EGO ID y GUT ID personalizando cada respuesta. Pregúntame por precio, EGO ID o GUT ID si quieres más detalle.",
+    "Aquí puedes hablar con la versión digital de tu entrenador o nutricionista, entrenada con su forma real de pensar y comunicarse. Se adapta a ti gracias a tu EGO ID y tu GUT ID. ¿Sobre qué te gustaría saber más?",
+  ],
 };
+
+function elegirAlAzar(opciones: string[]): string {
+  return opciones[Math.floor(Math.random() * opciones.length)];
+}
 
 const CHIPS: Array<{ label: string; key: RespuestaKey }> = [
   { label: "¿Cómo funciona?", key: "funciona" },
@@ -67,7 +89,7 @@ export default function LiliGuideSearch({ marca = "Lili Fit" }: { marca?: string
     setPensando(true);
     setTimeout(() => {
       setPensando(false);
-      escribirRespuesta(RESPUESTAS[detectarClave(texto)]);
+      escribirRespuesta(elegirAlAzar(RESPUESTAS[detectarClave(texto)]));
     }, 900);
   }
 

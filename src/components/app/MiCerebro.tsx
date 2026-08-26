@@ -7,9 +7,6 @@ import { ENEAGRAMA_TRIADA } from "@/lib/ego/eneagramaInfo";
 import { VIA_FORTALEZAS } from "@/lib/ego/types";
 import { descripcionRasgo } from "@/lib/ego/bigFiveDescripciones";
 import { TALES_INFO, enTuCaso } from "@/lib/ego/talesInsights";
-import dynamic from "next/dynamic";
-
-const TalesSpheres = dynamic(() => import("./TalesSpheres"), { ssr: false });
 
 function Barra({ label, valor, desc }: { label: string; valor: number; desc?: string }) {
   return (
@@ -40,7 +37,6 @@ function BarraTales({ pct }: { pct: number }) {
 export default function MiCerebro() {
   const { twin } = useTwin();
   const [tab, setTab] = useState<"quien-soy" | "tales">("quien-soy");
-  const [vista3d, setVista3d] = useState(false);
 
   if (!twin) {
     return (
@@ -147,51 +143,42 @@ export default function MiCerebro() {
         </div>
       ) : (
         <div className="space-y-4">
-          <div className="mt-glass flex items-center justify-between p-4">
+          <div className="mt-glass p-4">
             <p className="text-xs text-white/50">
               Diez lentes filosóficas, siempre activas a la vez. Más peso = más presente en cómo responde tu twin.
               Kant es la única fija — nunca se desactiva.
             </p>
-            <button onClick={() => setVista3d((v) => !v)} className="ml-3 flex-shrink-0 rounded-full bg-white px-3 py-1.5 text-[11px] font-bold text-black">
-              {vista3d ? "Ver en tarjetas" : "Ver en 3D →"}
-            </button>
           </div>
 
-          {vista3d ? (
-            <div className="mt-glass p-2">
-              <TalesSpheres weights={twin.tales_weights} data={twin.tales_data} />
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {lentesOrdenadas.map(([filosofo, peso]) => {
-                const info = TALES_INFO[filosofo as keyof typeof TALES_INFO];
-                const pct = Math.round(peso * 100);
-                const fijo = filosofo === "Kant" || filosofo === "Gorgias" || filosofo === "Homero";
-                return (
-                  <div key={filosofo} className="mt-glass p-4">
-                    <div className="flex items-start gap-3">
-                      <span className="text-2xl">{info.icon}</span>
-                      <div className="flex-1">
-                        <p className="text-sm font-bold">{info.titulo}</p>
-                        <p className="text-[11px] text-white/40">{info.subtitulo}</p>
-                      </div>
-                      <span className="text-lg font-extrabold text-[#1abc9c]">
-                        {pct}%{fijo && filosofo !== "Kant" ? " mín." : ""}
-                      </span>
+          <div className="space-y-3">
+            {lentesOrdenadas.map(([filosofo, peso]) => {
+              const info = TALES_INFO[filosofo as keyof typeof TALES_INFO];
+              const pct = Math.round(peso * 100);
+              const fijo = filosofo === "Kant" || filosofo === "Gorgias" || filosofo === "Homero";
+              return (
+                <div key={filosofo} className="mt-glass p-4">
+                  <div className="flex items-start gap-3">
+                    <span className="text-2xl">{info.icon}</span>
+                    <div className="flex-1">
+                      <p className="text-sm font-bold">{info.titulo}</p>
+                      <p className="text-[11px] text-white/40">{info.subtitulo}</p>
                     </div>
-                    <div className="mt-2">
-                      <BarraTales pct={pct} />
-                    </div>
-                    <p className="mt-2 text-[12px] text-white/60">{info.descripcion}</p>
-                    <p className="mt-2 rounded-lg bg-white/[0.04] p-2 text-[11px] text-white/50">
-                      <span className="font-bold text-[#1abc9c]">EN TU CASO · </span>
-                      {enTuCaso(filosofo as keyof typeof TALES_INFO, twin.ego)}
-                    </p>
+                    <span className="text-lg font-extrabold text-[#1abc9c]">
+                      {pct}%{fijo && filosofo !== "Kant" ? " mín." : ""}
+                    </span>
                   </div>
-                );
-              })}
-            </div>
-          )}
+                  <div className="mt-2">
+                    <BarraTales pct={pct} />
+                  </div>
+                  <p className="mt-2 text-[12px] text-white/60">{info.descripcion}</p>
+                  <p className="mt-2 rounded-lg bg-white/[0.04] p-2 text-[11px] text-white/50">
+                    <span className="font-bold text-[#1abc9c]">EN TU CASO · </span>
+                    {enTuCaso(filosofo as keyof typeof TALES_INFO, twin.ego)}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>

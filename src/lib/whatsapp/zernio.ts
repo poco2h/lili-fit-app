@@ -39,36 +39,41 @@ async function zernioFetch<T = unknown>(path: string, init?: RequestInit): Promi
 }
 
 /**
- * Perfil de Zernio (contenedor de cuentas) a usar para las conexiones de
- * MindTwin. El workspace de Lili tiene varios perfiles (Default, Max Prueba,
- * javi, M...) — para no adivinar mal, se puede fijar explícitamente con
- * ZERNIO_PROFILE_ID. Sin esa variable, se prefiere el primer perfil que ya
- * tenga alguna cuenta conectada (evita caer en un perfil "Default" vacío
- * cuando el contenido real vive en otro), y si ninguno tiene cuentas, el
- * primero de la lista (que la API devuelve con el marcado isDefault primero).
+ * Perfil de Zernio PROPIO de un owner — cada profesional que se da de alta en
+ * MindTwin conecta sus propias cuentas (Instagram/TikTok/WhatsApp), no las
+ * de otro. Los nombres de perfil son únicos por workspace de Zernio, así que
+ * "crear con nombre `mindtwin-{ownerId}`" es idempotente de fábrica: si ya
+ * existe, Zernio devuelve 409 con el id existente en vez de duplicarlo — no
+ * hace falta guardar el profileId en nuestra propia base de datos.
  */
-export async function primerProfileId(): Promise<ZernioResultado<string>> {
-  const fijo = process.env.ZERNIO_PROFILE_ID;
-  if (fijo) return { ok: true, data: fijo };
+export async function profileIdParaOwner(ownerId: string): Promise<ZernioResultado<string>> {
+  const apiKey = process.env.ZERNIO_API_KEY;
+  if (!apiKey) return { ok: false, motivo: "ZERNIO_API_KEY no configurada" };
 
-  const r = await zernioFetch<{ profiles?: Array<{ _id: string; accountUsernames?: string[] }> } | Array<{ _id: string; accountUsernames?: string[] }>>(
-    "/profiles"
-  );
-  if (!r.ok) return r;
-  const lista = Array.isArray(r.data) ? r.data : (r.data.profiles ?? []);
-  const conCuentas = lista.find((p) => (p.accountUsernames?.length ?? 0) > 0);
-  if (conCuentas) return { ok: true, data: conCuentas._id };
-  const id = lista[0]?._id;
-  if (!id) return { ok: false, motivo: "No hay ningún perfil de Zernio creado" };
-  return { ok: true, data: id };
+  const nombre = `mindtwin-${ownerId}`.slice(0, 60);
+  try {
+    const res = await fetch(`${ZERNIO_BASE}/profiles`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ name: nombre }),
+      signal: AbortSignal.timeout(15000),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.status === 201 && data?.profile?._id) return { ok: true, data: data.profile._id as string };
+    if (res.status === 409 && data?.details?.existingProfileId) return { ok: true, data: data.details.existingProfileId as string };
+    return { ok: false, motivo: data?.error ?? `HTTP ${res.status}` };
+  } catch (e) {
+    return { ok: false, motivo: e instanceof Error ? e.message : "error de red" };
+  }
 }
 
 /** URL de conexión OAuth de Zernio para instagram/tiktok/whatsapp — el usuario se redirige ahí para autorizar. */
 export async function urlConexionZernio(
   plataforma: "instagram" | "tiktok" | "whatsapp",
-  redirectUrl: string
+  redirectUrl: string,
+  ownerId: string
 ): Promise<ZernioResultado<string>> {
-  const profileId = await primerProfileId();
+  const profileId = await profileIdParaOwner(ownerId);
   if (!profileId.ok) return profileId;
   const r = await zernioFetch<{ authUrl?: string }>(
     `/connect/${plataforma}?profileId=${encodeURIComponent(profileId.data)}&redirect_url=${encodeURIComponent(redirectUrl)}`
@@ -81,14 +86,17 @@ export async function urlConexionZernio(
 type CuentaZernioRaw = { _id: string; profileId?: { _id: string } | string; platform: string; isActive: boolean };
 type CuentaZernio = { accountId: string; profileId?: string; platform: string; isActive: boolean };
 
-/** Localiza la primera cuenta de WhatsApp activa conectada al workspace de Zernio. */
-export async function cuentaWhatsappActiva(): Promise<ZernioResultado<CuentaZernio>> {
-  const r = await zernioFetch<{ accounts?: CuentaZernioRaw[] }>("/accounts?platform=whatsapp&status=connected");
+/** Localiza la cuenta de WhatsApp activa conectada al perfil Zernio de ESTE owner (no de otro). */
+export async function cuentaWhatsappActiva(ownerId: string): Promise<ZernioResultado<CuentaZernio>> {
+  const profileId = await profileIdParaOwner(ownerId);
+  if (!profileId.ok) return profileId;
+  const r = await zernioFetch<{ accounts?: CuentaZernioRaw[] }>(
+    `/accounts?platform=whatsapp&status=connected&profileId=${encodeURIComponent(profileId.data)}`
+  );
   if (!r.ok) return r;
   const cuenta = (r.data.accounts ?? []).find((a) => a.isActive);
-  if (!cuenta) return { ok: false, motivo: "No hay ninguna cuenta de WhatsApp conectada en Zernio" };
-  const profileId = typeof cuenta.profileId === "string" ? cuenta.profileId : cuenta.profileId?._id;
-  return { ok: true, data: { accountId: cuenta._id, profileId, platform: cuenta.platform, isActive: cuenta.isActive } };
+  if (!cuenta) return { ok: false, motivo: "Este owner todavía no ha conectado su WhatsApp en Zernio" };
+  return { ok: true, data: { accountId: cuenta._id, profileId: profileId.data, platform: cuenta.platform, isActive: cuenta.isActive } };
 }
 
 type PlantillaZernio = { name: string; status: "APPROVED" | "PENDING" | "REJECTED" };
@@ -122,12 +130,13 @@ export async function asegurarPlantillaRecordatorio(accountId: string): Promise<
   return { ok: true, data: creada.data.template };
 }
 
-/** Envía un recordatorio a un número concreto vía un broadcast Zernio de un solo destinatario. */
+/** Envía un recordatorio a un número concreto vía un broadcast Zernio de un solo destinatario, desde la cuenta de WhatsApp de ESTE owner. */
 export async function enviarRecordatorioWhatsapp(params: {
+  ownerId: string;
   telefono: string;
   habito: string;
 }): Promise<ZernioResultado<{ enviado: true }>> {
-  const cuenta = await cuentaWhatsappActiva();
+  const cuenta = await cuentaWhatsappActiva(params.ownerId);
   if (!cuenta.ok) return cuenta;
 
   const plantilla = await asegurarPlantillaRecordatorio(cuenta.data.accountId);

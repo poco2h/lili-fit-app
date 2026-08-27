@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://mindtwin-app.vercel.app";
   const redirectUrl = `${appUrl}/api/fuentes/zernio/callback?ownerId=${encodeURIComponent(ownerId)}`;
 
-  const resultado = await urlConexionZernio(plataforma, redirectUrl);
+  const resultado = await urlConexionZernio(plataforma, redirectUrl, ownerId);
   if (!resultado.ok) return NextResponse.json({ error: resultado.motivo }, { status: 501 });
 
   return NextResponse.json({ ok: true, url: resultado.data });

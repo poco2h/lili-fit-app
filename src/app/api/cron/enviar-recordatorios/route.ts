@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
         continue;
       }
 
-      const resultado = await enviarRecordatorioWhatsapp({ telefono: r.telefono, habito: r.habito });
+      const resultado = await enviarRecordatorioWhatsapp({ ownerId: fila.owner_id, telefono: r.telefono, habito: r.habito });
       if (resultado.ok) {
         enviados++;
         cambios = true;

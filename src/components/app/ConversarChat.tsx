@@ -158,28 +158,8 @@ export default function ConversarChat({
           💬 Sesión {NUMERO_SESION[sesionActual] ?? sesionActual}
         </div>
       )}
-      {/* Barra superior de canales y bolsa de minutos */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 p-3">
-        <div className="flex items-center gap-1.5">
-          {([
-            ["texto", "💬 Texto"],
-            ["voz", "🎙️ Voz"],
-            ["video", "🎬 Vídeo RT"],
-          ] as const).map(([key, label]) => (
-            <button
-              key={key}
-              onClick={() => setCanal(key)}
-              className={
-                "rounded-full px-3 py-1.5 text-xs font-bold transition " +
-                (canal === key ? "bg-white text-black" : "bg-white/5 text-white/40 hover:bg-white/10")
-              }
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-
-        {/* Estado de la bolsa / sesión activa */}
+      {/* Barra superior de bolsa de minutos — cambiar de canal se hace con el micro/cámara de abajo */}
+      <div className="flex flex-wrap items-center justify-end gap-2 border-b border-white/10 p-3">
         <div className="flex items-center gap-3">
           {billing.activa ? (
             <div className="flex items-center gap-2">

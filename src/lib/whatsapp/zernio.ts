@@ -38,11 +38,26 @@ async function zernioFetch<T = unknown>(path: string, init?: RequestInit): Promi
   }
 }
 
-/** Perfil de Zernio (contenedor de cuentas) del workspace — se asume uno solo, el primero. */
+/**
+ * Perfil de Zernio (contenedor de cuentas) a usar para las conexiones de
+ * MindTwin. El workspace de Lili tiene varios perfiles (Default, Max Prueba,
+ * javi, M...) — para no adivinar mal, se puede fijar explícitamente con
+ * ZERNIO_PROFILE_ID. Sin esa variable, se prefiere el primer perfil que ya
+ * tenga alguna cuenta conectada (evita caer en un perfil "Default" vacío
+ * cuando el contenido real vive en otro), y si ninguno tiene cuentas, el
+ * primero de la lista (que la API devuelve con el marcado isDefault primero).
+ */
 export async function primerProfileId(): Promise<ZernioResultado<string>> {
-  const r = await zernioFetch<{ profiles?: Array<{ _id: string }> } | Array<{ _id: string }>>("/profiles");
+  const fijo = process.env.ZERNIO_PROFILE_ID;
+  if (fijo) return { ok: true, data: fijo };
+
+  const r = await zernioFetch<{ profiles?: Array<{ _id: string; accountUsernames?: string[] }> } | Array<{ _id: string; accountUsernames?: string[] }>>(
+    "/profiles"
+  );
   if (!r.ok) return r;
   const lista = Array.isArray(r.data) ? r.data : (r.data.profiles ?? []);
+  const conCuentas = lista.find((p) => (p.accountUsernames?.length ?? 0) > 0);
+  if (conCuentas) return { ok: true, data: conCuentas._id };
   const id = lista[0]?._id;
   if (!id) return { ok: false, motivo: "No hay ningún perfil de Zernio creado" };
   return { ok: true, data: id };

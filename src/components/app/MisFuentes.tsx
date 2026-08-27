@@ -270,10 +270,18 @@ export default function MisFuentes() {
 
   const CON_OAUTH_ZERNIO = new Set<keyof Sources>(["instagram", "tiktok", "whatsapp"]);
 
+  function endpointConectorReal(key: keyof Sources, ownerId: string): string | null {
+    if (CON_OAUTH_ZERNIO.has(key)) return `/api/fuentes/zernio/conectar?ownerId=${encodeURIComponent(ownerId)}&plataforma=${key}`;
+    if (key === "google") return `/api/fuentes/google/conectar?ownerId=${encodeURIComponent(ownerId)}`;
+    if (key === "wearables") return `/api/fuentes/terra/conectar?ownerId=${encodeURIComponent(ownerId)}`;
+    return null;
+  }
+
   async function abrirConector(key: keyof Sources) {
-    if (CON_OAUTH_ZERNIO.has(key) && ownerId) {
+    const endpoint = ownerId ? endpointConectorReal(key, ownerId) : null;
+    if (endpoint) {
       try {
-        const res = await fetch(`/api/fuentes/zernio/conectar?ownerId=${encodeURIComponent(ownerId)}&plataforma=${key}`);
+        const res = await fetch(endpoint);
         const json = await res.json();
         if (res.ok && json.url) {
           window.location.href = json.url;

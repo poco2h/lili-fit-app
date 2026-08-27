@@ -73,6 +73,34 @@ export type Recordatorio = {
   canal: "email" | "whatsapp" | "ambos";
 };
 
+export type ConstanciaVertical = "deporte" | "idiomas" | "adicciones" | "nutricion" | "coaching" | "otro";
+export type ConstanciaMotivoAbandono = "estres_laboral" | "viaje" | "exito_repentino" | "lesion" | "otro";
+
+export type ConstanciaCheckin = { fecha: string /* ISO, día */ };
+export type ConstanciaMicroCompromiso = { texto: string; fecha: string };
+export type ConstanciaEpisodioAbandono = { fecha: string; motivo: ConstanciaMotivoAbandono };
+export type ConstanciaMensaje = { who: "gemelo" | "follower"; texto: string; fecha: string };
+
+/** Módulo Constancia — Mis Hábitos (MINDTWINS_CONSTANCIA_PROMPT_v1, entregado 2026-08-26). */
+export type ConstanciaState = {
+  habitoVertical?: ConstanciaVertical;
+  habitoEspecifico?: string;
+  checkins: ConstanciaCheckin[];
+  microCompromisos: ConstanciaMicroCompromiso[];
+  episodiosAbandono: ConstanciaEpisodioAbandono[];
+  ultimaAutoevaluacionScore?: number; // 0-10
+  ultimaAutoevaluacionFecha?: string;
+  mensajes: ConstanciaMensaje[];
+  flagAlerta?: boolean;
+};
+
+export const CONSTANCIA_VACIA: ConstanciaState = {
+  checkins: [],
+  microCompromisos: [],
+  episodiosAbandono: [],
+  mensajes: [],
+};
+
 export type DemoTwin = {
   ego: EgoId;
   tales_weights: Record<Filosofo, number>;
@@ -93,6 +121,8 @@ export type DemoTwin = {
   sources_data?: Partial<Record<keyof Sources, ConexionFuente>>;
   /** Recordatorios configurados en Mis Hábitos › Alertas. */
   recordatorios?: Recordatorio[];
+  /** Estado del módulo Constancia (Mis Hábitos › Constancia). */
+  constancia?: ConstanciaState;
 };
 
 const KEY = "mindtwin_demo_profile";

@@ -268,6 +268,24 @@ export default function MisFuentes() {
     setModalKey(null);
   }
 
+  const CON_OAUTH_ZERNIO = new Set<keyof Sources>(["instagram", "tiktok", "whatsapp"]);
+
+  async function abrirConector(key: keyof Sources) {
+    if (CON_OAUTH_ZERNIO.has(key) && ownerId) {
+      try {
+        const res = await fetch(`/api/fuentes/zernio/conectar?ownerId=${encodeURIComponent(ownerId)}&plataforma=${key}`);
+        const json = await res.json();
+        if (res.ok && json.url) {
+          window.location.href = json.url;
+          return;
+        }
+      } catch {
+        // sigue al formulario manual
+      }
+    }
+    setModalKey(key);
+  }
+
   const activasExternas = CONECTORES_EXTERNOS.filter((c) => twin.sources[c.key]).length;
 
   return (
@@ -469,7 +487,7 @@ export default function MisFuentes() {
                   </div>
                   <EstadoDot estado={activo ? "done" : "empty"} />
                   <button
-                    onClick={() => (activo ? desconectar(c.key) : setModalKey(c.key))}
+                    onClick={() => (activo ? desconectar(c.key) : abrirConector(c.key))}
                     className={"rounded-full px-3 py-1.5 text-[10px] font-bold " + (activo ? "bg-white/10 text-white/50" : "bg-white text-black")}
                   >
                     {activo ? "Desconectar" : "Conectar"}

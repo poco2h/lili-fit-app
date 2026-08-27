@@ -38,6 +38,31 @@ async function zernioFetch<T = unknown>(path: string, init?: RequestInit): Promi
   }
 }
 
+/** Perfil de Zernio (contenedor de cuentas) del workspace — se asume uno solo, el primero. */
+export async function primerProfileId(): Promise<ZernioResultado<string>> {
+  const r = await zernioFetch<{ profiles?: Array<{ _id: string }> } | Array<{ _id: string }>>("/profiles");
+  if (!r.ok) return r;
+  const lista = Array.isArray(r.data) ? r.data : (r.data.profiles ?? []);
+  const id = lista[0]?._id;
+  if (!id) return { ok: false, motivo: "No hay ningún perfil de Zernio creado" };
+  return { ok: true, data: id };
+}
+
+/** URL de conexión OAuth de Zernio para instagram/tiktok/whatsapp — el usuario se redirige ahí para autorizar. */
+export async function urlConexionZernio(
+  plataforma: "instagram" | "tiktok" | "whatsapp",
+  redirectUrl: string
+): Promise<ZernioResultado<string>> {
+  const profileId = await primerProfileId();
+  if (!profileId.ok) return profileId;
+  const r = await zernioFetch<{ authUrl?: string }>(
+    `/connect/${plataforma}?profileId=${encodeURIComponent(profileId.data)}&redirect_url=${encodeURIComponent(redirectUrl)}`
+  );
+  if (!r.ok) return r;
+  if (!r.data.authUrl) return { ok: false, motivo: "Zernio no devolvió authUrl" };
+  return { ok: true, data: r.data.authUrl };
+}
+
 type CuentaZernioRaw = { _id: string; profileId?: { _id: string } | string; platform: string; isActive: boolean };
 type CuentaZernio = { accountId: string; profileId?: string; platform: string; isActive: boolean };
 

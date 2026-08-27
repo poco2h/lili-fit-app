@@ -71,6 +71,10 @@ export type Recordatorio = {
   frecuenciaDias: number;
   hora: string;
   canal: "email" | "whatsapp" | "ambos";
+  /** Requerido si canal incluye whatsapp — número al que se envía el recordatorio, formato internacional (+34...). */
+  telefono?: string;
+  /** ISO del último envío real por WhatsApp — controla la cadencia (frecuenciaDias) desde el cron. */
+  ultimoEnvioWhatsapp?: string;
 };
 
 export type ConstanciaVertical = "deporte" | "idiomas" | "adicciones" | "nutricion" | "coaching" | "otro";

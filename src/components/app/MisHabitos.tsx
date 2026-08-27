@@ -48,6 +48,7 @@ export default function MisHabitos() {
   const [recFrecuencia, setRecFrecuencia] = useState(7);
   const [recHora, setRecHora] = useState("09:00");
   const [recCanal, setRecCanal] = useState<"email" | "whatsapp" | "ambos">("email");
+  const [recTelefono, setRecTelefono] = useState("");
   const [modulo, setModulo] = useState<Modulo>("microbiota");
   const [sub, setSub] = useState<string>("autoevaluacion");
   const [enviando, setEnviando] = useState(false);
@@ -85,18 +86,21 @@ export default function MisHabitos() {
 
   function guardarRecordatorio() {
     if (!twin || !recHabito.trim()) return;
+    if ((recCanal === "whatsapp" || recCanal === "ambos") && !recTelefono.trim()) return;
     const nuevo = {
       id: crypto.randomUUID(),
       habito: recHabito.trim(),
       frecuenciaDias: recFrecuencia,
       hora: recHora,
       canal: recCanal,
+      telefono: recTelefono.trim() || undefined,
     };
     guardar({ ...twin, recordatorios: [...(twin.recordatorios ?? []), nuevo] });
     setRecHabito("");
     setRecFrecuencia(7);
     setRecHora("09:00");
     setRecCanal("email");
+    setRecTelefono("");
   }
 
   function borrarRecordatorio(id: string) {
@@ -409,6 +413,19 @@ export default function MisHabitos() {
               ))}
             </div>
 
+            {(recCanal === "whatsapp" || recCanal === "ambos") && (
+              <>
+                <label className="mb-1 block text-[10px] uppercase tracking-wide text-white/40">Tu WhatsApp</label>
+                <input
+                  type="tel"
+                  value={recTelefono}
+                  onChange={(e) => setRecTelefono(e.target.value)}
+                  placeholder="+34 600 000 000"
+                  className="mb-4 w-full rounded-lg bg-white/5 px-3 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none"
+                />
+              </>
+            )}
+
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => {
@@ -416,6 +433,7 @@ export default function MisHabitos() {
                   setRecFrecuencia(7);
                   setRecHora("09:00");
                   setRecCanal("email");
+                  setRecTelefono("");
                 }}
                 className="rounded-full bg-white/5 px-4 py-2 text-xs text-white/60"
               >
@@ -423,7 +441,7 @@ export default function MisHabitos() {
               </button>
               <button
                 onClick={guardarRecordatorio}
-                disabled={!recHabito.trim()}
+                disabled={!recHabito.trim() || ((recCanal === "whatsapp" || recCanal === "ambos") && !recTelefono.trim())}
                 className="rounded-full bg-white px-4 py-2 text-xs font-bold text-black disabled:opacity-40"
               >
                 Guardar recordatorio

@@ -62,6 +62,12 @@ export type ConexionFuente = {
   detalle: string;
   fileUrl?: string;
   conectadoEn: string;
+  /** Solo Google: tokens OAuth para poder refrescar el acceso y volver a sincronizar sin repetir el consentimiento. */
+  refreshToken?: string;
+  accessToken?: string;
+  accessTokenExpira?: string; // ISO
+  /** Solo Google: muestra real de texto (YouTube+Drive+Gmail) usada para calibrar tono en Conversar — ver src/lib/fuentes/google.ts. */
+  muestraTexto?: string;
 };
 
 /** Recordatorio configurado en Mis Hábitos › Alertas (V10 §Alertas). */

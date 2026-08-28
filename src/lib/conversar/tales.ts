@@ -94,3 +94,19 @@ export function bloqueTalesPrompt(twin: DemoTwin | null, mensaje: string): strin
     `${bloqueKant(kantTriggerEtica, kantTriggerPlaneta)}`
   );
 }
+
+/**
+ * Bloque de estilo real (Mis Fuentes › Google) — muestra de texto extraída
+ * de YouTube+Drive+Gmail del owner (ver src/lib/fuentes/google.ts). Es el
+ * único uso real que hace la app de los scopes youtube.readonly/
+ * drive.readonly/gmail.readonly — sin este bloque, pedir esos permisos y no
+ * usarlos incumple la política de Google para apps verificadas.
+ */
+export function bloqueFuentesGoogle(twin: DemoTwin | null): string {
+  const muestra = twin?.sources_data?.google?.muestraTexto;
+  if (!muestra) return "";
+  return (
+    `[ESTILO REAL — muestra de texto real del owner (YouTube/Drive/Gmail), NO la repitas literal, ` +
+    `úsala solo para imitar su vocabulario y forma de hablar]:\n${muestra}`
+  );
+}

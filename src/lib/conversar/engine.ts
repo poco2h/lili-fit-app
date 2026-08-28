@@ -18,7 +18,7 @@ import {
 } from "@/lib/conversar/onboarding";
 import { leerTwinServer, guardarTwinServer } from "@/lib/session/twinProfileServer";
 import { resolveFollowerUuid } from "@/lib/demo/identities";
-import { bloqueTalesPrompt } from "@/lib/conversar/tales";
+import { bloqueTalesPrompt, bloqueFuentesGoogle } from "@/lib/conversar/tales";
 import { bloqueContextoFollower } from "@/lib/conversar/followerContext";
 import { llamarGemini, type TurnoHistorial } from "@/lib/conversar/gemini";
 
@@ -158,7 +158,9 @@ export async function responderConversar(input: ConversarInput): Promise<Convers
 
   const twinOwner = ownerId ? await leerTwinServer(ownerId) : null;
   const twinFollower = followerUuid ? await leerTwinServer(ownerId!, followerUuid) : null;
-  const talesBloque = [bloqueTalesPrompt(twinOwner, mensaje), bloqueContextoFollower(twinFollower)].filter(Boolean).join("\n\n");
+  const talesBloque = [bloqueTalesPrompt(twinOwner, mensaje), bloqueFuentesGoogle(twinOwner), bloqueContextoFollower(twinFollower)]
+    .filter(Boolean)
+    .join("\n\n");
   const generada = await llamarGemini(systemInstructionBase(ownerName, sportsContextResumen, talesBloque), mensaje, historial, null);
   if (generada && "texto" in generada) {
     const base = aplicaGuardrailPrecio(role, mensaje, generada.texto, ownerName);

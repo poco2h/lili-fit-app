@@ -1,12 +1,16 @@
-import OnboardingFlow from "@/components/app/OnboardingFlow";
+import { redirect } from "next/navigation";
 
+/**
+ * Retirado 2026-08-28: este cuestionario estático (OnboardingFlow.tsx)
+ * escribía sesion_actual="completo" por su cuenta, en paralelo al flujo
+ * conversacional real de Mis Conversaciones (engine.ts/onboarding.ts,
+ * V10 §5, R1-R6) — quien pasaba por aquí quedaba marcado como "ya
+ * onboardeado" sin haber hecho nunca las sesiones conversacionales, y
+ * Conversar le mostraba el saludo corto de "ya te conozco" en vez de
+ * arrancarlas. El onboarding real pasa siempre por /app/conversar ahora.
+ * Enlaces existentes a esta ruta (login, auth/callback, MisFuentes,
+ * MiCerebro) siguen funcionando — solo cambia adónde aterrizan.
+ */
 export default function OnboardingPage() {
-  return (
-    <div className="mt-app">
-      <div className="relative z-10 mx-auto max-w-2xl px-4 py-10">
-        <h1 className="mb-6 text-xl font-bold">Crea tu perfil EGO ID + GUT ID</h1>
-        <OnboardingFlow ownerName="tu MindTwin" />
-      </div>
-    </div>
-  );
+  redirect("/app/conversar");
 }

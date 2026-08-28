@@ -198,7 +198,7 @@ export default function ConversarChat({
       )}
 
       {canal === "video" ? (
-        <VideollamadaPanel ownerName={ownerName} />
+        <VideollamadaPanel ownerName={ownerName} ownerId={ownerId} />
       ) : canal === "voz" ? (
         <VozPanel ownerName={ownerName} ownerId={ownerId} role={role} />
       ) : (

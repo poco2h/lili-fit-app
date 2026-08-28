@@ -54,5 +54,7 @@ export function calcularGutBaseline(respuestas: RespuestasBaseline): GutData {
     n1_connected: false,
     n1_user_id: null,
     last_updated: new Date().toISOString(),
+    n3_bioimpedancia: null,
+    n4_microbioma: null,
   };
 }

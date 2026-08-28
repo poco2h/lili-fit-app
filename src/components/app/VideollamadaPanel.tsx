@@ -71,10 +71,14 @@ export default function VideollamadaPanel({ ownerName, ownerId }: { ownerName: s
         body: JSON.stringify({ texto: frase, ownerId }),
       });
       if (!res.ok) return;
+      const audioBuffer = await res.arrayBuffer();
+      const bytes = new Uint8Array(audioBuffer);
+      let binario = "";
+      for (let i = 0; i < bytes.length; i++) binario += String.fromCharCode(bytes[i]);
+      heygenRef.current?.speakAudio(btoa(binario));
     } catch {
       // Si falla el TTS, seguimos con la siguiente frase en vez de romper la llamada.
     }
-    await heygenRef.current?.speak(frase);
   }
 
   const { escuchando, soportado, alternar } = useVoiceInput(procesarTranscript);
@@ -91,18 +95,7 @@ export default function VideollamadaPanel({ ownerName, ownerId }: { ownerName: s
         const { avatarEsStock: esStock } = await heygen.init(ownerId);
         if (cancelado) return;
         setAvatarEsStock(esStock);
-
-        const esperarStream = async () => {
-          for (let i = 0; i < 100; i++) {
-            const stream = heygen.getMediaStream();
-            if (stream) return stream;
-            await new Promise((r) => setTimeout(r, 100));
-          }
-          return null;
-        };
-        const stream = await esperarStream();
-        if (cancelado) return;
-        if (stream && videoAvatarRef.current) videoAvatarRef.current.srcObject = stream;
+        if (videoAvatarRef.current) heygen.attach(videoAvatarRef.current);
 
         const camaraStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
         if (cancelado) {

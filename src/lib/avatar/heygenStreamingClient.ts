@@ -1,17 +1,22 @@
-import StreamingAvatar, { AvatarQuality, StreamingEvents, TaskType } from "@heygen/streaming-avatar";
+import { LiveAvatarSession } from "@heygen/liveavatar-web-sdk";
 
 /**
- * Envoltorio del SDK @heygen/streaming-avatar para la videollamada RT.
- * init() no recibe la API key directamente (a diferencia de lo que pedía
- * el prompt original) — llama a /api/heygen/videollamada/iniciar, que
- * cambia HEYGEN_API_KEY (secreto de servidor) por un access token de un
- * solo uso. Exponer la API key cruda como NEXT_PUBLIC_HEYGEN_API_KEY
- * permitiría a cualquiera en el navegador generar vídeos con la cuenta,
- * así que se evita.
+ * Envoltorio del SDK @heygen/liveavatar-web-sdk para la videollamada RT.
+ * Reemplaza a @heygen/streaming-avatar (descontinuado por HeyGen en favor
+ * de LiveAvatar, ver comentario en api/heygen/videollamada/iniciar/route.ts).
+ * init() no recibe la API key directamente — llama a ese endpoint, que
+ * cambia HEYGEN_API_KEY (secreto de servidor) por un session_token de un
+ * solo uso. Exponer la API key cruda en el navegador permitiría a
+ * cualquiera generar sesiones con la cuenta, así que se evita.
+ *
+ * Sesión en modo LITE con voiceChat desactivado a propósito: mindtwin-app
+ * ya tiene su propio pipeline de mic → STT del navegador (useVoiceInput),
+ * así que el micrófono integrado del SDK no se usa — el audio que el
+ * avatar reproduce se le manda ya generado (ElevenLabs) vía speakAudio(),
+ * no con su propio TTS.
  */
 export class HeyGenStreamingClient {
-  private avatar: StreamingAvatar | null = null;
-  private stream: MediaStream | null = null;
+  private session: LiveAvatarSession | null = null;
 
   async init(ownerId?: string): Promise<{ avatarEsStock: boolean }> {
     const res = await fetch("/api/heygen/videollamada/iniciar", {
@@ -22,34 +27,27 @@ export class HeyGenStreamingClient {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error ?? `Error ${res.status} iniciando HeyGen`);
 
-    this.avatar = new StreamingAvatar({ token: data.token });
-    this.avatar.on(StreamingEvents.STREAM_READY, (mediaStream: MediaStream) => {
-      this.stream = mediaStream;
+    this.session = new LiveAvatarSession(data.token, {
+      voiceChat: false,
+      apiUrl: "https://api.liveavatar.com",
     });
-    this.avatar.on(StreamingEvents.STREAM_DISCONNECTED, () => {
-      this.stream = null;
-    });
-
-    await this.avatar.createStartAvatar({
-      quality: AvatarQuality.High,
-      avatarName: data.avatarId,
-    });
+    await this.session.start();
 
     return { avatarEsStock: !!data.avatarEsStock };
   }
 
-  async speak(text: string): Promise<void> {
-    if (!this.avatar) return;
-    await this.avatar.speak({ text, task_type: TaskType.REPEAT });
+  /** Adjunta el vídeo/audio del avatar a un <video> o <audio> ya montado en el DOM. */
+  attach(element: HTMLMediaElement): void {
+    this.session?.attach(element);
   }
 
-  getMediaStream(): MediaStream | null {
-    return this.stream ?? this.avatar?.mediaStream ?? null;
+  /** Hace que el avatar hable un audio ya generado (mp3 en base64, sin el prefijo data:). */
+  speakAudio(audioBase64: string): void {
+    this.session?.repeatAudio(audioBase64);
   }
 
   async stop(): Promise<void> {
-    await this.avatar?.stopAvatar();
-    this.avatar = null;
-    this.stream = null;
+    await this.session?.stop();
+    this.session = null;
   }
 }

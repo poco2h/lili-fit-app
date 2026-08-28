@@ -250,9 +250,101 @@ function ConectarModal({
   );
 }
 
+type ManualKey = "bioimpedancia" | "microbioma";
+
+const CAMPOS_MANUAL: Record<ManualKey, { titulo: string; label: string; accept: string; ayuda: string }> = {
+  bioimpedancia: {
+    titulo: "Cargar datos de Bioimpedancia",
+    label: "PDF o CSV del dispositivo de medición",
+    accept: ".pdf,.csv",
+    ayuda: "Masa muscular, masa grasa, agua corporal y metabolismo basal — enriquece el score_base del GUT ID.",
+  },
+  microbioma: {
+    titulo: "Cargar informe de laboratorio",
+    label: "Informe del test de microbioma (heces)",
+    accept: ".pdf",
+    ayuda: "Transforma el GUT ID de \"estimado por preguntas\" a \"confirmado por laboratorio\".",
+  },
+};
+
+function SubirManualModal({
+  manualKey,
+  onClose,
+  onSubido,
+  ownerId,
+}: {
+  manualKey: ManualKey;
+  onClose: () => void;
+  onSubido: (archivo: { fileUrl: string; fileName: string }) => void;
+  ownerId: string | undefined;
+}) {
+  const campo = CAMPOS_MANUAL[manualKey];
+  const [archivo, setArchivo] = useState<File | null>(null);
+  const [enviando, setEnviando] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function confirmar() {
+    if (!archivo) {
+      setError("Selecciona el archivo antes de continuar.");
+      return;
+    }
+    setError(null);
+    setEnviando(true);
+    try {
+      const form = new FormData();
+      form.append("ownerId", ownerId ?? "demo");
+      form.append("sourceKey", `gut_${manualKey}`);
+      form.append("archivo", archivo);
+      const res = await fetch("/api/fuentes/subir-archivo", { method: "POST", body: form });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? "Error subiendo el archivo.");
+      onSubido({ fileUrl: json.url as string, fileName: archivo.name });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Algo falló subiendo el archivo.");
+    } finally {
+      setEnviando(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={onClose}>
+      <div
+        className="w-full max-w-sm rounded-2xl border border-amber-400/25 bg-[#0a0f0e] p-5"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <p className="mb-1 text-sm font-bold text-white">{campo.titulo}</p>
+        <p className="mb-4 text-[11px] text-white/40">{campo.ayuda}</p>
+
+        <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-white/50">{campo.label}</label>
+        <input
+          type="file"
+          accept={campo.accept}
+          onChange={(e) => setArchivo(e.target.files?.[0] ?? null)}
+          className="mb-1 w-full rounded-lg bg-white/5 px-3 py-2 text-xs text-white file:mr-2 file:rounded-full file:border-0 file:bg-white/10 file:px-3 file:py-1 file:text-xs file:text-white"
+        />
+        {error && <p className="mb-3 mt-2 text-[11px] text-red-400">{error}</p>}
+
+        <div className="mt-4 flex justify-end gap-2">
+          <button onClick={onClose} className="rounded-full bg-white/5 px-3 py-1.5 text-xs text-white/60">
+            Cancelar
+          </button>
+          <button
+            onClick={confirmar}
+            disabled={enviando}
+            className="rounded-full bg-white px-4 py-1.5 text-xs font-bold text-black disabled:opacity-50"
+          >
+            {enviando ? "Subiendo…" : "Subir"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function MisFuentes() {
   const { twin, guardar, ownerId } = useTwin();
   const [modalKey, setModalKey] = useState<keyof Sources | null>(null);
+  const [modalManual, setModalManual] = useState<ManualKey | null>(null);
 
   if (!twin) {
     return (
@@ -273,6 +365,16 @@ export default function MisFuentes() {
     if (!twin) return;
     const { [key]: _fuera, ...restoData } = twin.sources_data ?? {};
     guardar({ ...twin, sources: { ...twin.sources, [key]: false }, sources_data: restoData });
+  }
+
+  function subirManual(key: ManualKey, archivo: { fileUrl: string; fileName: string }) {
+    if (!twin) return;
+    const campoGut = key === "bioimpedancia" ? "n3_bioimpedancia" : "n4_microbioma";
+    guardar({
+      ...twin,
+      gut: { ...twin.gut, [campoGut]: { ...archivo, subidoEn: new Date().toISOString() } },
+    });
+    setModalManual(null);
   }
 
   function conectar(key: keyof Sources, detalle: string, fileUrl?: string) {
@@ -552,40 +654,65 @@ export default function MisFuentes() {
         <div className="mb-2.5 flex items-center gap-2 rounded-lg border border-amber-400/25 bg-amber-400/[0.07] px-2.5 py-2">
           <span>🏥</span>
           <span className="text-[10px] font-extrabold uppercase tracking-wide text-amber-400">Manuales · Carga del profesional</span>
-          <span className="ml-auto rounded-full bg-amber-400/15 px-2 py-0.5 text-[9px] font-bold text-amber-400">0 de 2 activas</span>
+          <span className="ml-auto rounded-full bg-amber-400/15 px-2 py-0.5 text-[9px] font-bold text-amber-400">
+            {(twin.gut.n3_bioimpedancia ? 1 : 0) + (twin.gut.n4_microbioma ? 1 : 0)} de 2 activas
+          </span>
         </div>
         <p className="mb-2 text-[10px] text-white/35">Activan los niveles N3 y N4 — máxima precisión diagnóstica. El MindTwin nunca interpreta clínicamente estos datos.</p>
         <div className="space-y-2">
-          <Card activo={false}>
+          <Card activo={!!twin.gut.n3_bioimpedancia}>
             <div className="flex items-center gap-2.5">
               <span className="text-lg">⚖️</span>
               <div className="flex-1">
                 <p className="text-sm font-bold">Bioimpedancia</p>
                 <p className="text-[10px] text-white/35">Masa muscular, masa grasa, agua corporal, metabolismo basal · N3</p>
               </div>
-              <EstadoDot estado="empty" />
-              <button className="rounded-full bg-white px-3 py-1.5 text-[10px] font-bold text-black">Cargar datos</button>
+              <EstadoDot estado={twin.gut.n3_bioimpedancia ? "n3" : "empty"} />
+              <button
+                onClick={() => setModalManual("bioimpedancia")}
+                className="rounded-full bg-white px-3 py-1.5 text-[10px] font-bold text-black"
+              >
+                {twin.gut.n3_bioimpedancia ? "Reemplazar" : "Cargar datos"}
+              </button>
             </div>
             <p className="mt-2 text-[10px] text-white/40">
-              El profesional sube el PDF/CSV del dispositivo de medición desde el Dashboard Clientes. Enriquece el score_base del GUT ID.
+              {twin.gut.n3_bioimpedancia
+                ? `✓ Cargado · ${twin.gut.n3_bioimpedancia.fileName}`
+                : "Sube el PDF/CSV del dispositivo de medición. Enriquece el score_base del GUT ID."}
             </p>
           </Card>
-          <Card activo={false}>
+          <Card activo={!!twin.gut.n4_microbioma}>
             <div className="flex items-center gap-2.5">
               <span className="text-lg">🔬</span>
               <div className="flex-1">
                 <p className="text-sm font-bold">Test de microbioma (heces) · Laboratorio</p>
                 <p className="text-[10px] text-white/35">Análisis metagenómico real · N4</p>
               </div>
-              <EstadoDot estado="empty" />
-              <button className="rounded-full bg-white px-3 py-1.5 text-[10px] font-bold text-black">Cargar informe</button>
+              <EstadoDot estado={twin.gut.n4_microbioma ? "n4" : "empty"} />
+              <button
+                onClick={() => setModalManual("microbioma")}
+                className="rounded-full bg-white px-3 py-1.5 text-[10px] font-bold text-black"
+              >
+                {twin.gut.n4_microbioma ? "Reemplazar" : "Cargar informe"}
+              </button>
             </div>
             <p className="mt-2 text-[10px] text-white/40">
-              Transforma el GUT ID de &quot;estimado por preguntas&quot; a &quot;confirmado por laboratorio&quot;. Desbloquea derivación a GUT ID Advisor certificado.
+              {twin.gut.n4_microbioma
+                ? `✓ Cargado · ${twin.gut.n4_microbioma.fileName}`
+                : 'Transforma el GUT ID de "estimado por preguntas" a "confirmado por laboratorio". Desbloquea derivación a GUT ID Advisor certificado.'}
             </p>
           </Card>
         </div>
       </div>
+
+      {modalManual && (
+        <SubirManualModal
+          manualKey={modalManual}
+          onClose={() => setModalManual(null)}
+          onSubido={(archivo) => subirManual(modalManual, archivo)}
+          ownerId={ownerId}
+        />
+      )}
     </div>
   );
 }

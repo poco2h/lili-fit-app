@@ -6,6 +6,7 @@ import { RESTAURANTES, generarAgendaFallback, DEPORTES, HABITOS_POR_DEPORTE, HAB
 import { recetasParaBacterias, nombresABacteriaIds } from "@/lib/recetas/rankear";
 import { enviarAgendaAlProfesional } from "@/lib/actions/agenda";
 import Autoevaluacion from "./Autoevaluacion";
+import ConstanciaChat from "./ConstanciaChat";
 
 const MODULOS = [
   { key: "microbiota", label: "🦠 Microbiota" },
@@ -138,7 +139,7 @@ export default function MisHabitos() {
     return (
       <div className="space-y-6">
         {tabsModulo}
-        <div className="mt-glass p-6 text-sm text-white/50">Próximamente.</div>
+        <ConstanciaChat />
       </div>
     );
   }

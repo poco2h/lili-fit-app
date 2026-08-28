@@ -55,6 +55,8 @@ export function twinProfileVacio(params: {
       n1_connected: false,
       n1_user_id: null,
       last_updated: null,
+      n3_bioimpedancia: null,
+      n4_microbioma: null,
     },
     fidelity_score: 0,
     elevenlabs_voice_id: null,

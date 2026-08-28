@@ -71,9 +71,23 @@ const ESTADO_DETECTADO: Record<Exclude<Filosofo, "Kant">, string> = {
  * prompt cae en el tono genérico de systemInstructionBase, sin romper nada.
  */
 export function bloqueTalesPrompt(twin: DemoTwin | null, mensaje: string): string {
-  if (!twin?.ego?.serialized || !twin.tales_weights) return "";
-
   const { talesState, kantTriggerEtica, kantTriggerPlaneta } = analizarMensajeN2(mensaje);
+  return bloqueTalesPromptConEstado(twin, talesState, kantTriggerEtica, kantTriggerPlaneta);
+}
+
+/**
+ * Igual que bloqueTalesPrompt, pero recibe el tales_state ya calculado en vez
+ * de calcularlo con el pre-procesador N2 genérico — usado por el módulo
+ * Constancia (src/lib/constancia/systemPrompt.ts), que tiene su propio
+ * pre-procesador con las señales específicas del §3 de su prompt.
+ */
+export function bloqueTalesPromptConEstado(
+  twin: DemoTwin | null,
+  talesState: TalesState,
+  kantTriggerEtica: boolean,
+  kantTriggerPlaneta: boolean
+): string {
+  if (!twin?.ego?.serialized || !twin.tales_weights) return "";
 
   const filosofosVariables = TALES_FILOSOFOS.filter((f): f is Exclude<Filosofo, "Kant"> => f !== "Kant")
     .map((f) => ({ f, peso: pesoEfectivo(twin, f, talesState), boosted: (talesState[f] ?? 0) > 0 }))

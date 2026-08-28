@@ -63,21 +63,29 @@ const CONECTORES_EXTERNOS: Array<{
     gain: "+4%",
   },
   {
-    key: "wearables", nombre: "Wearables", icon: "⌚",
-    queCaptura: "Sleep quality, HRV, actividad física y recovery score — datos fisiológicos diarios en tiempo real.",
-    mecanismo: "100% automático vía Terra API — un solo conector agrega Fitbit, Garmin, Apple Health, Oura y Whoop.",
+    key: "wearables", nombre: "Tu reloj o pulsera (Wearables)", icon: "⌚",
+    queCaptura: "Cómo duermes, tu ritmo cardíaco y cuánta energía tienes cada día — lo que ya mide tu reloj o pulsera, sin que tengas que apuntar nada tú.",
+    mecanismo: "Elige tu marca y listo — se sincroniza solo, todos los días.",
     filosofos: "Heráclito + · Platón +",
     gain: "+1–2%",
   },
 ];
 
 type CampoConector = {
-  tipo: "text" | "email" | "tel" | "select" | "file";
+  tipo: "text" | "email" | "tel" | "select" | "file" | "dispositivo";
   label: string;
   placeholder?: string;
   opciones?: string[];
   ayuda?: string;
 };
+
+const DISPOSITIVOS_WEARABLE: Array<{ nombre: string; emoji: string; color: string }> = [
+  { nombre: "Fitbit", emoji: "⌚", color: "#00B0B9" },
+  { nombre: "Garmin", emoji: "🏃", color: "#007CC3" },
+  { nombre: "Apple Health", emoji: "🍎", color: "#4b5563" },
+  { nombre: "Oura", emoji: "💍", color: "#8b5cf6" },
+  { nombre: "Whoop", emoji: "💪", color: "#dc2626" },
+];
 
 /** Qué información pedimos al pulsar "Conectar" — no hay OAuth real todavía para ninguna de estas fuentes, así que recogemos el dato mínimo necesario para que el profesional pueda activar la sincronización manualmente. */
 const CAMPOS_CONECTOR: Record<keyof Sources, CampoConector> = {
@@ -90,10 +98,9 @@ const CAMPOS_CONECTOR: Record<keyof Sources, CampoConector> = {
     ayuda: "WhatsApp → Chat → ⋮ → Más → Exportar chat → Sin multimedia. Sube el .txt resultante.",
   },
   wearables: {
-    tipo: "select",
-    label: "Tu dispositivo",
-    opciones: ["Fitbit", "Garmin", "Apple Health", "Oura", "Whoop"],
-    ayuda: "Además del dispositivo, déjanos tu email de contacto para activar la sincronización.",
+    tipo: "dispositivo",
+    label: "Toca el que llevas puesto",
+    ayuda: "Después déjanos tu email para avisarte en cuanto quede sincronizado.",
   },
 };
 
@@ -111,7 +118,7 @@ function ConectarModal({
   ownerId: string | undefined;
 }) {
   const campo = CAMPOS_CONECTOR[sourceKey];
-  const [valor, setValor] = useState(campo.tipo === "select" ? campo.opciones?.[0] ?? "" : "");
+  const [valor, setValor] = useState("");
   const [email, setEmail] = useState("");
   const [archivo, setArchivo] = useState<File | null>(null);
   const [enviando, setEnviando] = useState(false);
@@ -143,7 +150,7 @@ function ConectarModal({
       const detalle =
         campo.tipo === "file"
           ? archivo!.name
-          : campo.tipo === "select"
+          : campo.tipo === "dispositivo"
             ? `${valor}${email ? ` · ${email}` : ""}`
             : valor.trim();
       onConectado(detalle, fileUrl);
@@ -165,20 +172,33 @@ function ConectarModal({
           Necesitamos este dato para activar la sincronización — todavía no hay autenticación automática para esta fuente.
         </p>
 
-        {campo.tipo === "select" ? (
+        {campo.tipo === "dispositivo" ? (
           <>
-            <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-white/50">{campo.label}</label>
-            <select
-              value={valor}
-              onChange={(e) => setValor(e.target.value)}
-              className="mb-3 w-full rounded-lg bg-white/5 px-3 py-2 text-sm text-white focus:outline-none"
-            >
-              {campo.opciones?.map((o) => (
-                <option key={o} value={o} className="bg-[#0a0f0e]">
-                  {o}
-                </option>
-              ))}
-            </select>
+            <label className="mb-2 block text-[10px] font-bold uppercase tracking-wide text-white/50">{campo.label}</label>
+            <div className="mb-4 grid grid-cols-3 gap-2">
+              {DISPOSITIVOS_WEARABLE.map((d) => {
+                const activo = valor === d.nombre;
+                return (
+                  <button
+                    key={d.nombre}
+                    type="button"
+                    onClick={() => setValor(d.nombre)}
+                    className={
+                      "flex flex-col items-center gap-1.5 rounded-xl border p-3 text-center transition " +
+                      (activo ? "border-white bg-white/10" : "border-white/10 hover:border-white/25")
+                    }
+                  >
+                    <span
+                      className="flex h-10 w-10 items-center justify-center rounded-full text-lg"
+                      style={{ background: `${d.color}33` }}
+                    >
+                      {d.emoji}
+                    </span>
+                    <span className="text-[10px] font-semibold text-white/80">{d.nombre}</span>
+                  </button>
+                );
+              })}
+            </div>
             <label className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-white/50">Tu email de contacto</label>
             <input
               type="email"

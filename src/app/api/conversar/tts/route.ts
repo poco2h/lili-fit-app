@@ -37,21 +37,31 @@ export async function POST(req: NextRequest) {
   }
 
   const latencia = req.nextUrl.searchParams.get("optimize_streaming_latency");
+  // La videollamada (VideollamadaPanel → HeyGen LiveAvatar repeatAudio) exige
+  // PCM 16-bit sin comprimir a 24kHz mono — cualquier otra cosa (incluido el
+  // MP3 por defecto) el avatar lo interpreta como ruido de baja calidad, no
+  // como audio. El resto de llamadores (Voz, /profesionales/voz) siguen
+  // pidiendo MP3, que sí reproduce un <audio> normal del navegador.
+  const formatoPcm = req.nextUrl.searchParams.get("formato") === "pcm24k";
+  const outputFormat = formatoPcm ? "pcm_24000" : undefined;
 
-  const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
-    method: "POST",
-    headers: { "xi-api-key": apiKey, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      text: texto,
-      model_id: "eleven_flash_v2_5",
-      ...(latencia ? { optimize_streaming_latency: Number(latencia) } : {}),
-    }),
-  });
+  const res = await fetch(
+    `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}${outputFormat ? `?output_format=${outputFormat}` : ""}`,
+    {
+      method: "POST",
+      headers: { "xi-api-key": apiKey, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text: texto,
+        model_id: "eleven_flash_v2_5",
+        ...(latencia ? { optimize_streaming_latency: Number(latencia) } : {}),
+      }),
+    }
+  );
 
   if (!res.ok) {
     return NextResponse.json({ error: "ElevenLabs TTS falló" }, { status: 502 });
   }
 
   const audio = await res.arrayBuffer();
-  return new NextResponse(audio, { headers: { "Content-Type": "audio/mpeg" } });
+  return new NextResponse(audio, { headers: { "Content-Type": formatoPcm ? "audio/pcm" : "audio/mpeg" } });
 }

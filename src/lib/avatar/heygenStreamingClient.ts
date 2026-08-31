@@ -1,4 +1,4 @@
-import { LiveAvatarSession } from "@heygen/liveavatar-web-sdk";
+import { LiveAvatarSession, SessionEvent } from "@heygen/liveavatar-web-sdk";
 
 /**
  * Envoltorio del SDK @heygen/liveavatar-web-sdk para la videollamada RT.
@@ -36,14 +36,45 @@ export class HeyGenStreamingClient {
     return { avatarEsStock: !!data.avatarEsStock };
   }
 
-  /** Adjunta el vídeo/audio del avatar a un <video> o <audio> ya montado en el DOM. */
-  attach(element: HTMLMediaElement): void {
-    this.session?.attach(element);
+  /**
+   * Adjunta el vídeo/audio del avatar a un <video> o <audio> ya montado en
+   * el DOM. session.attach() del SDK es una foto fija — si los tracks
+   * remotos aún no han llegado, no hace nada y no se reintenta solo. En la
+   * práctica los tracks a veces ya llegan MIENTRAS `session.start()`
+   * todavía está resolviendo (confirmado con logs en producción) — es
+   * decir, SESSION_STREAM_READY puede dispararse antes de que este método
+   * llegue siquiera a registrar el listener, y en ese caso nunca lo
+   * recibiríamos. Por eso se comprueba el estado real de los tracks
+   * (`_remoteVideoTrack`/`_remoteAudioTrack`, `private` en los tipos del
+   * SDK pero accesibles en runtime) en vez de fiarse solo del evento.
+   */
+  attach(element: HTMLMediaElement, onListo?: () => void): void {
+    if (!this.session) return;
+    const session = this.session;
+    const tracksListos = () => {
+      const s = session as unknown as { _remoteVideoTrack: unknown; _remoteAudioTrack: unknown };
+      return !!s._remoteVideoTrack && !!s._remoteAudioTrack;
+    };
+    if (tracksListos()) {
+      session.attach(element);
+      onListo?.();
+      return;
+    }
+    session.on(SessionEvent.SESSION_STREAM_READY, () => {
+      session.attach(element);
+      onListo?.();
+    });
   }
 
-  /** Hace que el avatar hable un audio ya generado (mp3 en base64, sin el prefijo data:). */
-  speakAudio(audioBase64: string): void {
-    this.session?.repeatAudio(audioBase64);
+  /**
+   * Hace que el avatar hable un audio ya generado. Tiene que ser PCM 16-bit
+   * sin comprimir a 24kHz mono, en base64 — confirmado contra el servidor
+   * real: mandarlo sin base64 devuelve "invalid base64 audio data" por el
+   * websocket, y mandar otro formato (mp3, aunque vaya en base64 válido)
+   * decodifica bien pero suena a ruido porque el contenido no es PCM.
+   */
+  speakAudio(pcm24kBase64: string): void {
+    this.session?.repeatAudio(pcm24kBase64);
   }
 
   async stop(): Promise<void> {

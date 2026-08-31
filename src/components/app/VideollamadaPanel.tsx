@@ -18,6 +18,7 @@ const FRASE_FIN_RE = /[.?!]\s*$/;
 export default function VideollamadaPanel({ ownerName, ownerId }: { ownerName: string; ownerId?: string }) {
   const [estado, setEstado] = useState<"idle" | "conectando" | "activa" | "error">("idle");
   const [avatarEsStock, setAvatarEsStock] = useState(false);
+  const [avatarListo, setAvatarListo] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const videoAvatarRef = useRef<HTMLVideoElement | null>(null);
@@ -65,7 +66,12 @@ export default function VideollamadaPanel({ ownerName, ownerId }: { ownerName: s
 
   async function hablarFrase(frase: string) {
     try {
-      const res = await fetch(`/api/conversar/tts?optimize_streaming_latency=4`, {
+      // formato=pcm24k: HeyGen LiveAvatar repeatAudio() espera PCM 16-bit sin
+      // comprimir a 24kHz mono, en BASE64 (confirmado con el error real del
+      // servidor: "invalid base64 audio data" al mandarlo sin codificar).
+      // Mandar el MP3 normal en base64 (como antes) también falla — decodifica
+      // bien como base64 pero el contenido no es PCM, así que suena a ruido.
+      const res = await fetch(`/api/conversar/tts?optimize_streaming_latency=4&formato=pcm24k`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ texto: frase, ownerId }),
@@ -95,7 +101,7 @@ export default function VideollamadaPanel({ ownerName, ownerId }: { ownerName: s
         const { avatarEsStock: esStock } = await heygen.init(ownerId);
         if (cancelado) return;
         setAvatarEsStock(esStock);
-        if (videoAvatarRef.current) heygen.attach(videoAvatarRef.current);
+        if (videoAvatarRef.current) heygen.attach(videoAvatarRef.current, () => setAvatarListo(true));
 
         const camaraStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
         if (cancelado) {
@@ -145,25 +151,19 @@ export default function VideollamadaPanel({ ownerName, ownerId }: { ownerName: s
     setEstado("idle");
   }
 
-  if (estado === "conectando") {
-    return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-4 p-8 text-center">
-        <p className="text-sm text-white/70">Conectando con el avatar de {ownerName}…</p>
-      </div>
-    );
-  }
-
-  if (estado === "error") {
-    return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-4 p-8 text-center">
-        <p className="max-w-sm rounded-lg bg-red-500/10 p-3 text-xs text-red-400">{error}</p>
-      </div>
-    );
-  }
-
+  /**
+   * OJO: el árbol de vídeo se renderiza SIEMPRE, sin importar `estado` —
+   * antes había un `return` distinto para "conectando"/"error" que no
+   * montaba los <video>, así que cuando el código de iniciar() intentaba
+   * hacer heygen.attach(videoAvatarRef.current) o poner el srcObject de la
+   * cámara, esas refs todavía eran null y la asignación se perdía en
+   * silencio — para cuando `estado` pasaba a "activa" y los <video> por
+   * fin se montaban, ya no había nada que los conectase. Los estados de
+   * "conectando"/error ahora son overlays encima del mismo contenedor.
+   */
   return (
     <div className="relative flex flex-1 flex-col items-center gap-2 p-4">
-      {avatarEsStock && (
+      {avatarEsStock && estado === "activa" && (
         <p className="max-w-sm text-center text-[11px] text-white/40">
           Este profesional aún no ha entrenado su avatar en HeyGen — estás hablando con un avatar de muestra.
         </p>
@@ -171,6 +171,16 @@ export default function VideollamadaPanel({ ownerName, ownerId }: { ownerName: s
 
       <div className="relative w-full flex-1 overflow-hidden rounded-xl border border-white/10 bg-black">
         <video ref={videoAvatarRef} autoPlay playsInline className="h-full w-full object-cover" />
+        {estado !== "error" && !avatarListo && (
+          <div className="absolute inset-0 flex items-center justify-center text-center text-xs text-white/40">
+            Conectando con el avatar de {ownerName}… (puede tardar unos segundos)
+          </div>
+        )}
+        {estado === "error" && (
+          <div className="absolute inset-0 flex items-center justify-center p-6 text-center">
+            <p className="max-w-sm rounded-lg bg-red-500/10 p-3 text-xs text-red-400">{error}</p>
+          </div>
+        )}
         <video
           ref={videoUsuarioRef}
           autoPlay
@@ -184,7 +194,7 @@ export default function VideollamadaPanel({ ownerName, ownerId }: { ownerName: s
       <div className="flex items-center gap-3 pt-2">
         <button
           onClick={alternar}
-          disabled={!soportado}
+          disabled={!soportado || estado !== "activa"}
           className={
             "rounded-full px-6 py-2.5 text-sm font-bold disabled:opacity-50 " +
             (escuchando ? "bg-[#1abc9c] text-black" : "bg-white text-black")

@@ -56,7 +56,10 @@ export async function syncAgent(ownerId: string): Promise<SyncResult> {
         // tick, siempre generaba la misma frase casi literal. 0.7 varía la
         // redacción manteniendo la corrección técnica coherente.
         prompt: { prompt, llm: "gemini-2.5-flash", temperature: 0.7 },
-        first_message: "¡Hola! Soy tu entrenador virtual. Activa la cámara cuando quieras empezar.",
+        // La cámara ya está activa y el agente ya te ve para cuando este
+        // mensaje se reproduce (el flujo enciende cámara antes de conectar
+        // el agente) — pedir "activa la cámara" aquí era confuso y falso.
+        first_message: "¡Hola! Ya te veo por cámara — cuando quieras, empieza a moverte y te voy corrigiendo.",
         language: "es",
       },
       tts: { voice_id: perfil.voice_id, model_id: "eleven_flash_v2_5" },

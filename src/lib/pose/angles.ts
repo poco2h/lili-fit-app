@@ -43,6 +43,23 @@ const IDX = {
   rightAnkle: 28,
 } as const;
 
+/**
+ * MediaPipe siempre devuelve los 33 landmarks, incluso para partes del
+ * cuerpo fuera de encuadre — para esos casos "inventa" una posición
+ * extrapolada con `visibility` muy baja en vez de omitirla. Sin este
+ * filtro, el coach corregía la rodilla o la cadera aunque el alumno
+ * estuviera solo de torso para arriba en cámara.
+ */
+const MIN_VISIBILITY = 0.5;
+
+function visible(lm?: Landmark): boolean {
+  return !!lm && (lm.visibility === undefined || lm.visibility >= MIN_VISIBILITY);
+}
+
+function allVisible(...lms: Array<Landmark | undefined>): boolean {
+  return lms.every(visible);
+}
+
 function midpoint(a: Landmark, b: Landmark): Landmark {
   return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2, z: a.z !== undefined && b.z !== undefined ? (a.z + b.z) / 2 : undefined };
 }
@@ -93,14 +110,14 @@ export function computeJointAngles(landmarks: Landmark[]): Partial<Record<JointN
   const lWrist = get(IDX.leftWrist);
   const rWrist = get(IDX.rightWrist);
 
-  if (lHip && lKnee && lAnkle) angles.knee_left = angleBetween(lHip, lKnee, lAnkle);
-  if (rHip && rKnee && rAnkle) angles.knee_right = angleBetween(rHip, rKnee, rAnkle);
-  if (lShoulder && lHip && lKnee) angles.hip_left = angleBetween(lShoulder, lHip, lKnee);
-  if (rShoulder && rHip && rKnee) angles.hip_right = angleBetween(rShoulder, rHip, rKnee);
-  if (lShoulder && lElbow && lWrist) angles.elbow_left = angleBetween(lShoulder, lElbow, lWrist);
-  if (rShoulder && rElbow && rWrist) angles.elbow_right = angleBetween(rShoulder, rElbow, rWrist);
-  if (lElbow && lShoulder && lHip) angles.shoulder_left = angleBetween(lElbow, lShoulder, lHip);
-  if (rElbow && rShoulder && rHip) angles.shoulder_right = angleBetween(rElbow, rShoulder, rHip);
+  if (allVisible(lHip, lKnee, lAnkle)) angles.knee_left = angleBetween(lHip, lKnee, lAnkle);
+  if (allVisible(rHip, rKnee, rAnkle)) angles.knee_right = angleBetween(rHip, rKnee, rAnkle);
+  if (allVisible(lShoulder, lHip, lKnee)) angles.hip_left = angleBetween(lShoulder, lHip, lKnee);
+  if (allVisible(rShoulder, rHip, rKnee)) angles.hip_right = angleBetween(rShoulder, rHip, rKnee);
+  if (allVisible(lShoulder, lElbow, lWrist)) angles.elbow_left = angleBetween(lShoulder, lElbow, lWrist);
+  if (allVisible(rShoulder, rElbow, rWrist)) angles.elbow_right = angleBetween(rShoulder, rElbow, rWrist);
+  if (allVisible(lElbow, lShoulder, lHip)) angles.shoulder_left = angleBetween(lElbow, lShoulder, lHip);
+  if (allVisible(rElbow, rShoulder, rHip)) angles.shoulder_right = angleBetween(rElbow, rShoulder, rHip);
 
   // Espalda: ángulo hombro-cadera-rodilla promediado entre lado izq/der (aproximación de la línea de la espalda).
   if (angles.hip_left !== undefined && angles.hip_right !== undefined) {
@@ -113,14 +130,14 @@ export function computeJointAngles(landmarks: Landmark[]): Partial<Record<JointN
 
   // Columna: inclinación del vector cadera-media→hombro-medio respecto a la vertical.
   // Frontal (izq/der) usa x; lateral (adelante/atrás) usa z como proxy de profundidad de MediaPipe.
-  if (lHip && rHip && lShoulder && rShoulder) {
+  if (allVisible(lHip, rHip, lShoulder, rShoulder)) {
     const midHip = midpoint(lHip, rHip);
     const midShoulder = midpoint(lShoulder, rShoulder);
     angles.spine_frontal_tilt = tiltFromVertical(midHip, midShoulder, "x");
     angles.spine_lateral_tilt = tiltFromVertical(midHip, midShoulder, "z");
 
     const nose = get(IDX.nose);
-    if (nose) angles.cervical_alignment = angleBetween(nose, midShoulder, midHip);
+    if (visible(nose)) angles.cervical_alignment = angleBetween(nose, midShoulder, midHip);
   }
 
   // Simetría lateral: diferencia % media entre rodilla/cadera/codo izq vs der.

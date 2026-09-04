@@ -123,6 +123,15 @@ export default function ConversarChat({
     };
   }, [canal, ownerId]);
 
+  // Al entrar en la pestaña de vídeo, arranca la sesión de billing sola —
+  // sin este paso, había una pantalla intermedia con un botón "Activar Visual
+  // Coach" antes de que la cámara se encendiera; ahora va directo.
+  useEffect(() => {
+    if (canal !== "video" || billing.cargandoWallet || billing.activa) return;
+    billing.asegurarSesion(20);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canal, billing.cargandoWallet, billing.activa]);
+
   // El saludo inicial se fija al montar, antes de que la sesión real del
   // owner (nombre, progreso de onboarding) se resuelva de forma asíncrona
   // (useOwnerSession/useTwin) — se corrige aquí en cuanto llega, solo si el
@@ -215,17 +224,8 @@ export default function ConversarChat({
         billing.activa && billing.sessionBillingId && ownerId && followerId ? (
           <VisualCoachPanel ownerId={ownerId} followerId={followerId} sportsProfile={sportsProfile} sessionBillingId={billing.sessionBillingId} />
         ) : (
-          <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
-            <p className="max-w-sm text-sm text-white/60">
-              Visual Coach analiza tu técnica en directo por cámara — {ownerName} ya no aparece en vídeo, pero te corrige en tiempo real con su voz.
-            </p>
-            <button
-              onClick={() => billing.asegurarSesion(20)}
-              disabled={!ownerId || !followerId}
-              className="rounded-full bg-[#1abc9c] px-6 py-2.5 text-sm font-bold text-black disabled:opacity-40"
-            >
-              Activar Visual Coach →
-            </button>
+          <div className="flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center">
+            <p className="max-w-sm text-sm text-white/50">Activando Visual Coach…</p>
           </div>
         )
       ) : canal === "voz" ? (

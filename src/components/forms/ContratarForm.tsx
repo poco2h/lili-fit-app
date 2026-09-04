@@ -177,46 +177,46 @@ export default function ContratarForm() {
       }}
     >
       <label className="text-sm">
-        <span className="block text-[rgb(99,99,99)]">Nombre completo</span>
-        <input name="nombre" defaultValue={borrador?.nombre} required className="mt-1 w-full rounded-lg border border-black/15 px-3 py-2" />
+        <span className="block text-white/60">Nombre completo</span>
+        <input name="nombre" defaultValue={borrador?.nombre} required className="mt-1 w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-white placeholder-white/30 outline-none focus:border-[#1abc9c]" />
       </label>
       <label className="text-sm">
-        <span className="block text-[rgb(99,99,99)]">Email</span>
-        <input name="email" type="email" defaultValue={borrador?.email} required className="mt-1 w-full rounded-lg border border-black/15 px-3 py-2" />
+        <span className="block text-white/60">Email</span>
+        <input name="email" type="email" defaultValue={borrador?.email} required className="mt-1 w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-white placeholder-white/30 outline-none focus:border-[#1abc9c]" />
       </label>
       <label className="text-sm">
-        <span className="block text-[rgb(99,99,99)]">Especialidad</span>
-        <input name="especialidad" defaultValue={borrador?.especialidad} required placeholder="Nutricionista, entrenador, coach..." className="mt-1 w-full rounded-lg border border-black/15 px-3 py-2" />
+        <span className="block text-white/60">Especialidad</span>
+        <input name="especialidad" defaultValue={borrador?.especialidad} required placeholder="Nutricionista, entrenador, coach..." className="mt-1 w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-white placeholder-white/30 outline-none focus:border-[#1abc9c]" />
       </label>
-      <div className="mt-2 border-t border-black/10 pt-4">
-        <p className="text-xs font-semibold uppercase tracking-widest text-[rgb(99,99,99)]">
+      <div className="mt-2 border-t border-white/10 pt-4">
+        <p className="text-xs font-semibold uppercase tracking-widest text-white/50">
           Precio licencia Mylili: 99&nbsp;€/mes
         </p>
-        <p className="mt-1 text-xs text-[rgb(99,99,99)]">
+        <p className="mt-1 text-xs text-white/50">
           Precio MindTwin: por motivos de confidencialidad de tus tarifas finales, te
           pasaremos una calculadora de los precios que pueden pagar tus clientes (sin costes
           para ti) una vez dado de alta.
         </p>
       </div>
 
-      <div className="mt-2 border-t border-black/10 pt-4">
-        <p className="text-xs font-semibold uppercase tracking-widest text-[rgb(99,99,99)]">
+      <div className="mt-2 border-t border-white/10 pt-4">
+        <p className="text-xs font-semibold uppercase tracking-widest text-white/50">
           Datos de facturación
         </p>
       </div>
       <label className="text-sm">
-        <span className="block text-[rgb(99,99,99)]">NIF / CIF</span>
-        <input name="nif" defaultValue={borrador?.nif} required className="mt-1 w-full rounded-lg border border-black/15 px-3 py-2" />
+        <span className="block text-white/60">NIF / CIF</span>
+        <input name="nif" defaultValue={borrador?.nif} required className="mt-1 w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-white placeholder-white/30 outline-none focus:border-[#1abc9c]" />
       </label>
       <label className="text-sm">
-        <span className="block text-[rgb(99,99,99)]">Dirección de facturación</span>
-        <input name="direccionFacturacion" defaultValue={borrador?.direccionFacturacion} required className="mt-1 w-full rounded-lg border border-black/15 px-3 py-2" />
+        <span className="block text-white/60">Dirección de facturación</span>
+        <input name="direccionFacturacion" defaultValue={borrador?.direccionFacturacion} required className="mt-1 w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-white placeholder-white/30 outline-none focus:border-[#1abc9c]" />
       </label>
 
-      <div className="flex items-center justify-between rounded-lg border border-black/10 p-3">
+      <div className="flex items-center justify-between rounded-lg border border-white/15 bg-white/5 p-3">
         <div>
           <p className="text-sm font-medium">Stripe Connect</p>
-          <p className="text-xs text-[rgb(99,99,99)]">
+          <p className="text-xs text-white/50">
             Necesario para facturar tu licencia mensual de 99&nbsp;€ de Mylili y para que
             recibas los pagos de tu MindTwin.
           </p>
@@ -227,57 +227,57 @@ export default function ContratarForm() {
           disabled={conectandoStripe || stripeConectado}
           className={
             "rounded-full px-4 py-2 text-xs font-bold " +
-            (stripeConectado ? "bg-[#1abc9c] text-black" : "bg-black text-white disabled:opacity-50")
+            (stripeConectado ? "bg-[#1abc9c] text-black" : "bg-white text-black disabled:opacity-50")
           }
         >
           {stripeConectado ? "Conectado ✓" : conectandoStripe ? "Conectando..." : "Conectar Stripe"}
         </button>
       </div>
-      <p className="text-xs text-[rgb(99,99,99)]">
+      <p className="text-xs text-white/50">
         * Stripe descuenta su comisión de procesamiento de cada cobro antes de transferirte el
         resto — la verás detallada en tu panel de Stripe Connect.
       </p>
-      {stripeError && <p className="text-xs text-amber-600">{stripeError}</p>}
+      {stripeError && <p className="text-xs text-amber-400">{stripeError}</p>}
 
-      <div className="mt-2 border-t border-black/10 pt-4">
-        <p className="text-xs font-semibold uppercase tracking-widest text-[rgb(99,99,99)]">
+      <div className="mt-2 border-t border-white/10 pt-4">
+        <p className="text-xs font-semibold uppercase tracking-widest text-white/50">
           Clave de acceso profesional
         </p>
-        <p className="mt-1 text-xs text-[rgb(99,99,99)]">
+        <p className="mt-1 text-xs text-white/50">
           Obligatoria (§1.2). Validamos tu credencial y te enviamos una clave de un solo uso.
           La clave es ilimitada — no caduca.
         </p>
       </div>
       <label className="text-sm">
-        <span className="block text-[rgb(99,99,99)]">Clave de acceso</span>
+        <span className="block text-white/60">Clave de acceso</span>
         <input
           value={claveAcceso}
           onChange={(e) => setClaveAcceso(e.target.value)}
           required
           placeholder="Pégala aquí tras solicitarla"
-          className="mt-1 w-full rounded-lg border border-black/15 px-3 py-2"
+          className="mt-1 w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-white placeholder-white/30 outline-none focus:border-[#1abc9c]"
         />
       </label>
       <button
         type="button"
         onClick={solicitarDesdeFormulario}
         disabled={solicitandoClave}
-        className="justify-self-start rounded-full border border-black/15 px-4 py-2 text-xs font-bold disabled:opacity-50"
+        className="justify-self-start rounded-full border border-white/15 px-4 py-2 text-xs font-bold disabled:opacity-50"
       >
         {solicitandoClave ? "Solicitando..." : "¿No tienes clave? Solicítala →"}
       </button>
-      {claveSolicitada && <p className="text-xs text-[#0e6b57]">{claveSolicitada}</p>}
-      {claveError && <p className="text-xs text-red-600">{claveError}</p>}
+      {claveSolicitada && <p className="text-xs text-[#1abc9c]">{claveSolicitada}</p>}
+      {claveError && <p className="text-xs text-red-400">{claveError}</p>}
 
       <button
         disabled={pending}
-        className="mt-2 rounded-full bg-black px-6 py-3 text-sm font-semibold text-white hover:bg-[#1abc9c] disabled:opacity-50"
+        className="mt-2 rounded-full bg-[#1abc9c] px-6 py-3 text-sm font-semibold text-black hover:opacity-90 disabled:opacity-50"
       >
         {pending ? "Enviando..." : "Contratar →"}
       </button>
 
       {result?.ok && (
-        <div className="rounded-lg bg-[#1abc9c]/10 p-3 text-sm text-[#0e6b57]">
+        <div className="rounded-lg border border-[#1abc9c]/30 bg-[#1abc9c]/10 p-3 text-sm text-white">
           <p>
             ¡Alta recibida! Te llegará un email con tu magic link de acceso.
             {result.simulated && " (simulado — Supabase/Resend todavía no están conectados)"}
@@ -287,25 +287,25 @@ export default function ContratarForm() {
               type="button"
               onClick={() => pagarLicenciaMensual(result.ownerId!, result.email)}
               disabled={pagandoLicencia}
-              className="mt-2 w-full rounded-full bg-black px-4 py-2.5 text-sm font-bold text-white disabled:opacity-50"
+              className="mt-2 w-full rounded-full bg-[#1abc9c] px-4 py-2.5 text-sm font-bold text-black disabled:opacity-50"
             >
               {pagandoLicencia ? "Redirigiendo a Stripe..." : "Pagar licencia mensual (Stripe test) →"}
             </button>
           ) : (
-            <Link href="/login" className="mt-1 inline-block font-semibold underline">
+            <Link href="/login" className="mt-1 inline-block font-semibold text-[#1abc9c] underline">
               Ir a login →
             </Link>
           )}
-          {errorLicencia && <p className="mt-2 text-xs text-red-600">{errorLicencia}</p>}
+          {errorLicencia && <p className="mt-2 text-xs text-red-400">{errorLicencia}</p>}
         </div>
       )}
 
       {result?.ok && (
         <div className="mt-2">
-          <p className="text-xs font-semibold uppercase tracking-widest text-[rgb(99,99,99)]">
+          <p className="text-xs font-semibold uppercase tracking-widest text-white/50">
             Tu precio, ahora que ya estás dado de alta
           </p>
-          <p className="mt-1 text-xs text-[rgb(99,99,99)]">
+          <p className="mt-1 text-xs text-white/50">
             Por motivos de confidencialidad de tus tarifas, esta calculadora solo se muestra
             tras el alta.
           </p>
@@ -313,7 +313,7 @@ export default function ContratarForm() {
         </div>
       )}
       {result && !result.ok && (
-        <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{result.error}</p>
+        <p className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">{result.error}</p>
       )}
     </form>
   );

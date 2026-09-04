@@ -6,6 +6,8 @@ import type { SessionBilling } from "./store";
 
 export type EstadoBilling = {
   activa: boolean;
+  /** Solo relevante para Visual Coach (canal video_rt), que necesita el id para loguear sus eventos. */
+  sessionBillingId: string | null;
   elapsedSec: number;
   walletBalanceSec: number;
   walletBalanceMin: number;
@@ -32,6 +34,7 @@ export function useSessionBilling(
 ) {
   const [estado, setEstado] = useState<EstadoBilling>({
     activa: false,
+    sessionBillingId: null,
     elapsedSec: 0,
     walletBalanceSec: 0,
     walletBalanceMin: 0,
@@ -87,6 +90,7 @@ export function useSessionBilling(
       setEstado((s) => ({
         ...s,
         activa: false,
+        sessionBillingId: null,
         elapsedSec: elapsedRef.current,
         resultado: data,
         walletBalanceSec: data.walletBalanceSeconds ?? s.walletBalanceSec,
@@ -121,6 +125,7 @@ export function useSessionBilling(
       setEstado((s) => ({
         ...s,
         activa: true,
+        sessionBillingId: data.sessionBillingId ?? null,
         elapsedSec: 0,
         resultado: null,
         walletBalanceSec: data.availableSeconds ?? s.walletBalanceSec,

@@ -212,7 +212,34 @@ CREATE TABLE IF NOT EXISTS generated_videos (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- 14. ROW LEVEL SECURITY (RLS) — REGLAS ESTRICTAS DE PRIVACIDAD
+-- 14.5. VISUAL COACH — columnas nuevas en tablas existentes (ya aplicadas en
+-- Supabase vía ALTER TABLE, CREATE TABLE IF NOT EXISTS no las tocaría si la
+-- tabla ya existe — ver visual_coach_events más abajo).
+ALTER TABLE followers ADD COLUMN IF NOT EXISTS display_name TEXT;
+ALTER TABLE twin_profiles ADD COLUMN IF NOT EXISTS elevenlabs_agent_id VARCHAR;
+
+-- 15. VISUAL COACH — EVENTOS DE FEEDBACK AUTOMÁTICO Y TRANSCRIPT DE SESIONES
+-- twin_profiles.sports_profile (owner-level, follower_id IS NULL) guarda la
+-- config del entrenador: { sport, knowledge_base, exercises: [{id, label,
+-- joint_targets: {joint: [min, max]}}] }. Una sola tabla de eventos cubre
+-- tanto el feedback automático (cada 8s, con ángulos) como el transcript de
+-- preguntas/respuestas — evita crear 3 tablas separadas para el MVP.
+CREATE TABLE IF NOT EXISTS visual_coach_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  owner_id UUID REFERENCES owners(id) ON DELETE CASCADE,
+  follower_id UUID REFERENCES followers(id) ON DELETE CASCADE,
+  session_billing_id UUID REFERENCES session_billing(id) ON DELETE SET NULL,
+  event_type TEXT CHECK (event_type IN ('feedback_auto', 'qa_alumno', 'qa_coach')) NOT NULL,
+  exercise TEXT,
+  joint_angles JSONB,
+  deviations JSONB,
+  text TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_visual_coach_events_owner_follower ON visual_coach_events(owner_id, follower_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_visual_coach_events_owner_exercise ON visual_coach_events(owner_id, exercise);
+
+-- 16. ROW LEVEL SECURITY (RLS) — REGLAS ESTRICTAS DE PRIVACIDAD
 ALTER TABLE owners ENABLE ROW LEVEL SECURITY;
 ALTER TABLE followers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE twin_profiles ENABLE ROW LEVEL SECURITY;
@@ -224,3 +251,4 @@ ALTER TABLE habits ENABLE ROW LEVEL SECURITY;
 ALTER TABLE habit_evaluations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE agenda_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE generated_videos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE visual_coach_events ENABLE ROW LEVEL SECURITY;

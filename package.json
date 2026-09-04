@@ -9,8 +9,10 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@elevenlabs/client": "^1.23.0",
     "@google/generative-ai": "^0.24.1",
     "@heygen/liveavatar-web-sdk": "^0.0.18",
+    "@mediapipe/tasks-vision": "^1.0.1",
     "@supabase/ssr": "^0.12.4",
     "@supabase/supabase-js": "^2.112.3",
     "next": "16.3.0",

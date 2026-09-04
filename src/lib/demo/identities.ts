@@ -49,10 +49,46 @@ export async function resolveOwnerUuid(ownerIdExternal: string): Promise<string 
   return created.id;
 }
 
-export async function resolveFollowerUuid(followerIdExternal: string, ownerUuid: string): Promise<string | null> {
+/**
+ * `displayName` es opcional (Visual Coach: el alumno escribe su nombre sin
+ * registrarse). Si se pasa y difiere del guardado, se actualiza — así un
+ * alumno que cambie de nombre entre sesiones queda con el más reciente.
+ *
+ * A diferencia de `resolveOwnerUuid`, aquí un `followerIdExternal` con forma
+ * de UUID NO implica que la fila ya exista en `followers`: el id local sin
+ * registro (`obtenerFollowerLocalId`, `crypto.randomUUID()`) es un UUID
+ * válido desde el primer momento, antes de haber tocado la base de datos.
+ * Devolverlo tal cual sin comprobar (como hacía antes) dejaba el `follower_id`
+ * de billing/eventos apuntando a una fila que nunca se creó — el `UPDATE` de
+ * abajo no encontraba nada y no fallaba, así que el bug pasaba en silencio.
+ */
+export async function resolveFollowerUuid(
+  followerIdExternal: string,
+  ownerUuid: string,
+  displayName?: string
+): Promise<string | null> {
   const supabase = getSupabaseAdmin();
   if (!supabase) return null;
-  if (UUID_RE.test(followerIdExternal)) return followerIdExternal;
+
+  if (UUID_RE.test(followerIdExternal)) {
+    const { data: existente } = await supabase.from("followers").select("id").eq("id", followerIdExternal).maybeSingle();
+    if (existente) {
+      if (displayName) await supabase.from("followers").update({ display_name: displayName }).eq("id", followerIdExternal);
+      return followerIdExternal;
+    }
+    const { data: creado, error } = await supabase
+      .from("followers")
+      .insert({
+        id: followerIdExternal,
+        email: `follower+${followerIdExternal}@demo.mindtwin.local`,
+        owner_id: ownerUuid,
+        display_name: displayName ?? null,
+      })
+      .select("id")
+      .single();
+    if (error) throw new Error(`No se pudo crear follower con id local: ${error.message}`);
+    return creado.id;
+  }
 
   const email = `follower+${slug(followerIdExternal)}@demo.mindtwin.local`;
   const { data: existing } = await supabase
@@ -61,11 +97,14 @@ export async function resolveFollowerUuid(followerIdExternal: string, ownerUuid:
     .eq("email", email)
     .eq("owner_id", ownerUuid)
     .maybeSingle();
-  if (existing) return existing.id;
+  if (existing) {
+    if (displayName) await supabase.from("followers").update({ display_name: displayName }).eq("id", existing.id);
+    return existing.id;
+  }
 
   const { data: created, error } = await supabase
     .from("followers")
-    .insert({ email, owner_id: ownerUuid })
+    .insert({ email, owner_id: ownerUuid, display_name: displayName ?? null })
     .select("id")
     .single();
   if (error) throw new Error(`No se pudo resolver follower demo: ${error.message}`);

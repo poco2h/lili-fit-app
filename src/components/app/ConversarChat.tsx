@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import VideollamadaPanel from "./VideollamadaPanel";
+import VisualCoachPanel from "./VisualCoachPanel";
 import VozPanel from "./VozPanel";
 import { leerMarcas } from "@/lib/demo/marcas";
 import { useSessionBilling } from "@/lib/billing/useSessionBilling";
 import type { Canal as CanalBilling } from "@/lib/billing/pricing";
+import { SPORTS_PROFILE_DEFAULT, type SportsProfile } from "@/app/api/profesionales/deporte/route";
 
 type Msg = { who: "MindTwin" | "Tú"; text: string; time: string };
 type Canal = "texto" | "voz" | "video";
@@ -107,7 +108,20 @@ export default function ConversarChat({
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [marcaYaMencionada, setMarcaYaMencionada] = useState(false);
-  const billing = useSessionBilling(CANAL_BILLING[canal]);
+  const [sportsProfile, setSportsProfile] = useState<SportsProfile>(SPORTS_PROFILE_DEFAULT);
+  const billing = useSessionBilling(CANAL_BILLING[canal], followerId, ownerId);
+
+  // Config de deporte del entrenador (Visual Coach) — solo hace falta cargarla al entrar en la pestaña de vídeo.
+  useEffect(() => {
+    if (canal !== "video" || !ownerId) return;
+    let activo = true;
+    fetch(`/api/profesionales/deporte?ownerId=${encodeURIComponent(ownerId)}`)
+      .then((r) => r.json())
+      .then((d) => activo && d.sportsProfile && setSportsProfile(d.sportsProfile));
+    return () => {
+      activo = false;
+    };
+  }, [canal, ownerId]);
 
   // El saludo inicial se fija al montar, antes de que la sesión real del
   // owner (nombre, progreso de onboarding) se resuelva de forma asíncrona
@@ -198,7 +212,22 @@ export default function ConversarChat({
       )}
 
       {canal === "video" ? (
-        <VideollamadaPanel ownerName={ownerName} ownerId={ownerId} />
+        billing.activa && billing.sessionBillingId && ownerId && followerId ? (
+          <VisualCoachPanel ownerId={ownerId} followerId={followerId} sportsProfile={sportsProfile} sessionBillingId={billing.sessionBillingId} />
+        ) : (
+          <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
+            <p className="max-w-sm text-sm text-white/60">
+              Visual Coach analiza tu técnica en directo por cámara — {ownerName} ya no aparece en vídeo, pero te corrige en tiempo real con su voz.
+            </p>
+            <button
+              onClick={() => billing.asegurarSesion(20)}
+              disabled={!ownerId || !followerId}
+              className="rounded-full bg-[#1abc9c] px-6 py-2.5 text-sm font-bold text-black disabled:opacity-40"
+            >
+              Activar Visual Coach →
+            </button>
+          </div>
+        )
       ) : canal === "voz" ? (
         <VozPanel ownerName={ownerName} ownerId={ownerId} role={role} />
       ) : (
@@ -234,8 +263,8 @@ export default function ConversarChat({
             <button
               type="button"
               onClick={() => setCanal("video")}
-              aria-label="Cambiar a videollamada"
-              title="Videollamada"
+              aria-label="Cambiar a Visual Coach"
+              title="Visual Coach — análisis de técnica por cámara"
               className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white/10 text-white/80 hover:bg-white/20 hover:text-white transition"
             >
               <IconoCamara />

@@ -256,6 +256,9 @@ ALTER TABLE owners ADD COLUMN IF NOT EXISTS min_hourly_rate_cents INT NOT NULL D
 -- (esa es la cuenta Connect por la que el owner cobra a SUS alumnos).
 ALTER TABLE owners ADD COLUMN IF NOT EXISTS generator_stripe_customer_id TEXT;
 ALTER TABLE owners ADD COLUMN IF NOT EXISTS generator_stripe_subscription_id TEXT;
+-- Buscador público de profesionales (src/app/clientes/buscar) — antes usaba un
+-- array hardcodeado de 4 profesionales de ejemplo, nunca a los owners reales.
+ALTER TABLE owners ADD COLUMN IF NOT EXISTS ciudad TEXT;
 
 CREATE TABLE IF NOT EXISTS packs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

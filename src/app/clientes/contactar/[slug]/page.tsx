@@ -1,8 +1,10 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import Logo from "@/components/Logo";
-import { PROFESIONALES } from "@/lib/data/profesionales";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
 import ContactarForm from "@/components/forms/ContactarForm";
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export default async function ContactarPage({
   params,
@@ -10,7 +12,16 @@ export default async function ContactarPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const profesional = PROFESIONALES.find((p) => p.slug === slug);
+  const supabase = getSupabaseAdmin();
+  if (!supabase) notFound();
+
+  // Los owners dados de alta antes de que existiera `slug` no tienen uno real
+  // guardado — el buscador enlaza aquí con su id (UUID) como respaldo.
+  const query = supabase.from("owners").select("id, name, especialidad, ciudad").eq("mindtwin_status", "active");
+  const { data: profesional } = UUID_RE.test(slug)
+    ? await query.eq("id", slug).maybeSingle()
+    : await query.eq("slug", slug).maybeSingle();
+
   if (!profesional) notFound();
 
   return (
@@ -24,16 +35,16 @@ export default async function ContactarPage({
       </header>
       <main className="mx-auto max-w-xl px-6 py-14">
         <p className="text-xs font-semibold uppercase tracking-widest text-[#1abc9c]">
-          {profesional.especialidad} · {profesional.ciudad}
+          {profesional.especialidad}
+          {profesional.ciudad && ` · ${profesional.ciudad}`}
         </p>
-        <h1 className="mt-2 font-serif text-3xl">{profesional.nombre}</h1>
-        <p className="mt-2 text-black/60">{profesional.bio}</p>
+        <h1 className="mt-2 font-serif text-3xl">{profesional.name}</h1>
         <p className="mt-4 rounded-lg bg-[#f9f9f9] p-4 text-sm text-black/60">
-          Al contactar, {profesional.nombre.split(" ")[0]} te responderá por email con sus
+          Al contactar, {profesional.name.split(" ")[0]} te responderá por email con sus
           tarifas exactas y un link de pago. Lili Fit no fija ni muestra precios aquí — los
           fija cada profesional.
         </p>
-        <ContactarForm slug={profesional.slug} />
+        <ContactarForm slug={slug} />
       </main>
     </div>
   );

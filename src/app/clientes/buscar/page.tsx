@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Logo from "@/components/Logo";
-import { buscarProfesionales, ordenarPorProximidad } from "@/lib/search/buscarProfesionales";
+import { ordenarPorProximidad } from "@/lib/search/buscarProfesionales";
+import { buscarProfesionalesReal } from "@/lib/search/buscarProfesionalesReal";
 import { detectarCiudadPorIp } from "@/lib/geo/detectarCiudad";
 
 export default async function BuscarProfesionalPage({
@@ -10,7 +11,7 @@ export default async function BuscarProfesionalPage({
 }) {
   const params = await searchParams;
   const ciudadDetectada = params.ciudad ? null : await detectarCiudadPorIp();
-  const resultados = ordenarPorProximidad(buscarProfesionales(params), ciudadDetectada);
+  const resultados = ordenarPorProximidad(await buscarProfesionalesReal(params), ciudadDetectada);
 
   return (
     <div className="mt-landing min-h-screen">
@@ -67,8 +68,11 @@ export default async function BuscarProfesionalPage({
             <div key={p.slug} className="flex items-center justify-between rounded-2xl border border-black/10 p-5">
               <div>
                 <h3 className="font-semibold">{p.nombre}</h3>
-                <p className="text-sm text-[#1abc9c]">{p.especialidad} · {p.ciudad}</p>
-                <p className="mt-1 text-sm text-black/60">{p.bio}</p>
+                <p className="text-sm text-[#1abc9c]">
+                  {p.especialidad}
+                  {p.ciudad && ` · ${p.ciudad}`}
+                </p>
+                {p.bio && p.bio !== p.especialidad && <p className="mt-1 text-sm text-black/60">{p.bio}</p>}
               </div>
               <Link
                 href={`/clientes/contactar/${p.slug}`}

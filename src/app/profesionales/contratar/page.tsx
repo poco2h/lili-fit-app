@@ -17,12 +17,7 @@ export default function ContratarPage() {
       </header>
       <main className="relative overflow-hidden">
         <Starfield />
-        <div className="relative z-10 mx-auto max-w-xl px-6 py-14">
-          <h1 className="font-serif text-3xl">Crea tu MindTwin</h1>
-          <p className="mt-2 text-white/60">
-            Tu licencia de Mylili te da acceso ilimitado al sistema. Tras inscribirte, recibirás
-            un email con tu magic link.
-          </p>
+        <div className="relative z-10 mx-auto max-w-4xl px-6 py-14">
           <Suspense fallback={null}>
             <ContratarForm />
           </Suspense>

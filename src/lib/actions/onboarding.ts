@@ -27,6 +27,7 @@ export async function contratarOwner(formData: FormData): Promise<ActionResult> 
   const nif = String(formData.get("nif") ?? "").trim();
   const direccionFacturacion = String(formData.get("direccionFacturacion") ?? "").trim();
   const stripeConectado = formData.get("stripeConectado") === "true";
+  const stripeAccountId = String(formData.get("stripeAccountId") ?? "").trim() || undefined;
   const claveAcceso = String(formData.get("claveAcceso") ?? "").trim();
   // MindTwin Generator (alta self-service multi-vertical) — opcionales para no
   // romper el flujo Lili Fit existente, que no los envía.
@@ -60,6 +61,7 @@ export async function contratarOwner(formData: FormData): Promise<ActionResult> 
         nif,
         direccion_facturacion: direccionFacturacion,
         stripe_conectado: stripeConectado,
+        ...(stripeAccountId ? { stripe_account_id: stripeAccountId } : {}),
         precio_follower_texto_min: 0,
         ...(slug ? { slug } : {}),
         ...(vertical ? { vertical, mindtwin_status: "pending" } : {}),

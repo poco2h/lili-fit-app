@@ -52,8 +52,19 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Pack no disponible." }, { status: 404 });
       }
 
-      const { data: owner } = await supabase.from("owners").select("slug").eq("id", ownerId).maybeSingle();
+      const { data: owner } = await supabase.from("owners").select("slug, stripe_account_id").eq("id", ownerId).maybeSingle();
       const slugUrl = owner?.slug ? `/mt/${owner.slug}` : "/app/conversar";
+
+      // Stripe Connect (doc MindTwin Generator §"Flujo de pagos"): el cobro va
+      // DIRECTO a la cuenta Connect del profesional, Poco2h se queda solo la
+      // comisión de plataforma — nunca se cobra íntegro a la plataforma.
+      if (!owner?.stripe_account_id) {
+        return NextResponse.json(
+          { error: "Este profesional todavía no ha conectado Stripe Connect — no puede vender packs todavía." },
+          { status: 400 }
+        );
+      }
+      const feePct = Number(process.env.STRIPE_PLATFORM_FEE_PERCENT ?? 15);
 
       const session = await stripe.checkout.sessions.create({
         mode: "payment",
@@ -68,6 +79,10 @@ export async function POST(req: NextRequest) {
             quantity: 1,
           },
         ],
+        payment_intent_data: {
+          application_fee_amount: Math.round((pack.price_cents * feePct) / 100),
+          transfer_data: { destination: owner.stripe_account_id },
+        },
         metadata: { kind: "pack_purchase", ownerId, packId: pack.id },
         success_url: `${siteUrl}/login?redirect=${encodeURIComponent(`/app/conversar?ownerId=${ownerId}&role=follower`)}&stripe=success`,
         cancel_url: `${siteUrl}${slugUrl}/comprar?stripe=cancel`,

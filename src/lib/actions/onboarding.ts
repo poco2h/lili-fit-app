@@ -28,6 +28,11 @@ export async function contratarOwner(formData: FormData): Promise<ActionResult> 
   const direccionFacturacion = String(formData.get("direccionFacturacion") ?? "").trim();
   const stripeConectado = formData.get("stripeConectado") === "true";
   const claveAcceso = String(formData.get("claveAcceso") ?? "").trim();
+  // MindTwin Generator (alta self-service multi-vertical) — opcionales para no
+  // romper el flujo Lili Fit existente, que no los envía.
+  const slug = String(formData.get("slug") ?? "").trim() || undefined;
+  const verticalRaw = String(formData.get("vertical") ?? "").trim();
+  const vertical = ["fit", "speak", "business", "coach", "custom"].includes(verticalRaw) ? verticalRaw : undefined;
 
   if (!nombre || !email || !especialidad || !nif || !direccionFacturacion) {
     return { ok: false, error: "Faltan campos obligatorios (incluye datos de facturación)." };
@@ -56,6 +61,8 @@ export async function contratarOwner(formData: FormData): Promise<ActionResult> 
         direccion_facturacion: direccionFacturacion,
         stripe_conectado: stripeConectado,
         precio_follower_texto_min: 0,
+        ...(slug ? { slug } : {}),
+        ...(vertical ? { vertical, mindtwin_status: "pending" } : {}),
       })
       .select("id")
       .single();

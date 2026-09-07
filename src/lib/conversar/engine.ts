@@ -34,6 +34,11 @@ export type ConversarInput = {
   marcaYaMencionada?: boolean;
   sportsContextResumen?: string; // solo Lili Celebs (V10 §7.3)
   historial?: TurnoHistorial[]; // turnos previos de la conversación (sin el mensaje actual)
+  // MindTwin Generator (verticales speak/business/coach/custom): system prompt
+  // generado por Gemini en el alta (owners.system_prompt), sustituye por
+  // completo al prompt de "profesional del bienestar" — y se salta el
+  // onboarding EGO ID/GUT ID de Lili Fit, que no aplica a esos verticales.
+  systemPromptOverride?: string;
 };
 
 export type ConversarOutput = {
@@ -130,7 +135,29 @@ async function turnoOnboarding(
  * progreso guardado, no solo del texto del mensaje.
  */
 export async function responderConversar(input: ConversarInput): Promise<ConversarOutput> {
-  const { mensaje, role, ownerName, ownerId, followerId, marcas, marcaYaMencionada, sportsContextResumen, historial } = input;
+  const { mensaje, role, ownerName, ownerId, followerId, marcas, marcaYaMencionada, sportsContextResumen, historial, systemPromptOverride } =
+    input;
+
+  if (systemPromptOverride) {
+    if (role === "follower" && esPreguntaDePrecio(mensaje)) {
+      return { respuesta: respuestaBloqueadaPorPrecio(ownerName), capa: "n2-guardrail" };
+    }
+    const cacheHit = buscarEnCache(mensaje);
+    if (cacheHit) {
+      const base = aplicaGuardrailPrecio(role, mensaje, cacheHit, ownerName);
+      return { ...conMencionMarca(base, mensaje, marcas, marcaYaMencionada), capa: "n1-cache" };
+    }
+    const generada = await llamarGemini(systemPromptOverride, mensaje, historial, null);
+    if (generada && "texto" in generada) {
+      const base = aplicaGuardrailPrecio(role, mensaje, generada.texto, ownerName);
+      return { ...conMencionMarca(base, mensaje, marcas, marcaYaMencionada), capa: "n3-gemini" };
+    }
+    const fallback =
+      generada && "errorApiKeyFalta" in generada
+        ? "Ahora mismo no puedo generar una respuesta completa (falta configurar GEMINI_API_KEY), pero he registrado tu mensaje."
+        : "Ahora mismo no puedo generar una respuesta completa (fallo temporal al conectar con el modelo), pero he registrado tu mensaje.";
+    return { ...conMencionMarca(fallback, mensaje, marcas, marcaYaMencionada), capa: "n3-fallback" };
+  }
 
   if (role === "owner" && ownerId) {
     const resultado = await turnoOnboarding(input, "owner");

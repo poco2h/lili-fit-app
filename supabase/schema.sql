@@ -237,6 +237,55 @@ CREATE TABLE IF NOT EXISTS visual_coach_events (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS idx_visual_coach_events_owner_follower ON visual_coach_events(owner_id, follower_id, created_at);
+
+-- 16. MINDTWIN GENERATOR — alta self-service multi-vertical (idiomas/coach/
+-- business/custom, no solo Lili Fit). Reutiliza owners/followers/twin_profiles
+-- y el sistema de bolsa de minutos ya existentes (follower_minute_wallets) en
+-- vez de duplicar un modelo de "Purchase" paralelo — un pack comprado simplemente
+-- añade segundos a la bolsa ya existente del follower.
+ALTER TABLE owners ADD COLUMN IF NOT EXISTS slug TEXT UNIQUE;
+ALTER TABLE owners ADD COLUMN IF NOT EXISTS vertical TEXT NOT NULL DEFAULT 'fit'
+  CHECK (vertical IN ('fit', 'speak', 'business', 'coach', 'custom'));
+ALTER TABLE owners ADD COLUMN IF NOT EXISTS mindtwin_status TEXT NOT NULL DEFAULT 'active'
+  CHECK (mindtwin_status IN ('pending', 'generating', 'active', 'suspended', 'error'));
+ALTER TABLE owners ADD COLUMN IF NOT EXISTS mindtwin_error TEXT;
+ALTER TABLE owners ADD COLUMN IF NOT EXISTS mindscore INT NOT NULL DEFAULT 0;
+ALTER TABLE owners ADD COLUMN IF NOT EXISTS system_prompt TEXT;
+ALTER TABLE owners ADD COLUMN IF NOT EXISTS min_hourly_rate_cents INT NOT NULL DEFAULT 600;
+-- Suscripción del owner a Poco2h (99€/mes) — DISTINTA de stripe_account_id
+-- (esa es la cuenta Connect por la que el owner cobra a SUS alumnos).
+ALTER TABLE owners ADD COLUMN IF NOT EXISTS generator_stripe_customer_id TEXT;
+ALTER TABLE owners ADD COLUMN IF NOT EXISTS generator_stripe_subscription_id TEXT;
+
+CREATE TABLE IF NOT EXISTS packs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  owner_id UUID NOT NULL REFERENCES owners(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  description TEXT,
+  hours NUMERIC(5, 2) NOT NULL,
+  price_cents INT NOT NULL,
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_packs_owner ON packs(owner_id);
+
+-- Registro de cada compra de pack (Stripe Checkout de pago único) — historial e
+-- ingresos del owner ("Ingresos este mes: €284"). El efecto real (añadir tiempo)
+-- se aplica sobre follower_minute_wallets/minute_wallet_transactions ya existentes.
+CREATE TABLE IF NOT EXISTS pack_purchases (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  owner_id UUID NOT NULL REFERENCES owners(id) ON DELETE CASCADE,
+  follower_id UUID REFERENCES followers(id) ON DELETE SET NULL,
+  pack_id UUID REFERENCES packs(id) ON DELETE SET NULL,
+  follower_email TEXT NOT NULL,
+  stripe_session_id TEXT UNIQUE,
+  stripe_payment_intent_id TEXT,
+  amount_cents INT NOT NULL,
+  seconds_granted INT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'completed' CHECK (status IN ('pending', 'completed', 'failed')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_pack_purchases_owner ON pack_purchases(owner_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_visual_coach_events_owner_exercise ON visual_coach_events(owner_id, exercise);
 
 -- 16. ROW LEVEL SECURITY (RLS) — REGLAS ESTRICTAS DE PRIVACIDAD

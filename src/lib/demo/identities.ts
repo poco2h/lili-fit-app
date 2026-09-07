@@ -110,3 +110,31 @@ export async function resolveFollowerUuid(
   if (error) throw new Error(`No se pudo resolver follower demo: ${error.message}`);
   return created.id;
 }
+
+/**
+ * Resuelve (o crea) un follower a partir de su email REAL — usado por la
+ * compra de packs del MindTwin Generator (Stripe Checkout ya nos da el email
+ * de verdad del comprador, no hace falta el patrón `follower+slug@demo...`
+ * que usa resolveFollowerUuid para ids de texto arbitrarios).
+ */
+export async function resolveFollowerByEmail(email: string, ownerUuid: string): Promise<string | null> {
+  const supabase = getSupabaseAdmin();
+  if (!supabase) return null;
+
+  const emailNormalizado = email.trim().toLowerCase();
+  const { data: existing } = await supabase
+    .from("followers")
+    .select("id")
+    .eq("email", emailNormalizado)
+    .eq("owner_id", ownerUuid)
+    .maybeSingle();
+  if (existing) return existing.id;
+
+  const { data: created, error } = await supabase
+    .from("followers")
+    .insert({ email: emailNormalizado, owner_id: ownerUuid })
+    .select("id")
+    .single();
+  if (error) throw new Error(`No se pudo crear follower: ${error.message}`);
+  return created.id;
+}

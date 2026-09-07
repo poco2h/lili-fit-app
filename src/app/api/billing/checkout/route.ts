@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStripe } from "@/lib/billing/stripeClient";
 import type { Canal } from "@/lib/billing/pricing";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
 
 /**
  * Stripe Checkout — dos flujos:
@@ -25,7 +26,55 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const kind = body?.kind === "owner_license" ? "owner_license" : "minutes";
+    const kind =
+      body?.kind === "owner_license" ? "owner_license" : body?.kind === "pack_purchase" ? "pack_purchase" : "minutes";
+
+    if (kind === "pack_purchase") {
+      const packId = String(body?.packId ?? "");
+      const ownerId = String(body?.ownerId ?? "");
+      if (!packId || !ownerId) {
+        return NextResponse.json({ error: "Falta packId u ownerId." }, { status: 400 });
+      }
+
+      const supabase = getSupabaseAdmin();
+      if (!supabase) return NextResponse.json({ error: "Supabase no configurado." }, { status: 501 });
+
+      // El precio SIEMPRE se lee del servidor, nunca del cliente — evita que
+      // alguien manipule el body y pague menos de lo que cuesta el pack.
+      const { data: pack } = await supabase
+        .from("packs")
+        .select("id, name, hours, price_cents, is_active, owner_id")
+        .eq("id", packId)
+        .eq("owner_id", ownerId)
+        .maybeSingle();
+
+      if (!pack || !pack.is_active) {
+        return NextResponse.json({ error: "Pack no disponible." }, { status: 404 });
+      }
+
+      const { data: owner } = await supabase.from("owners").select("slug").eq("id", ownerId).maybeSingle();
+      const slugUrl = owner?.slug ? `/mt/${owner.slug}` : "/app/conversar";
+
+      const session = await stripe.checkout.sessions.create({
+        mode: "payment",
+        payment_method_types: ["card"],
+        line_items: [
+          {
+            price_data: {
+              currency: "eur",
+              product_data: { name: `MindTwin · ${pack.name}` },
+              unit_amount: pack.price_cents,
+            },
+            quantity: 1,
+          },
+        ],
+        metadata: { kind: "pack_purchase", ownerId, packId: pack.id },
+        success_url: `${siteUrl}/login?redirect=${encodeURIComponent(`/app/conversar?ownerId=${ownerId}&role=follower`)}&stripe=success`,
+        cancel_url: `${siteUrl}${slugUrl}/comprar?stripe=cancel`,
+      });
+
+      return NextResponse.json({ url: session.url });
+    }
 
     if (kind === "minutes") {
       const canal = String(body?.canal ?? "texto") as Canal;
@@ -86,7 +135,7 @@ export async function POST(req: NextRequest) {
         },
       ],
       metadata: { kind: "owner_license", ownerId },
-      success_url: `${siteUrl}/login?stripe=success`,
+      success_url: `${siteUrl}/profesionales/generando?ownerId=${ownerId}`,
       cancel_url: `${siteUrl}/profesionales/contratar?stripe=cancel`,
     });
 

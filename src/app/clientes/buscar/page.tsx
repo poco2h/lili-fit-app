@@ -4,6 +4,12 @@ import { ordenarPorProximidad } from "@/lib/search/buscarProfesionales";
 import { buscarProfesionalesReal } from "@/lib/search/buscarProfesionalesReal";
 import { detectarCiudadPorIp } from "@/lib/geo/detectarCiudad";
 
+// Cachea cada combinación de filtros 30s — la búsqueda por array estático
+// era instantánea porque no consultaba nada; ahora consulta Supabase de
+// verdad, así que las visitas repetidas a la misma búsqueda dentro de esos
+// 30s se sirven de caché en vez de volver a tocar la base de datos.
+export const revalidate = 30;
+
 export default async function BuscarProfesionalPage({
   searchParams,
 }: {

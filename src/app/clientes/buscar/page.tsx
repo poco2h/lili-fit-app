@@ -30,10 +30,12 @@ export default async function BuscarProfesionalPage({
       </header>
 
       <main className="mx-auto max-w-4xl px-6 py-14">
-        <h1 className="font-serif text-3xl">Encuentra a tu profesional</h1>
+        <p className="text-xs font-semibold uppercase tracking-widest text-[#1abc9c]">Mis Profesionales</p>
+        <h1 className="mt-2 font-serif text-3xl">Encuentra a tu nutricionista o entrenador personal</h1>
         <p className="mt-2 text-black/60">
-          Búsqueda determinista por nombre, especialidad o ciudad — sin recomendaciones por IA,
-          sin mostrar precios de Poco2h. El precio final lo fija cada profesional.
+          Practica con su MindTwin 24/7 — nutrición y entrenamiento personalizado, cuando lo
+          necesites. Búsqueda por nombre, especialidad o ciudad, sin recomendaciones por IA ni
+          precios de Poco2h. El precio final lo fija cada profesional.
         </p>
         {ciudadDetectada && (
           <p className="mt-1 text-xs text-[#1abc9c]">

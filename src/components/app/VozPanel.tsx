@@ -81,14 +81,26 @@ export default function VozPanel({ ownerName, ownerId, role = "follower" }: { ow
     setErrorMic(null);
     const recognition = new SpeechRecognition();
     recognition.lang = "es-ES";
+    // continuous=true: con false, Chrome cierra el reconocimiento en la
+    // primera pausa que detecta (aunque el usuario siga hablando), cortando
+    // la frase a medias en vez de esperar a que se pulse "parar".
+    recognition.continuous = true;
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
+    let transcriptAcumulado = "";
     recognition.onresult = (e: any) => {
-      const texto = e.results[0][0].transcript;
-      if (texto?.trim()) enviarMensaje(texto.trim());
+      let texto = "";
+      for (let i = 0; i < e.results.length; i++) {
+        texto += e.results[i]?.[0]?.transcript ?? "";
+      }
+      transcriptAcumulado = texto;
     };
     recognition.onerror = () => setErrorMic("No se ha podido capturar el audio del micrófono.");
-    recognition.onend = () => setEscuchando(false);
+    recognition.onend = () => {
+      setEscuchando(false);
+      const texto = transcriptAcumulado.trim();
+      if (texto) enviarMensaje(texto);
+    };
     recognitionRef.current = recognition;
     setEscuchando(true);
     recognition.start();

@@ -23,6 +23,7 @@ export function useVoiceInput(onResultado: (texto: string) => void) {
   const [escuchando, setEscuchando] = useState(false);
   const [soportado, setSoportado] = useState(true);
   const recRef = useRef<SpeechRecognitionLike | null>(null);
+  const transcriptRef = useRef("");
 
   const alternar = useCallback(() => {
     if (escuchando) {
@@ -43,14 +44,25 @@ export function useVoiceInput(onResultado: (texto: string) => void) {
 
     const rec = new Ctor();
     rec.lang = "es-ES";
-    rec.continuous = false;
+    // continuous=true: con false, Chrome cierra el reconocimiento en la
+    // primera pausa que detecta (aunque el usuario siga hablando), cortando
+    // la frase a medias en vez de esperar a que se pulse "parar".
+    rec.continuous = true;
     rec.interimResults = false;
+    transcriptRef.current = "";
     rec.onresult = (e) => {
-      const texto = e.results[0]?.[0]?.transcript;
-      if (texto) onResultado(texto);
+      let texto = "";
+      for (let i = 0; i < e.results.length; i++) {
+        texto += e.results[i]?.[0]?.transcript ?? "";
+      }
+      transcriptRef.current = texto;
     };
     rec.onerror = () => setEscuchando(false);
-    rec.onend = () => setEscuchando(false);
+    rec.onend = () => {
+      setEscuchando(false);
+      const texto = transcriptRef.current.trim();
+      if (texto) onResultado(texto);
+    };
     recRef.current = rec;
     rec.start();
     setEscuchando(true);

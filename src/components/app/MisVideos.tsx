@@ -20,6 +20,69 @@ const PASOS = [
 
 type VideoGuardado = { id: string; video_url: string; variante: string; guion: string | null; created_at: string };
 
+function AccionesVideo({ videoUrl, nombreArchivo }: { videoUrl: string; nombreArchivo: string }) {
+  const [descargando, setDescargando] = useState(false);
+  const [compartible, setCompartible] = useState(false);
+
+  useEffect(() => {
+    setCompartible(typeof navigator !== "undefined" && !!navigator.share);
+  }, []);
+
+  async function obtenerArchivo() {
+    const res = await fetch(videoUrl);
+    const blob = await res.blob();
+    return new File([blob], nombreArchivo, { type: blob.type || "video/mp4" });
+  }
+
+  async function descargar() {
+    setDescargando(true);
+    try {
+      const archivo = await obtenerArchivo();
+      const url = URL.createObjectURL(archivo);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = nombreArchivo;
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setDescargando(false);
+    }
+  }
+
+  async function compartir() {
+    try {
+      const archivo = await obtenerArchivo();
+      if (navigator.canShare?.({ files: [archivo] })) {
+        await navigator.share({ files: [archivo], title: "Mi vídeo MindTwin" });
+        return;
+      }
+      await navigator.share({ url: videoUrl, title: "Mi vídeo MindTwin" });
+    } catch {
+      // el usuario canceló el share sheet — no es un error a mostrar
+    }
+  }
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      <button
+        onClick={descargar}
+        disabled={descargando}
+        className="rounded-full bg-white/10 px-4 py-1.5 text-xs font-bold text-white/80 hover:bg-white/15 disabled:opacity-40"
+      >
+        {descargando ? "Descargando…" : "⬇ Descargar"}
+      </button>
+      {compartible && (
+        <button
+          onClick={compartir}
+          className="rounded-full bg-[#1abc9c]/15 px-4 py-1.5 text-xs font-bold text-[#1abc9c] hover:bg-[#1abc9c]/25"
+        >
+          ↗ Compartir a Reels/TikTok
+        </button>
+      )}
+    </div>
+  );
+}
+
 export default function MisVideos() {
   const { owner } = useOwnerSession();
   const [variante, setVariante] = useState<VariantePV>("v3");
@@ -173,8 +236,11 @@ export default function MisVideos() {
           >
             {resultado.mensaje}
             {resultado.estado === "completado" && resultado.videoUrl && (
-              // eslint-disable-next-line jsx-a11y/media-has-caption
-              <video controls src={resultado.videoUrl} className="mt-3 w-full rounded-lg" />
+              <div className="mt-3 space-y-2">
+                {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+                <video controls src={resultado.videoUrl} className="w-full rounded-lg" />
+                <AccionesVideo videoUrl={resultado.videoUrl} nombreArchivo="mindtwin-video.mp4" />
+              </div>
             )}
           </div>
         )}
@@ -185,10 +251,11 @@ export default function MisVideos() {
           <p className="text-xs font-bold uppercase tracking-wide text-white/50">Tus vídeos guardados</p>
           <div className="grid gap-3 sm:grid-cols-2">
             {videosGuardados.map((v) => (
-              <div key={v.id} className="space-y-1">
+              <div key={v.id} className="space-y-2">
                 {v.guion && <p className="text-xs text-white/50">{v.guion}</p>}
                 {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
                 <video controls src={v.video_url} className="w-full rounded-lg" />
+                <AccionesVideo videoUrl={v.video_url} nombreArchivo={`mindtwin-video-${v.id}.mp4`} />
               </div>
             ))}
           </div>

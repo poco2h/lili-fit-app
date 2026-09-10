@@ -238,14 +238,18 @@ CREATE TABLE IF NOT EXISTS visual_coach_events (
 );
 CREATE INDEX IF NOT EXISTS idx_visual_coach_events_owner_follower ON visual_coach_events(owner_id, follower_id, created_at);
 
--- 16. MINDTWIN GENERATOR — alta self-service multi-vertical (idiomas/coach/
--- business/custom, no solo Lili Fit). Reutiliza owners/followers/twin_profiles
+-- 16. MINDTWIN GENERATOR — alta self-service multi-vertical (idiomas/fit/
+-- wakeup/celeb, no solo Lili Fit). Reutiliza owners/followers/twin_profiles
 -- y el sistema de bolsa de minutos ya existentes (follower_minute_wallets) en
 -- vez de duplicar un modelo de "Purchase" paralelo — un pack comprado simplemente
 -- añade segundos a la bolsa ya existente del follower.
 ALTER TABLE owners ADD COLUMN IF NOT EXISTS slug TEXT UNIQUE;
-ALTER TABLE owners ADD COLUMN IF NOT EXISTS vertical TEXT NOT NULL DEFAULT 'fit'
-  CHECK (vertical IN ('fit', 'speak', 'business', 'coach', 'custom'));
+ALTER TABLE owners ADD COLUMN IF NOT EXISTS vertical TEXT NOT NULL DEFAULT 'fit';
+-- El check se recrea siempre (no ADD COLUMN IF NOT EXISTS) porque la columna
+-- ya existía antes de sustituir business/coach/custom por wakeup/celeb.
+ALTER TABLE owners DROP CONSTRAINT IF EXISTS owners_vertical_check;
+ALTER TABLE owners ADD CONSTRAINT owners_vertical_check
+  CHECK (vertical IN ('fit', 'speak', 'wakeup', 'celeb'));
 ALTER TABLE owners ADD COLUMN IF NOT EXISTS mindtwin_status TEXT NOT NULL DEFAULT 'active'
   CHECK (mindtwin_status IN ('pending', 'generating', 'active', 'suspended', 'error'));
 ALTER TABLE owners ADD COLUMN IF NOT EXISTS mindtwin_error TEXT;

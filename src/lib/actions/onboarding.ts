@@ -33,7 +33,7 @@ export async function contratarOwner(formData: FormData): Promise<ActionResult> 
   // romper el flujo Lili Fit existente, que no los envía.
   const slug = String(formData.get("slug") ?? "").trim() || undefined;
   const verticalRaw = String(formData.get("vertical") ?? "").trim();
-  const vertical = ["fit", "speak", "business", "coach", "custom"].includes(verticalRaw) ? verticalRaw : undefined;
+  const vertical = ["fit", "speak", "wakeup", "celeb"].includes(verticalRaw) ? verticalRaw : undefined;
 
   if (!nombre || !email || !especialidad || !nif || !direccionFacturacion) {
     return { ok: false, error: "Faltan campos obligatorios (incluye datos de facturación)." };

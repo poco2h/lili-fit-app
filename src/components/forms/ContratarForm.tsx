@@ -8,13 +8,13 @@ import IncomeCalculator from "@/components/landing/IncomeCalculator";
 
 const BORRADOR_KEY = "mindtwin_contratar_borrador";
 
-type Vertical = "speak" | "business" | "coach" | "custom";
+type Vertical = "speak" | "fit" | "wakeup" | "celeb";
 
 const VERTICALES: { id: Vertical; emoji: string; nombre: string; desc: string }[] = [
   { id: "speak", emoji: "🗣️", nombre: "Lili Speak", desc: "Idiomas conversacionales" },
-  { id: "business", emoji: "💼", nombre: "Lili Business", desc: "Formación empresarial" },
-  { id: "coach", emoji: "🧠", nombre: "Lili Coach", desc: "Coaching y bienestar" },
-  { id: "custom", emoji: "🎨", nombre: "Lili Custom", desc: "Personalizado" },
+  { id: "fit", emoji: "💪", nombre: "Lili Fit", desc: "Entrenamiento y nutrición" },
+  { id: "wakeup", emoji: "☀️", nombre: "Lili Wake Up", desc: "Motivación y rutinas diarias" },
+  { id: "celeb", emoji: "⭐", nombre: "Lili Celeb", desc: "Celebridades y creadores" },
 ];
 
 type Borrador = {
@@ -376,7 +376,7 @@ export default function ContratarForm() {
                     >
                       <span className="text-lg">{v.emoji}</span>
                       <p className="mt-1 font-semibold">{v.nombre}</p>
-                      <p className="text-xs text-white/50">{v.desc}</p>
+                      <p className="text-xs text-white">{v.desc}</p>
                     </button>
                   ))}
                 </div>

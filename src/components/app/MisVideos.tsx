@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { VariantePV, VideoJobResult } from "@/lib/videos/pipeline";
 import { useOwnerSession } from "@/lib/session/useOwnerSession";
+import { guardarVideoDemo, leerVideosDemo } from "@/lib/demo/localVideos";
 
 const VARIANTES: Array<{ key: VariantePV; nombre: string; desc: string; cuando: string }> = [
   { key: "v3", nombre: "V1 · Hablas a cámara", desc: "Tu cara y busto, con la boca sincronizada a lo que dices.", cuando: "Úsalo para Reels o TikToks donde explicas algo mirando a cámara." },
@@ -84,7 +85,7 @@ function AccionesVideo({ videoUrl, nombreArchivo }: { videoUrl: string; nombreAr
 }
 
 export default function MisVideos() {
-  const { owner } = useOwnerSession();
+  const { owner, cargando: cargandoOwner } = useOwnerSession();
   const [variante, setVariante] = useState<VariantePV>("v3");
   const [guion, setGuion] = useState("");
   const [resultado, setResultado] = useState<VideoJobResult | null>(null);
@@ -99,8 +100,13 @@ export default function MisVideos() {
   }, []);
 
   useEffect(() => {
-    if (owner?.ownerId) cargarVideos(owner.ownerId);
-  }, [owner?.ownerId]);
+    if (cargandoOwner) return;
+    if (owner?.ownerId) {
+      cargarVideos(owner.ownerId);
+    } else {
+      setVideosGuardados(leerVideosDemo());
+    }
+  }, [owner?.ownerId, cargandoOwner]);
 
   function cargarVideos(ownerId: string) {
     fetch(`/api/videos/listar?ownerId=${encodeURIComponent(ownerId)}`)
@@ -109,7 +115,10 @@ export default function MisVideos() {
   }
 
   async function guardarVideoGenerado(videoUrl: string) {
-    if (!owner?.ownerId) return;
+    if (!owner?.ownerId) {
+      setVideosGuardados(guardarVideoDemo({ video_url: videoUrl, variante, guion }));
+      return;
+    }
     await fetch("/api/videos/guardar", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
